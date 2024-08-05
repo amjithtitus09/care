@@ -32,11 +32,25 @@ services:
       - SERVICES=s3
       - EXTRA_CORS_ALLOWED_ORIGINS=*
       - EXTRA_CORS_ALLOWED_HEADERS=*
+      - DEBUG=1
     volumes:
       - "${TEMPDIR:-./care/media/localstack}:/var/lib/localstack"
       - "./docker/awslocal:/etc/localstack/init/ready.d/"
     ports:
       - "4566:4566"
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    restart: unless-stopped
+    volumes:
+      - azurite-data:/data
+    ports:
+      - 10000:10000 # Blob service
+    environment:
+      - DEBUG=azurite:*
+      - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==
+    command: azurite-blob --blobHost 127.0.0.1 --blobPort 10000 --debug path/debug.log --loose
 
   fidelius:
     image: khavinshankar/fidelius:latest
@@ -47,3 +61,4 @@ services:
 volumes:
   postgres-data:
   redis-data:
+  azurite-data:

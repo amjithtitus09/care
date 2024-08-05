@@ -1,3 +1,6 @@
+import os
+from urllib.parse import urljoin
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
@@ -12,6 +15,7 @@ from care.facility.models.mixins.permissions.facility import (
     FacilityRelatedPermissionMixin,
 )
 from care.users.models import District, LocalBody, State, Ward
+from care.utils.csp.config import CSProvider
 from care.utils.models.validators import mobile_or_landline_number_validator
 
 User = get_user_model()
@@ -218,9 +222,22 @@ class Facility(FacilityBaseModel, FacilityPermissionMixin):
         verbose_name_plural = "Facilities"
 
     def read_cover_image_url(self):
-        if self.cover_image_url:
-            return f"{settings.FACILITY_S3_BUCKET_EXTERNAL_ENDPOINT}/{settings.FACILITY_S3_BUCKET}/{self.cover_image_url}"
-        return None
+        if not self.cover_image_url:
+            return None
+
+        filename = self.cover_image_url
+
+        if settings.CS_PROVIDER == CSProvider.AWS.value:
+            return f"{settings.FACILITY_S3_BUCKET_EXTERNAL_ENDPOINT}/{settings.FACILITY_S3_BUCKET}/{filename}"
+        elif settings.CS_PROVIDER == CSProvider.AZURE.value:
+            return f"https://{settings.FACILITY_AZURE_ACCOUNT_NAME}.blob.core.windows.net/{settings.FACILITY_AZURE_CONTAINER}/{filename}"
+        elif settings.CS_PROVIDER == CSProvider.LOCAL.value:
+            relative_path = os.path.relpath(
+                os.path.join(settings.FACILITY_LOCAL_DIR, filename), settings.MEDIA_ROOT
+            )
+            return urljoin(settings.MEDIA_URL, relative_path)
+        else:
+            raise ValueError("Unsupported Cloud Service Provider")
 
     def __str__(self):
         return f"{self.name}"

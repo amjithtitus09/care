@@ -4,6 +4,7 @@ Base settings to build other settings files upon.
 
 import base64
 import json
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -512,9 +513,9 @@ FILE_UPLOAD_BUCKET_ENDPOINT = env(
 )
 FILE_UPLOAD_BUCKET_EXTERNAL_ENDPOINT = env(
     "FILE_UPLOAD_BUCKET_EXTERNAL_ENDPOINT",
-    default=BUCKET_EXTERNAL_ENDPOINT
-    if BUCKET_ENDPOINT
-    else FILE_UPLOAD_BUCKET_ENDPOINT,
+    default=(
+        BUCKET_EXTERNAL_ENDPOINT if BUCKET_ENDPOINT else FILE_UPLOAD_BUCKET_ENDPOINT
+    ),
 )
 
 ALLOWED_MIME_TYPES = env.list(
@@ -547,6 +548,7 @@ ALLOWED_MIME_TYPES = env.list(
         # Documents
         "text/plain",
         "text/csv",
+        "application/json",
         "application/rtf",
         "application/msword",
         "application/vnd.oasis.opendocument.text",
@@ -566,10 +568,28 @@ FACILITY_S3_BUCKET_ENDPOINT = env(
 )
 FACILITY_S3_BUCKET_EXTERNAL_ENDPOINT = env(
     "FACILITY_S3_BUCKET_EXTERNAL_ENDPOINT",
-    default=BUCKET_EXTERNAL_ENDPOINT
-    if BUCKET_ENDPOINT
-    else FACILITY_S3_BUCKET_ENDPOINT,
+    default=(
+        BUCKET_EXTERNAL_ENDPOINT if BUCKET_ENDPOINT else FACILITY_S3_BUCKET_ENDPOINT
+    ),
 )
+
+# Azure Blob Storage settings for facility bucket
+FACILITY_AZURE_CONNECTION_STRING = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+FACILITY_AZURE_CONTAINER = "facility-container"
+FACILITY_AZURE_ACCOUNT_NAME = "devstoreaccount1"
+
+# Azure Blob Storage settings for patient bucket
+PATIENT_AZURE_CONNECTION_STRING = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+PATIENT_AZURE_CONTAINER = "patient-container"
+
+# Local storage settings for facility
+FACILITY_LOCAL_DIR = os.path.join(MEDIA_ROOT, "facility-storage")
+
+# Local storage settings for patient
+PATIENT_LOCAL_DIR = os.path.join(MEDIA_ROOT, "patient-storage")
+
+# Cloud service provider setting
+CS_PROVIDER = env("CS_PROVIDER", default="AZURE")  # Can be 'AWS', 'AZURE', 'LOCAL'
 
 # for setting the shifting mode
 PEACETIME_MODE = env.bool("PEACETIME_MODE", default=True)

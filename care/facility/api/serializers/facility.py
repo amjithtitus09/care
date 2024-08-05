@@ -1,4 +1,5 @@
-import boto3
+import logging
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
@@ -12,7 +13,8 @@ from care.users.api.serializers.lsg import (
     StateSerializer,
     WardSerializer,
 )
-from care.utils.csp.config import BucketType, get_client_config
+from care.utils.csp.config import BucketType
+from care.utils.csp.storage_utils import get_storage_provider
 from config.serializers import ChoiceField
 from config.validators import MiddlewareDomainAddressValidator
 
@@ -165,14 +167,12 @@ class FacilityImageUploadSerializer(serializers.ModelSerializer):
         facility = self.instance
         image = self.validated_data["cover_image"]
         image_extension = image.name.rsplit(".", 1)[-1]
-        config, bucket_name = get_client_config(BucketType.FACILITY, True)
-        s3 = boto3.client("s3", **config)
         image_location = f"cover_images/{facility.external_id}_cover.{image_extension}"
-        s3.put_object(
-            Bucket=bucket_name,
-            Key=image_location,
-            Body=image.file,
+        storage_provider = get_storage_provider(BucketType.FACILITY)
+        storage_provider.upload_file(
+            image.file, image_location, image.content_type, **kwargs
         )
         facility.cover_image_url = image_location
+        logging.info(f"Image_location: {image_location}")
         facility.save()
         return facility

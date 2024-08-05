@@ -1,8 +1,8 @@
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.views import defaults as default_views
+from django.views.static import serve
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -41,9 +41,15 @@ urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # Rest API
-    path("api/v1/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path(
-        "api/v1/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"
+        "api/v1/auth/login/",
+        TokenObtainPairView.as_view(),
+        name="token_obtain_pair",
+    ),
+    path(
+        "api/v1/auth/token/refresh/",
+        TokenRefreshView.as_view(),
+        name="token_refresh",
     ),
     path(
         "api/v1/auth/token/verify/",
@@ -100,7 +106,7 @@ urlpatterns = [
     path(".well-known/jwks.json", PublicJWKsView.as_view(), name="jwks-json"),
     # TODO: Remove the config url as its not a standard implementation
     path(".well-known/openid-configuration", PublicJWKsView.as_view()),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
 
 if settings.ENABLE_ABDM:
     urlpatterns += abdm_urlpatterns
@@ -145,6 +151,13 @@ if settings.DEBUG or not settings.IS_PRODUCTION:
             name="swagger-ui",
         ),
         path("redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    ]
+
+if settings.DEBUG or not settings.IS_PRODUCTION:
+    urlpatterns += [
+        re_path(
+            r"^mediafiles/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}
+        ),
     ]
 
 for plug in settings.PLUGIN_APPS:

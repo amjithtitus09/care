@@ -1,11 +1,11 @@
 import time
 from uuid import uuid4
 
-import boto3
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from care.utils.csp.config import BucketType, get_client_config
+from care.utils.csp.config import BucketType
+from care.utils.csp.storage_utils import get_storage_provider
 from care.utils.models.base import BaseManager
 
 User = get_user_model()
@@ -66,49 +66,31 @@ class BaseFileUpload(models.Model):
     def signed_url(
         self, duration=60 * 60, mime_type=None, bucket_type=BucketType.PATIENT
     ):
-        config, bucket_name = get_client_config(bucket_type, True)
-        s3 = boto3.client("s3", **config)
-        params = {
-            "Bucket": bucket_name,
-            "Key": f"{self.FileType(self.file_type).name}/{self.internal_name}",
-        }
-        if mime_type:
-            params["ContentType"] = mime_type
-        return s3.generate_presigned_url(
-            "put_object",
-            Params=params,
-            ExpiresIn=duration,  # seconds
+        storage_provider = get_storage_provider(bucket_type, True)
+        return storage_provider.get_signed_upload_url(
+            f"{self.FileType(self.file_type).name}/{self.internal_name}",
+            mime_type,
+            duration,
         )
 
     def read_signed_url(self, duration=60 * 60, bucket_type=BucketType.PATIENT):
-        config, bucket_name = get_client_config(bucket_type, True)
-        s3 = boto3.client("s3", **config)
-        return s3.generate_presigned_url(
-            "get_object",
-            Params={
-                "Bucket": bucket_name,
-                "Key": f"{self.FileType(self.file_type).name}/{self.internal_name}",
-            },
-            ExpiresIn=duration,  # seconds
+        storage_provider = get_storage_provider(bucket_type, True)
+        return storage_provider.get_signed_download_url(
+            f"{self.FileType(self.file_type).name}/{self.internal_name}", duration
         )
 
-    def put_object(self, file, bucket_type=BucketType.PATIENT, **kwargs):
-        config, bucket_name = get_client_config(bucket_type)
-        s3 = boto3.client("s3", **config)
-        return s3.put_object(
-            Body=file,
-            Bucket=bucket_name,
-            Key=f"{self.FileType(self.file_type).name}/{self.internal_name}",
-            **kwargs,
+    def put_object(self, file, ContentType, bucket_type=BucketType.PATIENT, **kwargs):
+        storage_provider = get_storage_provider(bucket_type)
+        return storage_provider.upload_file(
+            file,
+            f"{self.FileType(self.file_type).name}/{self.internal_name}",
+            mime_type=ContentType,
         )
 
     def get_object(self, bucket_type=BucketType.PATIENT, **kwargs):
-        config, bucket_name = get_client_config(bucket_type)
-        s3 = boto3.client("s3", **config)
-        return s3.get_object(
-            Bucket=bucket_name,
-            Key=f"{self.FileType(self.file_type).name}/{self.internal_name}",
-            **kwargs,
+        storage_provider = get_storage_provider(bucket_type)
+        return storage_provider.download_file(
+            f"{self.FileType(self.file_type).name}/{self.internal_name}"
         )
 
     def file_contents(self):
