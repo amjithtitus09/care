@@ -76,6 +76,12 @@ def delete_asset_cache(sender, instance, created, **kwargs):
     cache.delete("asset:qr:" + str(instance.id))
 
 
+class AssetLocationFilter(filters.FilterSet):
+    asset_class = filters.CharFilter(
+        field_name="asset__asset_class",
+    )
+
+
 class AssetLocationViewSet(
     ListModelMixin,
     RetrieveModelMixin,
@@ -85,7 +91,11 @@ class AssetLocationViewSet(
     DestroyModelMixin,
 ):
     queryset = (
-        AssetLocation.objects.all().select_related("facility").order_by("-created_date")
+        AssetLocation.objects.all()
+        .select_related("facility")
+        .prefetch_related("asset_set")
+        .distinct()
+        .order_by("-created_date")
     )
     permission_classes = (
         IsAuthenticated,
@@ -93,8 +103,12 @@ class AssetLocationViewSet(
     )
     serializer_class = AssetLocationSerializer
     lookup_field = "external_id"
-    filter_backends = (drf_filters.SearchFilter,)
+    filter_backends = (
+        filters.DjangoFilterBackend,
+        drf_filters.SearchFilter,
+    )
     search_fields = ["name"]
+    filterset_class = AssetLocationFilter
 
     def get_serializer_context(self):
         facility = self.get_facility()
