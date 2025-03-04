@@ -272,7 +272,7 @@ def create_components(questionnaire, responses):
             continue
         component = {"value": observation["value"], "code": observation["main_code"]}
         if "note" in observation:
-            component["note"] = observation.note
+            component["note"] = observation["note"]
         components.append(component)
     return components
 
