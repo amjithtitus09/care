@@ -307,6 +307,9 @@ class User(AbstractUser):
         null=True,
     )
 
+    prefix = models.CharField(max_length=10, blank=True, null=True)
+    suffix = models.CharField(max_length=50, blank=True, null=True)
+
     verified = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
 
@@ -361,7 +364,13 @@ class User(AbstractUser):
 
     @property
     def full_name(self):
-        return self.get_full_name()
+        name_parts = []
+        if self.prefix:
+            name_parts.append(self.prefix)
+        name_parts.append(self.get_full_name())
+        if self.suffix:
+            name_parts.append(self.suffix)
+        return " ".join(name_parts)
 
     @staticmethod
     def has_read_permission(request):
