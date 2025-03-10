@@ -314,6 +314,8 @@ class User(AbstractUser):
     pf_endpoint = models.TextField(default=None, null=True)
     pf_p256dh = models.TextField(default=None, null=True)
     pf_auth = models.TextField(default=None, null=True)
+    totp_secret = models.TextField(blank=True, null=True)
+    mfa_settings = models.JSONField(default=dict, blank=True)
 
     # Asset Fields
 
@@ -353,6 +355,9 @@ class User(AbstractUser):
                 return f"{settings.FACILITY_CDN}/{self.profile_picture_url}"
             return f"{settings.FACILITY_S3_BUCKET_EXTERNAL_ENDPOINT}/{settings.FACILITY_S3_BUCKET}/{self.profile_picture_url}"
         return None
+
+    def is_mfa_enabled(self):
+        return bool(self.mfa_settings.get("totp", {}).get("enabled", False))
 
     @property
     def full_name(self):
