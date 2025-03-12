@@ -51,70 +51,30 @@ class Component(BaseModel):
 class BaseObservationSpec(EMRResource):
     __model__ = Observation
 
-    id: str = Field("", description="Unique ID in the system")
-
-    status: ObservationStatus = Field(
-        description="Status of the observation (final or amended)"
-    )
-
-    category: Coding | None = Field(
-        None, description="List of codeable concepts derived from the questionnaire"
-    )
-
-    main_code: Coding | None = Field(
-        None, description="Code for the observation (LOINC binding)"
-    )
-
+    id: str
+    status: ObservationStatus
+    category: Coding | None = None
+    main_code: Coding | None = None
     alternate_coding: CodeableConcept = dict
-
     subject_type: SubjectType
-
     encounter: UUID4 | None = None
-
-    effective_datetime: datetime = Field(
-        ...,
-        description="Datetime when observation was recorded",
-    )
-
-    performer: Performer | None = Field(
-        None,
-        description="Who performed the observation (currently supports RelatedPerson)",
-    )  # If none the observation is captured by the data entering person
-
-    value_type: QuestionType = Field(
-        description="Type of value",
-    )
-
-    value: QuestionnaireSubmitResultValue = Field(
-        description="Value of the observation if not code. For codes, contains display text",
-    )
-
-    note: str | None = Field(None, description="Additional notes about the observation")
-
+    effective_datetime: datetime
+    performer: Performer | None = None
+    value_type: QuestionType
+    value: QuestionnaireSubmitResultValue
+    note: str | None = None
     body_site: Coding | None = Field(
         None,
-        description="Body site where observation was made",
         json_schema_extra={"slug": CARE_BODY_SITE_VALUESET.slug},
     )
-
     method: Coding | None = Field(
         None,
-        description="Method used for the observation",
         json_schema_extra={"slug": CARE_OBSERVATION_COLLECTION_METHOD.slug},
     )
-
-    reference_range: list[ReferenceRange] = Field(
-        [], description="Reference ranges for interpretation"
-    )
-
-    interpretation: str | None = Field(
-        None, description="Interpretation based on the reference range"
-    )
-
-    parent: UUID4 | None = Field(None, description="ID reference to parent observation")
-
+    reference_range: list[ReferenceRange] = []
+    interpretation: str | None = None
+    parent: UUID4 | None = None
     questionnaire_response: UUID4 | None = None
-
     component: list[Component] = []
 
 
