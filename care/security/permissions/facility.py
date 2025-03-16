@@ -17,7 +17,7 @@ class FacilityPermissions(enum.Enum):
         "Can Create on Facility",
         "Something Here",
         PermissionContext.FACILITY,
-        [ADMINISTRATOR, ADMIN_ROLE],
+        [ADMINISTRATOR, ADMIN_ROLE, FACILITY_ADMIN_ROLE],
     )
     can_read_facility = Permission(
         "Can Read on Facility",

@@ -49,7 +49,7 @@ class OrganizationPermissions(enum.Enum):
         "Can Manage Users in an Organizations",
         "",
         PermissionContext.ORGANIZATION,
-        [ADMIN_ROLE, ADMINISTRATOR],
+        [ADMIN_ROLE, ADMINISTRATOR, FACILITY_ADMIN_ROLE],
     )
     can_list_organization_users = Permission(
         "Can List Users in an Organizations",
