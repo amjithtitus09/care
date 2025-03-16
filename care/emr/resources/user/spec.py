@@ -48,7 +48,7 @@ class UserUpdateSpec(UserBaseSpec):
 
 
 class UserCreateSpec(UserUpdateSpec):
-    geo_organization: UUID4
+    geo_organization: UUID4 | None = None
     password: str
     username: str
     email: str
@@ -89,9 +89,10 @@ class UserCreateSpec(UserUpdateSpec):
 
     def perform_extra_deserialization(self, is_update, obj):
         obj.set_password(self.password)
-        obj.geo_organization = get_object_or_404(
-            Organization, external_id=self.geo_organization, org_type="govt"
-        )
+        if self.geo_organization is not None:
+            obj.geo_organization = get_object_or_404(
+                Organization, external_id=self.geo_organization, org_type="govt"
+            )
 
 
 class UserSpec(UserBaseSpec):
