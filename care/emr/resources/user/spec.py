@@ -57,7 +57,7 @@ class UserUpdateSpec(UserBaseSpec):
 
 class UserCreateSpec(UserUpdateSpec):
     geo_organization: UUID4 | None = None
-    password: str
+    password: str | None = None
     username: str
     email: str
 
@@ -89,6 +89,8 @@ class UserCreateSpec(UserUpdateSpec):
     @field_validator("password")
     @classmethod
     def validate_password(cls, password):
+        if password is None:
+            return None
         try:
             validate_password(password)
         except Exception as e:
