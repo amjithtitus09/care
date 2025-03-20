@@ -143,6 +143,7 @@ class QuestionnaireValidationTests(QuestionnaireTestBase):
             "subject_type": "patient",
             "organizations": [str(self.organization.external_id)],
             "questions": questions,
+            "tags": [self.create_questionnaire_tag().external_id],
         }
 
         response = self.client.post(
@@ -314,6 +315,7 @@ class RequiredFieldValidationTests(QuestionnaireTestBase):
             "status": "active",
             "subject_type": "patient",
             "organizations": [str(self.organization.external_id)],
+            "tags": [self.create_questionnaire_tag().external_id],
             "questions": [
                 {
                     "link_id": "1",
@@ -380,6 +382,7 @@ class RequiredGroupValidationTests(QuestionnaireTestBase):
             "status": "active",
             "subject_type": "patient",
             "organizations": [str(self.organization.external_id)],
+            "tags": [self.create_questionnaire_tag().external_id],
             "questions": [
                 {
                     "styling_metadata": {"layout": "vertical"},
@@ -467,6 +470,7 @@ class QuestionnairePermissionTests(QuestionnaireTestBase):
             "status": "active",
             "subject_type": "patient",
             "organizations": [str(self.organization.external_id)],
+            "tags": [self.create_questionnaire_tag().external_id],
             "questions": [
                 {
                     "link_id": "1",
