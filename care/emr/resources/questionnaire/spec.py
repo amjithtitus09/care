@@ -96,6 +96,7 @@ class AnswerOption(QuestionnaireBaseSpec):
         default=False,
         description="Whether option is initially selected",
     )
+
     @field_validator("value")
     @classmethod
     def validate_value(cls, value: str, info):

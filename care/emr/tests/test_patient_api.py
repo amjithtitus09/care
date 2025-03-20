@@ -175,6 +175,7 @@ class TestPatientViewSet(CareAPITestBase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["date_of_birth"], "1992-01-10")
         self.assertEqual(response.data["year_of_birth"], 1992)
+
     def test_invalid_date_of_birth_and_death_date(self):
         user = self.create_user()
         geo_organization = self.create_organization(org_type="govt")

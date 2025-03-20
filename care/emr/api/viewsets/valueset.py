@@ -171,9 +171,7 @@ class ValueSetViewSet(EMRModelViewSet):
         valueset = self.get_object()
 
         try:
-            pref = UserValueSetPreference.objects.get(
-                user=user, valueset=valueset
-            )
+            pref = UserValueSetPreference.objects.get(user=user, valueset=valueset)
             favs = pref.favorite_codes
             new_favs = [fav for fav in favs if fav.get("code") != code_obj.code]
             pref.favorite_codes = new_favs
