@@ -95,6 +95,14 @@ class AnswerOption(QuestionnaireBaseSpec):
         default=False,
         description="Whether option is initially selected",
     )
+    @field_validator("value")
+    @classmethod
+    def validate_value(cls, value: str, info):
+        if not value.strip():
+            raise ValueError(
+                "All the answer option values must be provided for custom choices"
+            )
+        return value.strip()
 
 
 class Question(QuestionnaireBaseSpec):
