@@ -1,7 +1,7 @@
 from django_filters import CharFilter, FilterSet, UUIDFilter
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 
 from care.emr.api.viewsets.base import (
@@ -21,6 +21,7 @@ from care.emr.resources.condition.spec import (
     ConditionUpdateSpec,
 )
 from care.emr.resources.questionnaire.spec import SubjectType
+from care.security.authorization import AuthorizationController
 
 
 class ValidateEncounterMixin:
@@ -130,6 +131,19 @@ class DiagnosisViewSet(
             .filter(patient__external_id=self.kwargs["patient_external_id"])
             .select_related("patient", "encounter", "created_by", "updated_by")
         )
+
+    def authorize_update(self, request_obj, model_instance):
+        if model_instance.category == CategoryChoices.chronic_condition.value:
+            if not AuthorizationController.call(
+                "can_view_clinical_data", self.request.user, model_instance.patient
+            ):
+                raise PermissionDenied(
+                    "You do not have permission to update chronic condition"
+                )
+        elif not AuthorizationController.call(
+            "can_update_encounter_obj", self.request.user, model_instance.encounter
+        ):
+            raise PermissionDenied("You do not have permission to update encounter")
 
 
 InternalQuestionnaireRegistry.register(DiagnosisViewSet)
