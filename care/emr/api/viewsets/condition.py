@@ -50,9 +50,17 @@ class CategoryFilter(filters.CharFilter):
         return qs
 
 
+class ClinicalStatusFilter(filters.CharFilter):
+    def filter(self, qs, value):
+        if value:
+            clinical_statuses = value.split(",")
+            return qs.filter(clinical_status__in=clinical_statuses)
+        return qs
+
+
 class ConditionFilters(FilterSet):
     encounter = UUIDFilter(field_name="encounter__external_id")
-    clinical_status = CharFilter(field_name="clinical_status", lookup_expr="iexact")
+    clinical_status = ClinicalStatusFilter()
     verification_status = CharFilter(
         field_name="verification_status", lookup_expr="iexact"
     )
