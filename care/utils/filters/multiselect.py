@@ -6,7 +6,7 @@ class MultiSelectFilter(Filter):
         if not value:
             return qs
         if not self.field_name:
-            return None
+            return qs
         values_list = value.split(",")
         filters = {self.field_name + "__in": values_list}
         return qs.filter(**filters)

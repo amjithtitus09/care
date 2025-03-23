@@ -1,5 +1,4 @@
 from django_filters import CharFilter, FilterSet, UUIDFilter
-from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
@@ -22,6 +21,7 @@ from care.emr.resources.condition.spec import (
 )
 from care.emr.resources.questionnaire.spec import SubjectType
 from care.security.authorization import AuthorizationController
+from care.utils.filters.multiselect import MultiSelectFilter
 
 
 class ValidateEncounterMixin:
@@ -42,31 +42,15 @@ class ValidateEncounterMixin:
             )
 
 
-class CategoryFilter(filters.CharFilter):
-    def filter(self, qs, value):
-        if value:
-            categories = value.split(",")
-            return qs.filter(category__in=categories)
-        return qs
-
-
-class ClinicalStatusFilter(filters.CharFilter):
-    def filter(self, qs, value):
-        if value:
-            clinical_statuses = value.split(",")
-            return qs.filter(clinical_status__in=clinical_statuses)
-        return qs
-
-
 class ConditionFilters(FilterSet):
     encounter = UUIDFilter(field_name="encounter__external_id")
-    clinical_status = ClinicalStatusFilter()
+    clinical_status = MultiSelectFilter(field_name="clinical_status")
     verification_status = CharFilter(
         field_name="verification_status", lookup_expr="iexact"
     )
     severity = CharFilter(field_name="severity", lookup_expr="iexact")
     name = CharFilter(field_name="code__display", lookup_expr="icontains")
-    category = CategoryFilter()
+    category = MultiSelectFilter(field_name="category")
 
 
 class SymptomViewSet(
