@@ -45,9 +45,14 @@ class ValidateEncounterMixin:
 class ConditionFilters(FilterSet):
     encounter = UUIDFilter(field_name="encounter__external_id")
     clinical_status = MultiSelectFilter(field_name="clinical_status")
-    verification_status = CharFilter(
-        field_name="verification_status", lookup_expr="iexact"
+    exclude_clinical_status = MultiSelectFilter(
+        field_name="clinical_status", exclude=True
     )
+    verification_status = MultiSelectFilter(field_name="verification_status")
+    exclude_verification_status = MultiSelectFilter(
+        field_name="verification_status", exclude=True
+    )
+
     severity = CharFilter(field_name="severity", lookup_expr="iexact")
     name = CharFilter(field_name="code__display", lookup_expr="icontains")
     category = MultiSelectFilter(field_name="category")

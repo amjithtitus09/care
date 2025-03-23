@@ -9,4 +9,6 @@ class MultiSelectFilter(Filter):
             return qs
         values_list = value.split(",")
         filters = {self.field_name + "__in": values_list}
+        if self.exclude:
+            return qs.exclude(**filters)
         return qs.filter(**filters)
