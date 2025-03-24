@@ -44,7 +44,7 @@ class PatientBaseSpec(EMRResource):
     address: str
     permanent_address: str
     pincode: int
-    death_datetime: datetime.datetime | None = None
+    deceased_datetime: datetime.datetime | None = None
     blood_group: BloodGroupChoices | None = None
 
 
@@ -60,13 +60,13 @@ class PatientCreateSpec(PatientBaseSpec):
             raise ValueError("Either age or date of birth is required")
         if (
             self.date_of_birth
-            and self.death_datetime
-            and self.date_of_birth > self.death_datetime.date()
+            and self.deceased_datetime
+            and self.date_of_birth > self.deceased_datetime.date()
         ):
             raise ValueError("Date of birth cannot be after the date of death")
-        if self.age and self.death_datetime:
+        if self.age and self.deceased_datetime:
             curr_year = care_now().year
-            if curr_year - self.age > self.death_datetime.year:
+            if curr_year - self.age > self.deceased_datetime.year:
                 raise ValueError("Year of birth cannot be after the year of death")
         return self
 
