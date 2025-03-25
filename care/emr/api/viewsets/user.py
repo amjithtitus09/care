@@ -46,6 +46,9 @@ class UserViewSet(EMRModelViewSet):
     filter_backends = [filters.DjangoFilterBackend, drf_filters.SearchFilter]
     search_fields = ["first_name", "last_name", "username"]
 
+    def get_queryset(self):
+        return User.objects.filter(deleted=False)
+
     def perform_create(self, instance):
         with transaction.atomic():
             super().perform_create(instance)
