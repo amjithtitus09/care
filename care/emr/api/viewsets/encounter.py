@@ -40,6 +40,7 @@ from care.emr.resources.facility_organization.spec import FacilityOrganizationRe
 from care.emr.tasks.discharge_summary import generate_discharge_summary_task
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
+from care.users.models import User
 
 
 class LiveFilter(filters.CharFilter):
@@ -279,6 +280,58 @@ class EncounterViewSet(
             {"detail": "Discharge Summary will be generated shortly"},
             status=status.HTTP_202_ACCEPTED,
         )
+
+    class EncounterTreatingDoctorSpec(BaseModel):
+        treating_doctor_id: UUID4
+
+    @extend_schema(
+        request=EncounterTreatingDoctorSpec, responses={200: EncounterRetrieveSpec}
+    )
+    @action(detail=True, methods=["POST"])
+    def add_treating_doctor(self, request, *args, **kwargs):
+        request_data = self.EncounterTreatingDoctorSpec(**request.data)
+        encounter = self.get_object()
+        self.authorize_update({}, encounter)
+
+        doc = get_object_or_404(User, external_id=request_data.treating_doctor_id)
+
+        if doc.id in encounter.treating_doctors:
+            return Response(
+                {"detail": "Treating doctor is already added to this encounter."},
+                status=400,
+            )
+
+        if not AuthorizationController.call(
+            "can_view_encounter_obj", request.user, encounter
+        ):
+            raise PermissionDenied(
+                "Treating doctor does not have permission on encounter"
+            )
+
+        encounter.treating_doctors.append(doc.id)
+        encounter.save(update_fields=["treating_doctors"])
+        return Response(EncounterRetrieveSpec.serialize(encounter).to_json())
+
+    @extend_schema(
+        request=EncounterTreatingDoctorSpec, responses={200: EncounterRetrieveSpec}
+    )
+    @action(detail=True, methods=["POST"])
+    def remove_treating_doctor(self, request, *args, **kwargs):
+        request_data = self.EncounterTreatingDoctorSpec(**request.data)
+        encounter = self.get_object()
+        self.authorize_update({}, encounter)
+
+        doc = get_object_or_404(User, external_id=request_data.treating_doctor_id)
+
+        if doc.id not in encounter.treating_doctors:
+            return Response(
+                {"detail": "Treating doctor is not assigned to this encounter."},
+                status=400,
+            )
+
+        encounter.treating_doctors.remove(doc.id)
+        encounter.save(update_fields=["treating_doctors"])
+        return Response(EncounterRetrieveSpec.serialize(encounter).to_json())
 
 
 def dev_preview_discharge_summary(request, encounter_id):
