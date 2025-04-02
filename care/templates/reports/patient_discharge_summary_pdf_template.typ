@@ -190,9 +190,9 @@
 {% endif %}
 
 
-#align(right)[#text(12pt,fill: mygray)[*Treating Doctors* :] #text(10pt,weight: "bold")[{% if treating_doctors %}
-    {% for doctor in treating_doctors %}
-        {{ doctor.full_name }}
+#align(right)[#text(12pt,fill: mygray)[*Care Team* :] #text(10pt,weight: "bold")[{% if care_team %}
+    {% for member in care_team %}
+        {{ member.full_name }}
     {% endfor %}
 {% else %}
     -

@@ -51,7 +51,7 @@ class EncounterSpecBase(EMRResource):
         "facility",
         "appointment",
         "current_location",
-        "treating_doctors",
+        "care_team",
     ]
 
     id: UUID4 = None
@@ -106,7 +106,7 @@ class EncounterListSpec(EncounterSpecBase):
     encounter_class_history: dict
     created_date: datetime.datetime
     modified_date: datetime.datetime
-    treating_doctors: list[dict] = []
+    care_team: list[dict] = []
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -114,9 +114,9 @@ class EncounterListSpec(EncounterSpecBase):
         mapping["patient"] = PatientListSpec.serialize(obj.patient).to_json()
         mapping["facility"] = FacilityBareMinimumSpec.serialize(obj.facility).to_json()
 
-        mapping["treating_doctors"] = [
-            UserSpec.serialize(User.objects.get(id=treating_doctor)).to_json()
-            for treating_doctor in obj.treating_doctors
+        mapping["care_team"] = [
+            UserSpec.serialize(User.objects.get(id=care_team_member)).to_json()
+            for care_team_member in obj.care_team
         ]
 
 

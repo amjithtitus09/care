@@ -119,7 +119,7 @@ def get_discharge_summary_data(encounter: Encounter):
         else None
     )
 
-    treating_doctors = User.objects.filter(id__in=encounter.treating_doctors)
+    care_team = User.objects.filter(id__in=encounter.care_team)
 
     return {
         "encounter": encounter,
@@ -132,7 +132,7 @@ def get_discharge_summary_data(encounter: Encounter):
         "observations": observations,
         "medication_requests": medication_requests,
         "files": files,
-        "treating_doctors": treating_doctors,
+        "care_team": care_team,
     }
 
 

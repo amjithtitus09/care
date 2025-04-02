@@ -281,21 +281,21 @@ class EncounterViewSet(
             status=status.HTTP_202_ACCEPTED,
         )
 
-    class EncounterTreatingDoctorSpec(BaseModel):
-        treating_doctor_id: UUID4
+    class EncounterCareTeamMemberSpec(BaseModel):
+        care_team_member_id: UUID4
 
     @extend_schema(
-        request=EncounterTreatingDoctorSpec, responses={200: EncounterRetrieveSpec}
+        request=EncounterCareTeamMemberSpec, responses={200: EncounterRetrieveSpec}
     )
     @action(detail=True, methods=["POST"])
-    def add_treating_doctor(self, request, *args, **kwargs):
-        request_data = self.EncounterTreatingDoctorSpec(**request.data)
+    def add_care_team_member(self, request, *args, **kwargs):
+        request_data = self.EncounterCareTeamMemberSpec(**request.data)
         encounter = self.get_object()
         self.authorize_update({}, encounter)
 
-        doc = get_object_or_404(User, external_id=request_data.treating_doctor_id)
+        doc = get_object_or_404(User, external_id=request_data.care_team_member_id)
 
-        if doc.id in encounter.treating_doctors:
+        if doc.id in encounter.care_team:
             return Response(
                 {"detail": "Treating doctor is already added to this encounter."},
                 status=400,
@@ -308,29 +308,29 @@ class EncounterViewSet(
                 "Treating doctor does not have permission on encounter"
             )
 
-        encounter.treating_doctors.append(doc.id)
-        encounter.save(update_fields=["treating_doctors"])
+        encounter.care_team.append(doc.id)
+        encounter.save(update_fields=["care_team"])
         return Response(EncounterRetrieveSpec.serialize(encounter).to_json())
 
     @extend_schema(
-        request=EncounterTreatingDoctorSpec, responses={200: EncounterRetrieveSpec}
+        request=EncounterCareTeamMemberSpec, responses={200: EncounterRetrieveSpec}
     )
     @action(detail=True, methods=["POST"])
-    def remove_treating_doctor(self, request, *args, **kwargs):
-        request_data = self.EncounterTreatingDoctorSpec(**request.data)
+    def remove_care_team_member(self, request, *args, **kwargs):
+        request_data = self.EncounterCareTeamMemberSpec(**request.data)
         encounter = self.get_object()
         self.authorize_update({}, encounter)
 
-        doc = get_object_or_404(User, external_id=request_data.treating_doctor_id)
+        doc = get_object_or_404(User, external_id=request_data.care_team_member_id)
 
-        if doc.id not in encounter.treating_doctors:
+        if doc.id not in encounter.care_team:
             return Response(
                 {"detail": "Treating doctor is not assigned to this encounter."},
                 status=400,
             )
 
-        encounter.treating_doctors.remove(doc.id)
-        encounter.save(update_fields=["treating_doctors"])
+        encounter.care_team.remove(doc.id)
+        encounter.save(update_fields=["care_team"])
         return Response(EncounterRetrieveSpec.serialize(encounter).to_json())
 
 
