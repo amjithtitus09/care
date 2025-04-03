@@ -303,7 +303,10 @@ class EncounterViewSet(
                     "Treating doctor does not have permission on encounter"
                 )
             members.append(
-                {"user_id": user_obj.id, "role": member.role.model_dump(mode="json")}
+                {
+                    "user_id": user_obj.id,
+                    "role": member.role.model_dump(mode="json", exclude_defaults=True),
+                }
             )
 
         encounter.care_team = members
