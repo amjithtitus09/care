@@ -292,10 +292,12 @@ class EncounterViewSet(
         self.authorize_update({}, encounter)
 
         members = []
-
+        users = []
         for member in request_data.members:
             user_obj = get_object_or_404(User, external_id=member.user_id)
-
+            if user_obj.id in users:
+                raise ValidationError({"user" : "repeats are not allowed"})
+            users.append(user_obj.id)
             if not AuthorizationController.call(
                 "can_view_encounter_obj", request.user, encounter
             ):
