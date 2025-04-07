@@ -4,6 +4,9 @@ from care.security.permissions.facility_organization import (
     FacilityOrganizationPermissions,
 )
 from care.security.permissions.location import FacilityLocationPermissions
+from care.security.permissions.observation_definition import (
+    ObservationDefinitionPermissions,
+)
 from care.security.permissions.organization import OrganizationPermissions
 from care.security.permissions.patient import PatientPermissions
 from care.security.permissions.questionnaire import QuestionnairePermissions
@@ -34,6 +37,7 @@ class PermissionController:
         UserPermissions,
         UserSchedulePermissions,
         FacilityLocationPermissions,
+        ObservationDefinitionPermissions,
     ]
 
     cache = {}
