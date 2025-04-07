@@ -1,7 +1,6 @@
 import datetime
 import uuid
 from secrets import choice
-from unittest.mock import patch
 
 from django.forms import model_to_dict
 from django.urls import reverse
@@ -24,6 +23,7 @@ from care.utils.time_util import care_now
 class TestSymptomViewSet(CareAPITestBase):
     def setUp(self):
         super().setUp()
+        self.super_user = self.create_super_user()
         self.user = self.create_user()
         self.facility = self.create_facility(user=self.user)
         self.organization = self.create_facility_organization(facility=self.facility)
@@ -38,15 +38,6 @@ class TestSymptomViewSet(CareAPITestBase):
             "system": "http://test_system.care/test",
             "code": "123",
         }
-        # Mocking validate_valueset
-        self.patcher = patch(
-            "care.emr.resources.condition.spec.validate_valueset",
-            return_value=self.valid_code,
-        )
-        self.mock_validate_valueset = self.patcher.start()
-
-    def tearDown(self):
-        self.patcher.stop()
 
     def _get_symptom_url(self, symptom_id):
         """Helper to get the detail URL for a specific symptom."""
@@ -319,9 +310,7 @@ class TestSymptomViewSet(CareAPITestBase):
         )
         symptom_data_dict = self.generate_data_for_symptom(
             encounter,
-            onset={
-                "onset_datetime": care_now() + datetime.timedelta(seconds=20),
-            },
+            onset={"onset_datetime": care_now() + datetime.timedelta(days=1)},
         )
 
         response = self.client.post(self.base_url, symptom_data_dict, format="json")

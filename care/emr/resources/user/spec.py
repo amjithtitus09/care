@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 
 from django.contrib.auth.password_validation import validate_password
@@ -9,8 +10,19 @@ from rest_framework.generics import get_object_or_404
 from care.emr.models import Organization
 from care.emr.resources.base import EMRResource
 from care.emr.resources.patient.spec import GenderChoices
-from care.security.roles.role import DOCTOR_ROLE, NURSE_ROLE, STAFF_ROLE, VOLUNTEER_ROLE
+from care.security.roles.role import (
+    ADMINISTRATOR,
+    DOCTOR_ROLE,
+    NURSE_ROLE,
+    STAFF_ROLE,
+    VOLUNTEER_ROLE,
+)
 from care.users.models import User
+
+
+def is_valid_username(username):
+    pattern = r"^[a-zA-Z0-9_-]{3,}$"
+    return bool(re.fullmatch(pattern, username))
 
 
 class UserTypeOptions(str, Enum):
@@ -18,6 +30,7 @@ class UserTypeOptions(str, Enum):
     nurse = "nurse"
     staff = "staff"
     volunteer = "volunteer"
+    administrator = "administrator"
 
 
 class UserTypeRoleMapping(Enum):
@@ -25,6 +38,7 @@ class UserTypeRoleMapping(Enum):
     nurse = NURSE_ROLE
     staff = STAFF_ROLE
     volunteer = VOLUNTEER_ROLE
+    administrator = ADMINISTRATOR
 
 
 class UserBaseSpec(EMRResource):
@@ -35,28 +49,47 @@ class UserBaseSpec(EMRResource):
 
     first_name: str
     last_name: str
+    phone_number: str = Field(max_length=14)
+
     prefix: str | None = None
     suffix: str | None = None
-    phone_number: str = Field(max_length=14)
 
 
 class UserUpdateSpec(UserBaseSpec):
     user_type: UserTypeOptions
     gender: GenderChoices
+    phone_number: str = Field(max_length=14)
+    geo_organization: UUID4 | None = None
+
+    def perform_extra_deserialization(self, is_update, obj):
+        if self.geo_organization is not None:
+            obj.geo_organization = get_object_or_404(
+                Organization, external_id=self.geo_organization, org_type="govt"
+            )
 
 
 class UserCreateSpec(UserUpdateSpec):
-    geo_organization: UUID4
-    password: str
+    password: str | None = None
     username: str
     email: str
 
     @field_validator("username")
     @classmethod
     def validate_username(cls, username):
+        if not is_valid_username(username):
+            raise ValueError(
+                "Username can only contain alpha numeric values, dashes ( - ) and underscores ( _ )"
+            )
         if User.check_username_exists(username):
             raise ValueError("Username already exists")
         return username
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone_number(cls, phone_number):
+        if User.objects.filter(phone_number=phone_number).exists():
+            raise ValueError("Phone Number already exists")
+        return phone_number
 
     @field_validator("email")
     @classmethod
@@ -72,6 +105,8 @@ class UserCreateSpec(UserUpdateSpec):
     @field_validator("password")
     @classmethod
     def validate_password(cls, password):
+        if password is None:
+            return None
         try:
             validate_password(password)
         except Exception as e:
@@ -80,9 +115,6 @@ class UserCreateSpec(UserUpdateSpec):
 
     def perform_extra_deserialization(self, is_update, obj):
         obj.set_password(self.password)
-        obj.geo_organization = get_object_or_404(
-            Organization, external_id=self.geo_organization, org_type="govt"
-        )
 
 
 class UserSpec(UserBaseSpec):
@@ -92,6 +124,8 @@ class UserSpec(UserBaseSpec):
     gender: str
     username: str
     mfa_enabled: bool = False
+    phone_number: str = Field(max_length=14)
+    deleted: bool = False
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj: User):
@@ -118,3 +152,16 @@ class UserRetrieveSpec(UserSpec):
                 obj.geo_organization
             ).to_json()
         mapping["flags"] = obj.get_all_flags()
+
+
+class PublicUserReadSpec(UserBaseSpec):
+    last_login: str
+    profile_picture_url: str
+    user_type: str
+    gender: str
+    username: str
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj: User):
+        mapping["id"] = str(obj.external_id)
+        mapping["profile_picture_url"] = obj.read_profile_picture_url()

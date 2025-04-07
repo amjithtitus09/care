@@ -18,7 +18,7 @@ from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import Availability, SchedulableUserResource
 from care.emr.resources.scheduling.schedule.spec import SlotTypeOptions
 from care.emr.resources.scheduling.slot.spec import (
-    CANCELLED_STATUS_CHOICES,
+    COMPLETED_STATUS_CHOICES,
     TokenBookingReadSpec,
     TokenSlotBaseSpec,
 )
@@ -107,13 +107,13 @@ def convert_availability_and_exceptions_to_slots(availabilities, exceptions, day
 
 def lock_create_appointment(token_slot, patient, created_by, reason_for_visit):
     with Lock(f"booking:resource:{token_slot.resource.id}"), transaction.atomic():
-        if token_slot.start_datetime < timezone.now():
+        if token_slot.end_datetime < timezone.now():
             raise ValidationError("Slot is already past")
         if token_slot.allocated >= token_slot.availability.tokens_per_slot:
             raise ValidationError("Slot is already full")
         if (
             TokenBooking.objects.filter(token_slot=token_slot, patient=patient)
-            .exclude(status__in=CANCELLED_STATUS_CHOICES)
+            .exclude(status__in=COMPLETED_STATUS_CHOICES)
             .exists()
         ):
             raise ValidationError("Patient already has a booking for this slot")
@@ -193,14 +193,18 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         # Create everything else
         for _slot in slots:
             slot = slots[_slot]
+            end_datetime = datetime.datetime.combine(
+                request_data.day, slot["end_time"], tzinfo=None
+            )
+            # Skip creating slots in the past
+            if end_datetime < timezone.make_naive(timezone.now()):
+                continue
             TokenSlot.objects.create(
                 resource=schedulable_resource_obj,
                 start_datetime=datetime.datetime.combine(
                     request_data.day, slot["start_time"], tzinfo=None
                 ),
-                end_datetime=datetime.datetime.combine(
-                    request_data.day, slot["end_time"], tzinfo=None
-                ),
+                end_datetime=end_datetime,
                 availability_id=slot["availability_id"],
             )
         # Compare and figure out what needs to be created
@@ -230,7 +234,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
                 patient=patient,
                 token_slot__start_datetime__gte=care_now(),
             )
-            .exclude(status__in=CANCELLED_STATUS_CHOICES)
+            .exclude(status__in=COMPLETED_STATUS_CHOICES)
             .count()
             >= settings.MAX_APPOINTMENTS_PER_PATIENT
         ):

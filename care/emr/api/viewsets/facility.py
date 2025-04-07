@@ -19,7 +19,7 @@ from care.emr.resources.facility.spec import (
     FacilityReadSpec,
     FacilityRetrieveSpec,
 )
-from care.emr.resources.user.spec import UserSpec
+from care.emr.resources.user.spec import PublicUserReadSpec, UserSpec
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
 from care.users.models import User
@@ -134,7 +134,7 @@ class FacilityViewSet(EMRModelViewSet):
 
 class FacilitySchedulableUsersViewSet(EMRModelReadOnlyViewSet):
     database_model = User
-    pydantic_read_model = UserSpec
+    pydantic_read_model = PublicUserReadSpec
     authentication_classes = []
     permission_classes = []
 
@@ -154,7 +154,8 @@ class FacilityUsersViewSet(EMRModelReadOnlyViewSet):
     database_model = User
     pydantic_read_model = UserSpec
     filterset_class = FacilityUserFilter
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, drf_filters.SearchFilter]
+    search_fields = ["first_name", "last_name", "username"]
 
     def get_queryset(self):
         return User.objects.filter(

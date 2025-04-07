@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models import Q
 from django_filters import rest_framework as filters
 from rest_framework.decorators import action
@@ -77,6 +78,14 @@ class OrganizationViewSet(EMRModelViewSet):
             Organization.objects.all(), instance, model_obj
         ):
             raise ValidationError("Organization already exists with same name")
+
+        if instance.parent and model_obj is None:
+            parent = get_object_or_404(Organization, external_id=instance.parent)
+
+            # Validate Depth
+            if parent.level_cache >= settings.ORGANIZATION_MAX_DEPTH:
+                error = f"Max depth reached ({settings.ORGANIZATION_MAX_DEPTH})"
+                raise ValidationError(error)
 
     def authorize_destroy(self, instance):
         if Organization.objects.filter(parent=instance).exists():
@@ -226,16 +235,21 @@ class OrganizationUsersViewSet(EMRModelViewSet):
         if model_obj:
             return
         organization = self.get_organization_obj()
+        # TODO : Optimise by fetching user first, avoiding the extra join to org
         queryset = OrganizationUser.objects.filter(user__external_id=instance.user)
-        if organization.root_org is None:
-            queryset = queryset.filter(organization=organization)
-        else:
-            queryset = queryset.filter(
-                Q(organization=organization)
-                | Q(organization__root_org=organization.root_org)
-            )
-        if queryset.exists():
+        # Case 1 - Same organization
+        if queryset.filter(Q(organization=organization)).exists():
             raise ValidationError("User association already exists")
+        # Case 2 - Adding to a child organization ( parent already linked )
+        if organization.parent:
+            parent_orgs = organization.parent_cache
+            if queryset.filter(Q(organization__in=parent_orgs)).exists():
+                raise ValidationError("User is already linked to a parent organization")
+        # Case 3 - Adding to a parent organization ( child already linked )
+        if queryset.filter(
+            organization__parent_cache__overlap=[organization.id]
+        ).exists():
+            raise ValidationError("User has association to some child organization")
 
     def authorize_update(self, request_obj, model_instance):
         organization = self.get_organization_obj()

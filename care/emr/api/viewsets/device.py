@@ -48,6 +48,7 @@ from care.security.authorization import AuthorizationController
 class DeviceFilters(filters.FilterSet):
     current_encounter = filters.UUIDFilter(field_name="current_encounter__external_id")
     current_location = filters.UUIDFilter(field_name="current_location__external_id")
+    care_type = filters.CharFilter(field_name="care_type")
 
 
 class DeviceViewSet(EMRModelViewSet):
@@ -106,7 +107,7 @@ class DeviceViewSet(EMRModelViewSet):
                 care_device_class = DeviceTypeRegistry.get_care_device_class(
                     instance.care_type
                 )
-                care_device_class().handle_update(self.request.data, instance)
+                care_device_class().handle_delete(instance)
             super().perform_destroy(instance)
 
     def get_queryset(self):
@@ -264,7 +265,9 @@ class DeviceViewSet(EMRModelViewSet):
         ).exists():
             raise ValidationError("Organization is already associated with this device")
         device.managing_organization = organization
-        device.save(update_fields=["managing_organization"])
+        device.save(
+            update_fields=["managing_organization", "facility_organization_cache"]
+        )
         return Response({})
 
     @action(detail=True, methods=["POST"])
@@ -286,7 +289,9 @@ class DeviceViewSet(EMRModelViewSet):
             )
 
         device.managing_organization = None
-        device.save(update_fields=["managing_organization"])
+        device.save(
+            update_fields=["managing_organization", "facility_organization_cache"]
+        )
         return Response({})
 
 

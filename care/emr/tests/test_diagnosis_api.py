@@ -1,7 +1,6 @@
 import datetime
 import uuid
 from secrets import choice
-from unittest.mock import patch
 
 from django.forms import model_to_dict
 from django.urls import reverse
@@ -38,15 +37,6 @@ class TestDiagnosisViewSet(CareAPITestBase):
             "system": "http://test_system.care/test",
             "code": "123",
         }
-        # Mocking validate_valueset
-        self.patcher = patch(
-            "care.emr.resources.condition.spec.validate_valueset",
-            return_value=self.valid_code,
-        )
-        self.mock_validate_valueset = self.patcher.start()
-
-    def tearDown(self):
-        self.patcher.stop()
 
     def _get_diagnosis_url(self, diagnosis_id):
         """Helper to get the detail URL for a specific diagnosis."""
@@ -319,9 +309,7 @@ class TestDiagnosisViewSet(CareAPITestBase):
         )
         diagnosis_data_dict = self.generate_data_for_diagnosis(
             encounter,
-            onset={
-                "onset_datetime": care_now() + datetime.timedelta(seconds=20),
-            },
+            onset={"onset_datetime": care_now() + datetime.timedelta(days=1)},
         )
         response = self.client.post(self.base_url, diagnosis_data_dict, format="json")
         self.assertEqual(response.status_code, 400)
