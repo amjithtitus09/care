@@ -103,7 +103,9 @@ router.register(
 )
 
 router.register(
-    "observation_definition", ObservationDefinitionViewSet, basename="observation_definition"
+    "observation_definition",
+    ObservationDefinitionViewSet,
+    basename="observation_definition",
 )
 
 

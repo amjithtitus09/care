@@ -11,5 +11,5 @@ from .location import *  # noqa F403
 from .device import *  # noqa F403
 from .meta_artifact import *  # noqa F403
 from .observation_definition import *  # noqa F403
-from .specimen_definition import * # noqa F403
+from .specimen_definition import *  # noqa F403
 from .specimen import *  # noqa F403
