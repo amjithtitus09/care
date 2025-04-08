@@ -12,15 +12,15 @@ from care.security.roles.role import (
 )
 
 
-class ObservationDefinitionPermissions(enum.Enum):
-    can_write_observation_definition = Permission(
-        "Can Create Observation Definition on Facility",
+class SpecimenDefinitionPermissions(enum.Enum):
+    can_write_specimen_definition = Permission(
+        "Can Create Specimen Definition on Facility",
         "",
         PermissionContext.FACILITY,
         [FACILITY_ADMIN_ROLE, ADMIN_ROLE],
     )
-    can_read_observation_definition = Permission(
-        "Can Read Observation Definition",
+    can_read_specimen_definition = Permission(
+        "Can Read Specimen Definition",
         "",
         PermissionContext.FACILITY,
         [

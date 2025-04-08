@@ -23,7 +23,7 @@ class ObservationDefinitionFilters(filters.FilterSet):
     facility = filters.UUIDFilter(field_name="facility__external_id")
 
 
-class ObservationViewSet(
+class ObservationDefinitionViewSet(
     EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
 ):
     database_model = ObservationDefinition

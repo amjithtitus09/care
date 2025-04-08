@@ -31,7 +31,7 @@ class BaseObservationDefinitionSpec(EMRResource):
 
     id: str
     slug: str
-    name: str
+    title: str
     status: str
     description: str
     category: Coding | None = None

@@ -44,6 +44,7 @@ from care.emr.api.viewsets.meta_artifact import MetaArtifactViewSet
 from care.emr.api.viewsets.mfa_login import MFALoginViewSet
 from care.emr.api.viewsets.notes import NoteMessageViewSet, NoteThreadViewSet
 from care.emr.api.viewsets.observation import ObservationViewSet
+from care.emr.api.viewsets.observation_definition import ObservationDefinitionViewSet
 from care.emr.api.viewsets.organization import (
     OrganizationPublicViewSet,
     OrganizationUsersViewSet,
@@ -69,6 +70,7 @@ from care.emr.api.viewsets.scheduling.availability_exceptions import (
     AvailabilityExceptionsViewSet,
 )
 from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
+from care.emr.api.viewsets.specimen_definition import SpecimenDefinitionViewSet
 from care.emr.api.viewsets.totp import TOTPViewSet
 from care.emr.api.viewsets.user import UserViewSet
 from care.emr.api.viewsets.valueset import ValueSetViewSet
@@ -99,6 +101,11 @@ router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
 router.register(
     "questionnaire_tag", QuestionnaireTagsViewSet, basename="questionnaire_tags"
 )
+
+router.register(
+    "observation_definition", ObservationDefinitionViewSet, basename="observation_definition"
+)
+
 
 router.register("organization", OrganizationViewSet, basename="organization")
 
@@ -186,6 +193,11 @@ facility_nested_router.register(
     basename="device",
 )
 
+facility_nested_router.register(
+    r"specimen_definition",
+    SpecimenDefinitionViewSet,
+    basename="specimen_definition",
+)
 device_nested_router = NestedSimpleRouter(
     facility_nested_router, r"device", lookup="device"
 )
