@@ -4,7 +4,6 @@ from pydantic import UUID4, BaseModel, field_validator, model_validator
 
 from care.emr.models.observation_definition import ObservationDefinition
 from care.emr.resources.base import EMRResource
-from care.emr.resources.common import Coding
 from care.emr.resources.facility.spec import FacilityBareMinimumSpec
 from care.emr.resources.observation.valueset import (
     CARE_BODY_SITE_VALUESET,
@@ -47,9 +46,9 @@ def validate_question_type(question_type):
 
 
 class ObservationDefinitionComponentSpec(BaseModel):
-    code: Coding
+    code: ValueSetBoundCoding[CARE_OBSERVATION_VALUSET.slug]
     permitted_data_type: QuestionType
-    permitted_unit: Coding
+    permitted_unit: ValueSetBoundCoding[CARE_UCUM_UNITS.slug] | None = None
 
     @field_validator("permitted_data_type")
     @classmethod
