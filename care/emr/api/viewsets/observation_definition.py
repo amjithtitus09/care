@@ -21,6 +21,7 @@ from care.security.authorization import AuthorizationController
 
 class ObservationDefinitionFilters(filters.FilterSet):
     facility = filters.UUIDFilter(field_name="facility__external_id")
+    category = filters.CharFilter(lookup_expr="iexact")
 
 
 class ObservationDefinitionViewSet(
@@ -78,4 +79,4 @@ class ObservationDefinitionViewSet(
             ):
                 raise PermissionDenied("Access Denied to Observation Definition")
             return base_queryset.filter(facility=facility_obj)
-        return base_queryset.filter(facility__is_null=True)
+        return base_queryset.filter(facility__isnull=True)
