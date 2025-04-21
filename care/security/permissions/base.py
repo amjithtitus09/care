@@ -1,3 +1,4 @@
+from care.security.permissions.activity_definition import ActivityDefinitionPermissions
 from care.security.permissions.device import DevicePermissions
 from care.security.permissions.encounter import EncounterPermissions
 from care.security.permissions.facility import FacilityPermissions
@@ -42,6 +43,7 @@ class PermissionController:
         ObservationDefinitionPermissions,
         DevicePermissions,
         SpecimenDefinitionPermissions,
+        ActivityDefinitionPermissions,
     ]
 
     cache = {}

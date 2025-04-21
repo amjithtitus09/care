@@ -3,8 +3,8 @@ from care.emr.resources.common.valueset import ValueSetCompose, ValueSetInclude
 from care.emr.resources.valueset.spec import ValueSetStatusOptions
 
 ACTIVITY_DEFINITION_CATEGORY_CODE_VALUESET = CareValueset(
-    "Service Request Category Code",
-    "service-request-category-code",
+    "Activity Definition Category Code",
+    "activity-definition-category-code",
     ValueSetStatusOptions.active.value,
 )
 

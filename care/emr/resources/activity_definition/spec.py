@@ -1,6 +1,6 @@
 from enum import Enum
 
-from care.emr.models.specimen_definition import SpecimenDefinition
+from care.emr.models import ActivityDefinition
 from care.emr.resources.activity_definition.valueset import (
     ACTIVITY_DEFINITION_CATEGORY_CODE_VALUESET,
     ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET,
@@ -26,7 +26,7 @@ class ActivityDefinitionKindOptions(str, Enum):
 class BaseActivityDefinitionSpec(EMRResource):
     """Base model for activity definition"""
 
-    __model__ = SpecimenDefinition
+    __model__ = ActivityDefinition
     __exclude__ = ["facility"]
 
     id: str | None = None
@@ -35,9 +35,9 @@ class BaseActivityDefinitionSpec(EMRResource):
     subtitle: str = ""
     derived_from_uri: str | None = None
     status: ActivityDefinitionStatusOptions
-    description: str
-    purpose: str
-    usage: str
+    description: str = ""
+    purpose: str = ""
+    usage: str = ""
     category: ValueSetBoundCoding[ACTIVITY_DEFINITION_CATEGORY_CODE_VALUESET.slug]
     kind: ActivityDefinitionKindOptions
     code: (

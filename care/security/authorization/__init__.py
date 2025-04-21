@@ -11,3 +11,4 @@ from .facility_location import *  # noqa
 from .device import *  # noqa
 from .specimen_definition import *  # noqa
 from .observation_definition import *  # noqa
+from .activity_definition import *  # noqa
