@@ -13,4 +13,4 @@ from .meta_artifact import *  # noqa F403
 from .observation_definition import *  # noqa F403
 from .specimen_definition import *  # noqa F403
 from .specimen import *  # noqa F403
-from .activity_definition import * # noqa F403
+from .activity_definition import *  # noqa F403

@@ -1,7 +1,5 @@
 from enum import Enum
 
-from pydantic import UUID4
-
 from care.emr.models.specimen_definition import SpecimenDefinition
 from care.emr.resources.activity_definition.valueset import (
     ACTIVITY_DEFINITION_CATEGORY_CODE_VALUESET,
@@ -48,7 +46,6 @@ class BaseActivityDefinitionSpec(EMRResource):
     body_site: ValueSetBoundCoding[CARE_BODY_SITE_VALUESET.slug] | None = None
     # specimen_requirement : list[UUID4]
     # observation_result_requirement : list[UUID4]
-
 
 
 class ActivityDefinitionReadSpec(BaseActivityDefinitionSpec):
