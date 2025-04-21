@@ -29,6 +29,13 @@ class ObservationCategoryChoices(str, enum.Enum):
     activity = "activity"
 
 
+class ObservationStatusChoices(str, enum.Enum):
+    draft = "draft"
+    active = "active"
+    retired = "retired"
+    unknown = "unknown"
+
+
 def validate_question_type(question_type):
     if question_type in (
         QuestionType.group.value,
@@ -57,7 +64,7 @@ class BaseObservationDefinitionSpec(EMRResource):
     id: UUID4 | None = None
     slug: str
     title: str
-    status: str
+    status: ObservationStatusChoices
     description: str
     category: ObservationCategoryChoices
     code: ValueSetBoundCoding[CARE_OBSERVATION_VALUSET.slug]

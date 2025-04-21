@@ -1,5 +1,5 @@
 from django_filters import rest_framework as filters
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 
 from care.emr.api.viewsets.base import (
@@ -38,6 +38,10 @@ class SpecimenDefinitionViewSet(
 
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
+        if SpecimenDefinition.objects.filter(
+            slug__exact=instance.slug, facility=instance.facility
+        ).exists():
+            raise ValidationError("Specimen Definition with this slug already exists.")
         super().perform_create(instance)
 
     def authorize_create(self, instance):

@@ -1,3 +1,4 @@
+from care.security.authorization import AuthorizationController
 from care.security.authorization.base import (
     AuthorizationHandler,
 )
@@ -24,3 +25,6 @@ class SpecimenDefinitionAccess(AuthorizationHandler):
             user,
             facility=facility,
         )
+
+
+AuthorizationController.register_internal_controller(SpecimenDefinitionAccess)

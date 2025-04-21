@@ -1,3 +1,4 @@
+from care.security.authorization import AuthorizationController
 from care.security.authorization.base import (
     AuthorizationHandler,
 )
@@ -26,3 +27,6 @@ class ObservationDefinitionAccess(AuthorizationHandler):
             user,
             facility=facility,
         )
+
+
+AuthorizationController.register_internal_controller(ObservationDefinitionAccess)

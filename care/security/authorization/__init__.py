@@ -9,3 +9,5 @@ from .user import *  # noqa
 from .user_schedule import *  # noqa
 from .facility_location import *  # noqa
 from .device import *  # noqa
+from .specimen_definition import *  # noqa
+from .observation_definition import *  # noqa
