@@ -114,5 +114,5 @@ class ObservationDefinitionReadSpec(BaseObservationDefinitionSpec):
         mapping["id"] = obj.external_id
         if obj.facility:
             mapping["facility"] = FacilityBareMinimumSpec.serialize(
-                obj.faciltiy
+                obj.facility
             ).to_json()
