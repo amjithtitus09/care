@@ -1,7 +1,9 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from care.emr.models import EMRBaseModel, FacilityOrganization, TokenBooking
+from care.emr.models.base import EMRBaseModel
+from care.emr.models.organization import FacilityOrganization
+from care.emr.models.scheduling.booking import TokenBooking
 
 
 class Encounter(EMRBaseModel):

@@ -1,8 +1,9 @@
 from enum import Enum
 
+from pydantic import UUID4
+
 from care.emr.models import ActivityDefinition
 from care.emr.resources.activity_definition.valueset import (
-    ACTIVITY_DEFINITION_CATEGORY_CODE_VALUESET,
     ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET,
 )
 from care.emr.resources.base import EMRResource
@@ -23,6 +24,13 @@ class ActivityDefinitionKindOptions(str, Enum):
     service_request = "service_request"
 
 
+class ActivityDefinitionCategoryOptions(str, Enum):
+    laboratory = "laboratory"
+    imaging = "imaging"
+    counselling = "counselling"
+    surgical_procedure = "surgical_procedure"
+
+
 class BaseActivityDefinitionSpec(EMRResource):
     """Base model for activity definition"""
 
@@ -32,20 +40,17 @@ class BaseActivityDefinitionSpec(EMRResource):
     id: str | None = None
     slug: str
     title: str
-    subtitle: str = ""
     derived_from_uri: str | None = None
     status: ActivityDefinitionStatusOptions
     description: str = ""
-    purpose: str = ""
     usage: str = ""
-    category: ValueSetBoundCoding[ACTIVITY_DEFINITION_CATEGORY_CODE_VALUESET.slug]
+    category: ActivityDefinitionCategoryOptions
     kind: ActivityDefinitionKindOptions
-    code: (
-        ValueSetBoundCoding[ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET.slug] | None
-    ) = None
+    code: ValueSetBoundCoding[ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET.slug]
     body_site: ValueSetBoundCoding[CARE_BODY_SITE_VALUESET.slug] | None = None
-    # specimen_requirement : list[UUID4]
-    # observation_result_requirement : list[UUID4]
+    specimen_requirement: list[UUID4]
+    observation_result_requirement: list[UUID4]
+    locations: list[UUID4] = []
 
 
 class ActivityDefinitionReadSpec(BaseActivityDefinitionSpec):
@@ -56,3 +61,9 @@ class ActivityDefinitionReadSpec(BaseActivityDefinitionSpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+
+
+class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        super().perform_extra_serialization(mapping, obj)

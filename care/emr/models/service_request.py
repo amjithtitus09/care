@@ -1,0 +1,30 @@
+from django.contrib.postgres.fields import ArrayField
+from django.db import models
+
+from care.emr.models.base import EMRBaseModel
+
+
+class ServiceRequest(EMRBaseModel):
+    facility = models.ForeignKey(
+        "facility.Facility",
+        on_delete=models.PROTECT,
+        default=None,
+        null=True,
+        blank=True,
+    )
+    title = models.CharField(max_length=1024)
+    category = models.JSONField(null=True, blank=True)
+    status = models.CharField(max_length=255)
+    intent = models.CharField(max_length=255)
+    priority = models.CharField(max_length=255)
+    do_not_perform = models.BooleanField(default=False)
+    note = models.TextField(null=True, blank=True)
+    occurance = models.DateTimeField(null=True, blank=True)
+    patient_instruction = models.TextField(null=True, blank=True)
+    code = models.JSONField(null=True, blank=True)
+    body_site = models.JSONField(null=True, blank=True)
+    locations = ArrayField(models.IntegerField(), default=list)
+    patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)
+    encounter = models.ForeignKey(
+        "emr.Encounter", on_delete=models.CASCADE, null=True, blank=True
+    )

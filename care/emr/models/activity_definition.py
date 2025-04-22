@@ -1,7 +1,7 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from care.emr.models import EMRBaseModel
+from care.emr.models.base import EMRBaseModel
 
 
 class ActivityDefinition(EMRBaseModel):
@@ -15,15 +15,15 @@ class ActivityDefinition(EMRBaseModel):
     version = models.IntegerField(default=1)
     slug = models.CharField(max_length=255)
     title = models.CharField(max_length=1024)
-    subtitle = models.CharField(max_length=1024)
-    category = models.JSONField(null=True, blank=True)
+    category = models.CharField(max_length=100)
     derived_from_uri = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=255)
     description = models.TextField()
-    purpose = models.TextField()
     usage = models.TextField()
     kind = models.CharField(max_length=100)
     code = models.JSONField(null=True, blank=True)
     body_site = models.JSONField(null=True, blank=True)
     specimen_requirement = ArrayField(models.IntegerField(), default=list)
     observation_result_requirement = ArrayField(models.IntegerField(), default=list)
+    locations = ArrayField(models.IntegerField(), default=list)
+    latest = models.BooleanField(default=True)  # True when its the latest version
