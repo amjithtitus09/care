@@ -61,8 +61,12 @@ def emr_exception_handler(exc, context):
 
 
 class EMRRetrieveMixin:
+    def authorize_retrieve(self, model_instance):
+        pass
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
+        self.authorize_retrieve(instance)
         data = self.get_retrieve_pydantic_model().serialize(instance, request.user)
         return Response(data.to_json())
 

@@ -63,20 +63,33 @@ class ObservationDefinitionViewSet(
         ):
             raise PermissionDenied("Access Denied to Observation Definition")
 
+    def authorize_retrieve(self, model_instance):
+        if not model_instance.facility:
+            # All users can view non-facility specific observation definitions
+            return
+        if not AuthorizationController.call(
+            "can_list_facility_observation_definition",
+            self.request.user,
+            model_instance.facility,
+        ):
+            raise PermissionDenied("Access Denied to Observation Definition")
+
     def get_queryset(self):
         """
         If no facility filters are applied, all objects must be returned without a facility filter.
         If facility filter is applied, check for read permission and return all inside facility.
         """
         base_queryset = self.database_model.objects.all()
-        if "facility" in self.request.GET:
-            facility_id = self.request.GET["facility"]
-            facility_obj = get_object_or_404(Facility, external_id=facility_id)
-            if not AuthorizationController.call(
-                "can_list_facility_observation_definition",
-                self.request.user,
-                facility_obj,
-            ):
-                raise PermissionDenied("Access Denied to Observation Definition")
-            return base_queryset.filter(facility=facility_obj)
-        return base_queryset.filter(facility__isnull=True)
+        if self.action in ["list"]:
+            if "facility" in self.request.GET:
+                facility_id = self.request.GET["facility"]
+                facility_obj = get_object_or_404(Facility, external_id=facility_id)
+                if not AuthorizationController.call(
+                    "can_list_facility_observation_definition",
+                    self.request.user,
+                    facility_obj,
+                ):
+                    raise PermissionDenied("Access Denied to Observation Definition")
+                return base_queryset.filter(facility=facility_obj)
+            base_queryset = base_queryset.filter(facility__isnull=True)
+        return base_queryset
