@@ -3,11 +3,17 @@ from enum import Enum
 from pydantic import UUID4
 
 from care.emr.models import ActivityDefinition
+from care.emr.models.location import FacilityLocation
+from care.emr.models.observation_definition import ObservationDefinition
+from care.emr.models.specimen_definition import SpecimenDefinition
 from care.emr.resources.activity_definition.valueset import (
     ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET,
 )
 from care.emr.resources.base import EMRResource
+from care.emr.resources.location.spec import FacilityLocationListSpec
 from care.emr.resources.observation.valueset import CARE_BODY_SITE_VALUESET
+from care.emr.resources.observation_definition.spec import ObservationDefinitionReadSpec
+from care.emr.resources.specimen_definition.spec import SpecimenDefinitionReadSpec
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
 
 
@@ -48,8 +54,8 @@ class BaseActivityDefinitionSpec(EMRResource):
     kind: ActivityDefinitionKindOptions
     code: ValueSetBoundCoding[ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET.slug]
     body_site: ValueSetBoundCoding[CARE_BODY_SITE_VALUESET.slug] | None = None
-    specimen_requirement: list[UUID4]
-    observation_result_requirement: list[UUID4]
+    specimen_requirements: list[UUID4]
+    observation_result_requirements: list[UUID4]
     locations: list[UUID4] = []
 
 
@@ -64,6 +70,36 @@ class ActivityDefinitionReadSpec(BaseActivityDefinitionSpec):
 
 
 class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):
+    """Activity definition retrieve specification"""
+
+    specimen_requirement: list[dict]
+    observation_result_requirements: list[dict]
+    locations: list[dict]
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         super().perform_extra_serialization(mapping, obj)
+        specimen_requirements = []
+        for specimen_requirement in obj.specimen_requirements:
+            specimen_requirements.append(
+                SpecimenDefinitionReadSpec.serialize(
+                    SpecimenDefinition.objects.get(id=specimen_requirement)
+                ).to_json()
+            )
+        mapping["specimen_requirements"] = specimen_requirements
+        observation_result_requirements = []
+        for observation_result_requirement in obj.observation_result_requirements:
+            observation_result_requirements.append(
+                ObservationDefinitionReadSpec.serialize(
+                    ObservationDefinition.objects.get(id=observation_result_requirement)
+                ).to_json()
+            )
+        mapping["observation_result_requirements"] = observation_result_requirements
+        locations = []
+        for location in obj.locations:
+            locations.append(
+                FacilityLocationListSpec.serialize(
+                    FacilityLocation.objects.get(id=location)
+                ).to_json()
+            )
+        mapping["locations"] = locations

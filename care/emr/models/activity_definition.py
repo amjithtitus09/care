@@ -23,7 +23,7 @@ class ActivityDefinition(EMRBaseModel):
     kind = models.CharField(max_length=100)
     code = models.JSONField(null=True, blank=True)
     body_site = models.JSONField(null=True, blank=True)
-    specimen_requirement = ArrayField(models.IntegerField(), default=list)
-    observation_result_requirement = ArrayField(models.IntegerField(), default=list)
+    specimen_requirements = ArrayField(models.IntegerField(), default=list)
+    observation_result_requirements = ArrayField(models.IntegerField(), default=list)
     locations = ArrayField(models.IntegerField(), default=list)
     latest = models.BooleanField(default=True)  # True when its the latest version

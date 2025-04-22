@@ -10,8 +10,12 @@ from care.emr.api.viewsets.base import (
     EMRUpdateMixin,
 )
 from care.emr.models import ActivityDefinition
+from care.emr.models.location import FacilityLocation
+from care.emr.models.observation_definition import ObservationDefinition
+from care.emr.models.specimen_definition import SpecimenDefinition
 from care.emr.resources.activity_definition.spec import (
     ActivityDefinitionReadSpec,
+    ActivityDefinitionRetrieveSpec,
     BaseActivityDefinitionSpec,
 )
 from care.facility.models import Facility
@@ -28,6 +32,7 @@ class ActivityDefinitionViewSet(
     database_model = ActivityDefinition
     pydantic_model = BaseActivityDefinitionSpec
     pydantic_read_model = ActivityDefinitionReadSpec
+    pydantic_retrieve_model = ActivityDefinitionRetrieveSpec
     filterset_class = ActivityDefinitionFilters
     filter_backends = [filters.DjangoFilterBackend]
 
@@ -36,13 +41,63 @@ class ActivityDefinitionViewSet(
             Facility, external_id=self.kwargs["facility_external_id"]
         )
 
+    def convert_external_id_to_internal_id(self, instance):
+        # Convert speciment requirements to list of ids
+        ids = []
+        for specimen_requirement in instance.specimen_requirements:
+            obj = (
+                SpecimenDefinition.objects.only("id")
+                .filter(external_id=specimen_requirement, facility=instance.facility)
+                .first()
+            )
+            if not obj:
+                error_msg = (
+                    f"Specimen Definition with id {specimen_requirement} not found"
+                )
+                raise ValidationError(error_msg)
+            ids.append(obj.id)
+        instance.specimen_requirements = ids
+        # Convert observation results into list of ids
+        ids = []
+        for observation_result in instance.observation_result_requirements:
+            obj = (
+                ObservationDefinition.objects.only("id")
+                .filter(external_id=observation_result, facility=instance.facility)
+                .first()
+            )
+            if not obj:
+                error_msg = (
+                    f"Observation Definition with id {observation_result} not found"
+                )
+                raise ValidationError(error_msg)
+            ids.append(obj.id)
+        instance.observation_result_requirements = ids
+        # Convert locations into list of ids
+        ids = []
+        for location in instance.locations:
+            obj = (
+                FacilityLocation.objects.only("id")
+                .filter(external_id=location, facility=instance.facility)
+                .first()
+            )
+            if not obj:
+                error_msg = f"Location with id {location} not found"
+                raise ValidationError(error_msg)
+            ids.append(obj.id)
+        instance.location = ids
+
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
         if ActivityDefinition.objects.filter(
             slug__exact=instance.slug, facility=instance.facility
         ).exists():
             raise ValidationError("Activity Definition with this slug already exists.")
+        self.convert_external_id_to_internal_id(instance)
         super().perform_create(instance)
+
+    def perform_update(self, instance):
+        self.convert_external_id_to_internal_id(instance)
+        super().perform_update(instance)
 
     def authorize_create(self, instance):
         """
