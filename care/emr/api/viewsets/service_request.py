@@ -22,7 +22,12 @@ from care.security.authorization.base import AuthorizationController
 
 
 class ServiceRequestFilters(filters.FilterSet):
-    status = filters.CharFilter(field_name="status", lookup_expr="iexact")
+    status = filters.CharFilter(lookup_expr="iexact")
+    category = filters.CharFilter(lookup_expr="iexact")
+    title = filters.CharFilter(lookup_expr="icontains")
+    priority = filters.CharFilter(lookup_expr="iexact")
+    intent = filters.CharFilter(lookup_expr="iexact")
+    do_not_perform = filters.BooleanFilter()
 
 
 class ServiceRequestViewSet(

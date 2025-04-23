@@ -22,6 +22,8 @@ from care.security.authorization import AuthorizationController
 class ObservationDefinitionFilters(filters.FilterSet):
     facility = filters.UUIDFilter(field_name="facility__external_id")
     category = filters.CharFilter(lookup_expr="iexact")
+    status = filters.CharFilter(lookup_expr="iexact")
+    title = filters.CharFilter(lookup_expr="icontains")
 
 
 class ObservationDefinitionViewSet(

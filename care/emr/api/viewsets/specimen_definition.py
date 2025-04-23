@@ -19,7 +19,8 @@ from care.security.authorization import AuthorizationController
 
 
 class SpecimenDefinitionFilters(filters.FilterSet):
-    status = filters.CharFilter(field_name="status", lookup_expr="iexact")
+    status = filters.CharFilter(lookup_expr="iexact")
+    title = filters.CharFilter(lookup_expr="icontains")
 
 
 class SpecimenDefinitionViewSet(

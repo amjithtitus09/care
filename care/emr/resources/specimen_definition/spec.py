@@ -72,7 +72,6 @@ class TypeTestedSpec(BaseModel):
     """Specification for tested specimen types"""
 
     is_derived: bool
-    specimen_type: ValueSetBoundCoding[SPECIMEN_TYPE_CODE_VALUESET.slug]
     preference: PreferenceOptions
     container: ContainerSpec | None = None
     requirement: str | None = None
