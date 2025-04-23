@@ -3,6 +3,7 @@ from enum import Enum
 from pydantic import UUID4
 
 from care.emr.models import ActivityDefinition
+from care.emr.models.healthcare_service import HealthcareService
 from care.emr.models.location import FacilityLocation
 from care.emr.models.observation_definition import ObservationDefinition
 from care.emr.models.specimen_definition import SpecimenDefinition
@@ -10,6 +11,7 @@ from care.emr.resources.activity_definition.valueset import (
     ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET,
 )
 from care.emr.resources.base import EMRResource
+from care.emr.resources.healthcare_service.spec import HealthcareServiceReadSpec
 from care.emr.resources.location.spec import FacilityLocationListSpec
 from care.emr.resources.observation.valueset import CARE_BODY_SITE_VALUESET
 from care.emr.resources.observation_definition.spec import ObservationDefinitionReadSpec
@@ -57,6 +59,13 @@ class BaseActivityDefinitionSpec(EMRResource):
     specimen_requirements: list[UUID4]
     observation_result_requirements: list[UUID4]
     locations: list[UUID4] = []
+    healthcare_service: UUID4 | None = None
+
+    def perform_extra_deserialization(self, is_update, obj):
+        if self.healthcare_service:
+            obj.healthcare_service = HealthcareService.objects.get(
+                external_id=self.healthcare_service
+            )
 
 
 class ActivityDefinitionReadSpec(BaseActivityDefinitionSpec):
@@ -75,6 +84,7 @@ class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):
     specimen_requirement: list[dict]
     observation_result_requirements: list[dict]
     locations: list[dict]
+    healthcare_service: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -103,3 +113,7 @@ class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):
                 ).to_json()
             )
         mapping["locations"] = locations
+        if obj.healthcare_service:
+            mapping["healthcare_service"] = HealthcareServiceReadSpec.serialize(
+                obj.healthcare_service
+            ).to_json()

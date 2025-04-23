@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from pydantic import UUID4
 
 from care.emr.models.encounter import Encounter
+from care.emr.models.healthcare_service import HealthcareService
 from care.emr.models.location import FacilityLocation
 from care.emr.models.service_request import ServiceRequest
 from care.emr.resources.activity_definition.spec import (
@@ -14,6 +15,7 @@ from care.emr.resources.activity_definition.valueset import (
     ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET,
 )
 from care.emr.resources.base import EMRResource
+from care.emr.resources.healthcare_service.spec import HealthcareServiceReadSpec
 from care.emr.resources.location.spec import FacilityLocationListSpec
 from care.emr.resources.observation.valueset import CARE_BODY_SITE_VALUESET
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
@@ -69,6 +71,13 @@ class BaseServiceRequestSpec(EMRResource):
     code: ValueSetBoundCoding[ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET.slug]
     occurance: datetime.datetime | None = None
     patient_instruction: str | None = None
+    healthcare_service: UUID4 | None = None
+
+    def perform_extra_deserialization(self, is_update, obj):
+        if self.healthcare_service:
+            obj.healthcare_service = HealthcareService.objects.get(
+                external_id=self.healthcare_service
+            )
 
 
 class ServiceRequestCreateSpec(BaseServiceRequestSpec):
@@ -93,6 +102,7 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
     """Read specification for service requests"""
 
     locations: list[dict]
+    healthcare_service: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -105,3 +115,7 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
                 ).to_json()
             )
         mapping["locations"] = locations
+        if obj.healthcare_service:
+            mapping["healthcare_service"] = HealthcareServiceReadSpec.serialize(
+                obj.healthcare_service
+            ).to_json()

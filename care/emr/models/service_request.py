@@ -28,3 +28,10 @@ class ServiceRequest(EMRBaseModel):
     encounter = models.ForeignKey(
         "emr.Encounter", on_delete=models.CASCADE, null=True, blank=True
     )
+    healthcare_service = models.ForeignKey(
+        "emr.HealthcareService",
+        on_delete=models.PROTECT,
+        default=None,
+        null=True,
+        blank=True,
+    )

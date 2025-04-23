@@ -60,13 +60,22 @@ class ServiceRequestViewSet(
             ids.append(obj.id)
         instance.locations = ids
 
+    def validate_health_care_service(self, instance):
+        if (
+            instance.healthcare_service
+            and instance.healthcare_service.facility != instance.facility
+        ):
+            raise ValidationError("Healthcare Service must be from the same facility")
+
     def perform_create(self, instance):
         self.convert_external_id_to_internal_id(instance)
         instance.facility = self.get_facility_obj()
+        self.validate_health_care_service(instance)
         return super().perform_create(instance)
 
     def perform_update(self, instance):
         self.convert_external_id_to_internal_id(instance)
+        self.validate_health_care_service(instance)
         return super().perform_update(instance)
 
     def authorize_create(self, instance):
