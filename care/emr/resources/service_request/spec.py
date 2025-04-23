@@ -66,12 +66,15 @@ class BaseServiceRequestSpec(EMRResource):
     category: ActivityDefinitionCategoryOptions
     do_not_perform: bool | None = None
     note: str | None = None
-    locations: list[UUID4] = []
     body_site: ValueSetBoundCoding[CARE_BODY_SITE_VALUESET.slug] | None = None
     code: ValueSetBoundCoding[ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET.slug]
     occurance: datetime.datetime | None = None
     patient_instruction: str | None = None
+
+
+class ServiceRequestWriteSpec(BaseServiceRequestSpec):
     healthcare_service: UUID4 | None = None
+    locations: list[UUID4] = []
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.healthcare_service:
@@ -80,7 +83,7 @@ class BaseServiceRequestSpec(EMRResource):
             )
 
 
-class ServiceRequestUpdateSpec(BaseServiceRequestSpec):
+class ServiceRequestUpdateSpec(ServiceRequestWriteSpec):
     """Update specification for service requests"""
 
     title: str | None = None
@@ -93,12 +96,13 @@ class ServiceRequestUpdateSpec(BaseServiceRequestSpec):
     ) = None
 
 
-class ServiceRequestCreateSpec(BaseServiceRequestSpec):
+class ServiceRequestCreateSpec(ServiceRequestWriteSpec):
     """Create specification for service requests"""
 
     encounter: UUID4
 
     def perform_extra_deserialization(self, is_update, obj):
+        super().perform_extra_deserialization(is_update, obj)
         obj.encounter = get_object_or_404(Encounter, external_id=self.encounter)
         obj.patient = obj.encounter.patient
 

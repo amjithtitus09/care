@@ -22,8 +22,13 @@ class BaseHealthcareServiceSpec(EMRResource):
     ) = None
     name: str
     styling_metadata: dict = {}
-    locations: list[UUID4] = []
     extra_details: str = ""
+
+
+class HealthcareServiceWriteSpec(BaseHealthcareServiceSpec):
+    """Healthcare service write specification"""
+
+    locations: list[UUID4] = []
 
 
 class HealthcareServiceReadSpec(BaseHealthcareServiceSpec):

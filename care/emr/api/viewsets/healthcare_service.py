@@ -12,9 +12,9 @@ from care.emr.api.viewsets.base import (
 from care.emr.models.healthcare_service import HealthcareService
 from care.emr.models.location import FacilityLocation
 from care.emr.resources.healthcare_service.spec import (
-    BaseHealthcareServiceSpec,
     HealthcareServiceReadSpec,
     HealthcareServiceRetrieveSpec,
+    HealthcareServiceWriteSpec,
 )
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
@@ -29,7 +29,7 @@ class HealthcareServiceViewSet(
     EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
 ):
     database_model = HealthcareService
-    pydantic_model = BaseHealthcareServiceSpec
+    pydantic_model = HealthcareServiceWriteSpec
     pydantic_read_model = HealthcareServiceReadSpec
     pydantic_retrieve_model = HealthcareServiceRetrieveSpec
     filterset_class = HealthcareServiceFilters

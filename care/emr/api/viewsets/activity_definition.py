@@ -16,7 +16,7 @@ from care.emr.models.specimen_definition import SpecimenDefinition
 from care.emr.resources.activity_definition.spec import (
     ActivityDefinitionReadSpec,
     ActivityDefinitionRetrieveSpec,
-    BaseActivityDefinitionSpec,
+    ActivityDefinitionWriteSpec,
 )
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
@@ -33,7 +33,7 @@ class ActivityDefinitionViewSet(
     EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
 ):
     database_model = ActivityDefinition
-    pydantic_model = BaseActivityDefinitionSpec
+    pydantic_model = ActivityDefinitionWriteSpec
     pydantic_read_model = ActivityDefinitionReadSpec
     pydantic_retrieve_model = ActivityDefinitionRetrieveSpec
     filterset_class = ActivityDefinitionFilters

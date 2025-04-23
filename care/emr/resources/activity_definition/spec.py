@@ -56,9 +56,12 @@ class BaseActivityDefinitionSpec(EMRResource):
     kind: ActivityDefinitionKindOptions
     code: ValueSetBoundCoding[ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET.slug]
     body_site: ValueSetBoundCoding[CARE_BODY_SITE_VALUESET.slug] | None = None
+
+
+class ActivityDefinitionWriteSpec(BaseActivityDefinitionSpec):
+    locations: list[UUID4] = []
     specimen_requirements: list[UUID4]
     observation_result_requirements: list[UUID4]
-    locations: list[UUID4] = []
     healthcare_service: UUID4 | None = None
 
     def perform_extra_deserialization(self, is_update, obj):
