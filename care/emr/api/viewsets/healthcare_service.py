@@ -14,6 +14,7 @@ from care.emr.models.location import FacilityLocation
 from care.emr.resources.healthcare_service.spec import (
     BaseHealthcareServiceSpec,
     HealthcareServiceReadSpec,
+    HealthcareServiceRetrieveSpec,
 )
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
@@ -30,6 +31,7 @@ class HealthcareServiceViewSet(
     database_model = HealthcareService
     pydantic_model = BaseHealthcareServiceSpec
     pydantic_read_model = HealthcareServiceReadSpec
+    pydantic_retrieve_model = HealthcareServiceRetrieveSpec
     filterset_class = HealthcareServiceFilters
     filter_backends = [filters.DjangoFilterBackend]
 
