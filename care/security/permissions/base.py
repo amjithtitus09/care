@@ -12,6 +12,7 @@ from care.security.permissions.observation_definition import (
 from care.security.permissions.organization import OrganizationPermissions
 from care.security.permissions.patient import PatientPermissions
 from care.security.permissions.questionnaire import QuestionnairePermissions
+from care.security.permissions.service_request import ServiceRequestPermissions
 from care.security.permissions.specimen_definition import SpecimenDefinitionPermissions
 from care.security.permissions.user import UserPermissions
 from care.security.permissions.user_schedule import UserSchedulePermissions
@@ -44,6 +45,7 @@ class PermissionController:
         DevicePermissions,
         SpecimenDefinitionPermissions,
         ActivityDefinitionPermissions,
+        ServiceRequestPermissions,
     ]
 
     cache = {}

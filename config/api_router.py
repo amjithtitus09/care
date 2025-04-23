@@ -9,10 +9,7 @@ from care.emr.api.otp_viewsets.slot import OTPSlotViewSet
 from care.emr.api.viewsets.activity_definition import ActivityDefinitionViewSet
 from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
-from care.emr.api.viewsets.condition import (
-    DiagnosisViewSet,
-    SymptomViewSet,
-)
+from care.emr.api.viewsets.condition import DiagnosisViewSet, SymptomViewSet
 from care.emr.api.viewsets.consent import ConsentViewSet
 from care.emr.api.viewsets.device import (
     DeviceEncounterHistoryViewSet,
@@ -71,6 +68,7 @@ from care.emr.api.viewsets.scheduling.availability_exceptions import (
     AvailabilityExceptionsViewSet,
 )
 from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
+from care.emr.api.viewsets.service_request import ServiceRequestViewSet
 from care.emr.api.viewsets.specimen_definition import SpecimenDefinitionViewSet
 from care.emr.api.viewsets.totp import TOTPViewSet
 from care.emr.api.viewsets.user import UserViewSet
@@ -207,6 +205,13 @@ facility_nested_router.register(
     ActivityDefinitionViewSet,
     basename="activity_definition",
 )
+
+facility_nested_router.register(
+    r"service_request",
+    ServiceRequestViewSet,
+    basename="service_request",
+)
+
 device_nested_router = NestedSimpleRouter(
     facility_nested_router, r"device", lookup="device"
 )

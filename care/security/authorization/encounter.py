@@ -7,6 +7,7 @@ from care.security.authorization.base import (
     AuthorizationHandler,
 )
 from care.security.permissions.encounter import EncounterPermissions
+from care.security.permissions.service_request import ServiceRequestPermissions
 
 
 class EncounterAccess(AuthorizationHandler):
@@ -73,6 +74,38 @@ class EncounterAccess(AuthorizationHandler):
             orgs.extend(encounter.current_location.facility_organization_cache)
         return self.check_permission_in_facility_organization(
             [EncounterPermissions.can_write_encounter.name],
+            user,
+            orgs=orgs,
+        )
+
+    def can_write_service_request_in_encounter(self, user, encounter):
+        """
+        Check if the user has permission to create service request under this encounter
+        """
+        if encounter.status in COMPLETED_CHOICES:
+            # Cannot write to a closed encounter
+            return False
+        orgs = [*encounter.facility_organization_cache]
+        if encounter.current_location:
+            orgs.extend(encounter.current_location.facility_organization_cache)
+        return self.check_permission_in_facility_organization(
+            [ServiceRequestPermissions.can_write_service_request.name],
+            user,
+            orgs=orgs,
+        )
+
+    def can_view_service_request_for_encounter(self, user, encounter):
+        """
+        Check if the user has permission to create service request under this encounter
+        """
+        if encounter.status in COMPLETED_CHOICES:
+            # Cannot write to a closed encounter
+            return False
+        orgs = [*encounter.facility_organization_cache]
+        if encounter.current_location:
+            orgs.extend(encounter.current_location.facility_organization_cache)
+        return self.check_permission_in_facility_organization(
+            [ServiceRequestPermissions.can_read_service_request.name],
             user,
             orgs=orgs,
         )
