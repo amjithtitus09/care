@@ -186,8 +186,11 @@ class ServiceRequestViewSet(
             facility=facility,
         )
         service_request = convert_ad_to_sr(activity_definition, encounter)
-        self.authorize_create(service_request)
-        model_instance = ServiceRequestUpdateSpec.de_serialize(obj=service_request)
+        self.authorize_update(request_params.service_request, service_request)
+        serializer_obj = ServiceRequestUpdateSpec.model_validate(
+            request_params.service_request.model_dump(mode="json")
+        )
+        model_instance = serializer_obj.de_serialize(obj=service_request)
         self.perform_update(model_instance)
         return Response(
             self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
