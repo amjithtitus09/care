@@ -80,6 +80,19 @@ class BaseServiceRequestSpec(EMRResource):
             )
 
 
+class ServiceRequestUpdateSpec(BaseServiceRequestSpec):
+    """Update specification for service requests"""
+
+    title: str | None = None
+    status: ServiceRequestStatusChoices | None = None
+    intent: ServiceRequestIntentChoices | None = None
+    priority: ServiceRequestPriorityChoices | None = None
+    category: ActivityDefinitionCategoryOptions | None = None
+    code: (
+        ValueSetBoundCoding[ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET.slug] | None
+    ) = None
+
+
 class ServiceRequestCreateSpec(BaseServiceRequestSpec):
     """Create specification for service requests"""
 

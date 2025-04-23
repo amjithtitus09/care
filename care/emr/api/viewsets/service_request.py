@@ -1,6 +1,10 @@
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
+from drf_spectacular.utils import extend_schema
+from pydantic import UUID4, BaseModel
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -9,13 +13,16 @@ from care.emr.api.viewsets.base import (
     EMRRetrieveMixin,
     EMRUpdateMixin,
 )
+from care.emr.models.activity_definition import ActivityDefinition
 from care.emr.models.encounter import Encounter
 from care.emr.models.location import FacilityLocation
 from care.emr.models.service_request import ServiceRequest
+from care.emr.resources.activity_definition.service_request import convert_ad_to_sr
 from care.emr.resources.service_request.spec import (
     BaseServiceRequestSpec,
     ServiceRequestCreateSpec,
     ServiceRequestReadSpec,
+    ServiceRequestUpdateSpec,
 )
 from care.facility.models.facility import Facility
 from care.security.authorization.base import AuthorizationController
@@ -28,6 +35,12 @@ class ServiceRequestFilters(filters.FilterSet):
     priority = filters.CharFilter(lookup_expr="iexact")
     intent = filters.CharFilter(lookup_expr="iexact")
     do_not_perform = filters.BooleanFilter()
+
+
+class ApplyActivityDefinitionRequest(BaseModel):
+    activity_definition: UUID4
+    service_request: ServiceRequestUpdateSpec
+    encounter: UUID4
 
 
 class ServiceRequestViewSet(
@@ -155,3 +168,27 @@ class ServiceRequestViewSet(
                 )
             return queryset.filter(encounter=encounter)
         raise ValidationError("Location or encounter is required")
+
+    @extend_schema(
+        request=ApplyActivityDefinitionRequest,
+    )
+    @action(methods=["POST"], detail=False)
+    def apply_activity_definition(self, request, *args, **kwargs):
+        facility = self.get_facility_obj()
+        request_params = ApplyActivityDefinitionRequest(**request.data)
+        # Authorize
+        encounter = get_object_or_404(
+            Encounter, external_id=request_params.encounter, facility=facility
+        )
+        activity_definition = get_object_or_404(
+            ActivityDefinition,
+            external_id=request_params.activity_definition,
+            facility=facility,
+        )
+        service_request = convert_ad_to_sr(activity_definition, encounter)
+        self.authorize_create(service_request)
+        model_instance = ServiceRequestUpdateSpec.de_serialize(obj=service_request)
+        self.perform_update(model_instance)
+        return Response(
+            self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
+        )

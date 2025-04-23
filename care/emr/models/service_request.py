@@ -13,7 +13,7 @@ class ServiceRequest(EMRBaseModel):
         blank=True,
     )
     title = models.CharField(max_length=1024)
-    category = models.JSONField(null=True, blank=True)
+    category = models.CharField(max_length=255)
     status = models.CharField(max_length=255)
     intent = models.CharField(max_length=255)
     priority = models.CharField(max_length=255)
