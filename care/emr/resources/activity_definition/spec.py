@@ -43,7 +43,7 @@ class BaseActivityDefinitionSpec(EMRResource):
     __model__ = ActivityDefinition
     __exclude__ = ["facility"]
 
-    id: str | None = None
+    id: UUID4 | None = None
     slug: str
     title: str
     derived_from_uri: str | None = None

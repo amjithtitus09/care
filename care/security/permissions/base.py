@@ -5,6 +5,7 @@ from care.security.permissions.facility import FacilityPermissions
 from care.security.permissions.facility_organization import (
     FacilityOrganizationPermissions,
 )
+from care.security.permissions.healthcare_service import HealthcareServicePermissions
 from care.security.permissions.location import FacilityLocationPermissions
 from care.security.permissions.observation_definition import (
     ObservationDefinitionPermissions,
@@ -46,6 +47,7 @@ class PermissionController:
         SpecimenDefinitionPermissions,
         ActivityDefinitionPermissions,
         ServiceRequestPermissions,
+        HealthcareServicePermissions,
     ]
 
     cache = {}

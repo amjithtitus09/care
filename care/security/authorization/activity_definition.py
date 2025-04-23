@@ -1,5 +1,5 @@
-from care.security.authorization import AuthorizationController
 from care.security.authorization.base import (
+    AuthorizationController,
     AuthorizationHandler,
 )
 from care.security.permissions.activity_definition import ActivityDefinitionPermissions
@@ -24,6 +24,7 @@ class ActivityDefinitionAccess(AuthorizationHandler):
             [ActivityDefinitionPermissions.can_write_activity_definition.name],
             user,
             facility=facility,
+            root=True,
         )
 
 

@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel, model_validator
+from pydantic import UUID4, BaseModel, model_validator
 
 from care.emr.models.specimen_definition import SpecimenDefinition
 from care.emr.resources.base import EMRResource
@@ -85,7 +85,7 @@ class BaseSpecimenDefinitionSpec(EMRResource):
     __model__ = SpecimenDefinition
     __exclude__ = ["facility"]
 
-    id: str | None = None
+    id: UUID4 | None = None
     slug: str
     title: str
     derived_from_uri: str | None = None

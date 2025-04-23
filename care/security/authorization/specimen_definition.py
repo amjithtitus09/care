@@ -1,7 +1,5 @@
 from care.security.authorization import AuthorizationController
-from care.security.authorization.base import (
-    AuthorizationHandler,
-)
+from care.security.authorization.base import AuthorizationHandler
 from care.security.permissions.specimen_definition import SpecimenDefinitionPermissions
 
 
@@ -24,6 +22,7 @@ class SpecimenDefinitionAccess(AuthorizationHandler):
             [SpecimenDefinitionPermissions.can_write_specimen_definition.name],
             user,
             facility=facility,
+            root=True,
         )
 
 

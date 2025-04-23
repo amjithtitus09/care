@@ -62,6 +62,7 @@ class ServiceRequestViewSet(
 
     def perform_create(self, instance):
         self.convert_external_id_to_internal_id(instance)
+        instance.facility = self.get_facility_obj()
         return super().perform_create(instance)
 
     def perform_update(self, instance):

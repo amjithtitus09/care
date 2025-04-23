@@ -29,6 +29,7 @@ from care.emr.api.viewsets.facility_organization import (
     FacilityOrganizationViewSet,
 )
 from care.emr.api.viewsets.file_upload import FileUploadViewSet
+from care.emr.api.viewsets.healthcare_service import HealthcareServiceViewSet
 from care.emr.api.viewsets.location import (
     FacilityLocationEncounterViewSet,
     FacilityLocationViewSet,
@@ -198,6 +199,12 @@ facility_nested_router.register(
     r"specimen_definition",
     SpecimenDefinitionViewSet,
     basename="specimen_definition",
+)
+
+facility_nested_router.register(
+    r"healthcare_service",
+    HealthcareServiceViewSet,
+    basename="healthcare_service",
 )
 
 facility_nested_router.register(

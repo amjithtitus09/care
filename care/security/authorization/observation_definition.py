@@ -1,7 +1,5 @@
 from care.security.authorization import AuthorizationController
-from care.security.authorization.base import (
-    AuthorizationHandler,
-)
+from care.security.authorization.base import AuthorizationHandler
 from care.security.permissions.observation_definition import (
     ObservationDefinitionPermissions,
 )
@@ -26,6 +24,7 @@ class ObservationDefinitionAccess(AuthorizationHandler):
             [ObservationDefinitionPermissions.can_write_observation_definition.name],
             user,
             facility=facility,
+            root=True,
         )
 
 

@@ -1,0 +1,52 @@
+from pydantic import UUID4
+
+from care.emr.models.healthcare_service import HealthcareService
+from care.emr.models.location import FacilityLocation
+from care.emr.resources.base import EMRResource
+from care.emr.resources.healthcare_service.valueset import (
+    HEALTHCARE_SERVICE_TYPE_CODE_VALUESET,
+)
+from care.emr.resources.location.spec import FacilityLocationListSpec
+from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
+
+
+class BaseHealthcareServiceSpec(EMRResource):
+    """Base model for healthcare service"""
+
+    __model__ = HealthcareService
+    __exclude__ = ["facility"]
+
+    id: UUID4 | None = None
+    service_type: (
+        ValueSetBoundCoding[HEALTHCARE_SERVICE_TYPE_CODE_VALUESET.slug] | None
+    ) = None
+    name: str
+    styling_metadata: dict = {}
+    locations: list[UUID4] = []
+    extra_details: str = ""
+
+
+class HealthcareServiceReadSpec(BaseHealthcareServiceSpec):
+    """Healthcare service read specification"""
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+
+
+class HealthcareServiceRetrieveSpec(HealthcareServiceReadSpec):
+    """Healthcare service retrieve specification"""
+
+    locations: list[dict]
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        super().perform_extra_serialization(mapping, obj)
+        locations = []
+        for location in obj.locations:
+            locations.append(
+                FacilityLocationListSpec.serialize(
+                    FacilityLocation.objects.get(id=location)
+                ).to_json()
+            )
+        mapping["locations"] = locations
