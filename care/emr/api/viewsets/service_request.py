@@ -40,12 +40,33 @@ class ServiceRequestViewSet(
             Facility, external_id=self.kwargs["facility_external_id"]
         )
 
+    def convert_external_id_to_internal_id(self, instance):
+        ids = []
+        # TODO check for Authz
+        for location in instance.locations:
+            obj = (
+                FacilityLocation.objects.only("id")
+                .filter(external_id=location, facility=instance.facility)
+                .first()
+            )
+            if not obj:
+                error_msg = f"Location with id {location} not found"
+                raise ValidationError(error_msg)
+            ids.append(obj.id)
+        instance.locations = ids
+
     def perform_create(self, instance):
-        instance.facility = self.get_facility_obj()
+        self.convert_external_id_to_internal_id(instance)
         return super().perform_create(instance)
 
+    def perform_update(self, instance):
+        self.convert_external_id_to_internal_id(instance)
+        return super().perform_update(instance)
+
     def authorize_create(self, instance):
-        encounter = get_object_or_404(Encounter, external_id=instance.encounter)
+        encounter = get_object_or_404(
+            Encounter, external_id=instance.encounter, facility=self.get_facility_obj()
+        )
         if not AuthorizationController.call(
             "can_write_service_request_in_encounter",
             self.request.user,

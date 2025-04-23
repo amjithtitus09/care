@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from pydantic import UUID4
 
 from care.emr.models.encounter import Encounter
+from care.emr.models.location import FacilityLocation
 from care.emr.models.service_request import ServiceRequest
 from care.emr.resources.activity_definition.spec import (
     ActivityDefinitionCategoryOptions,
@@ -13,6 +14,7 @@ from care.emr.resources.activity_definition.valueset import (
     ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET,
 )
 from care.emr.resources.base import EMRResource
+from care.emr.resources.location.spec import FacilityLocationListSpec
 from care.emr.resources.observation.valueset import CARE_BODY_SITE_VALUESET
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
 
@@ -85,3 +87,21 @@ class ServiceRequestReadSpec(BaseServiceRequestSpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+
+
+class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
+    """Read specification for service requests"""
+
+    locations: list[dict]
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        super().perform_extra_serialization(mapping, obj)
+        locations = []
+        for location in obj.locations:
+            locations.append(
+                FacilityLocationListSpec.serialize(
+                    FacilityLocation().objects.get(id=location)
+                ).to_json()
+            )
+        mapping["locations"] = locations
