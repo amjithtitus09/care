@@ -17,7 +17,11 @@ from care.emr.models.activity_definition import ActivityDefinition
 from care.emr.models.encounter import Encounter
 from care.emr.models.location import FacilityLocation
 from care.emr.models.service_request import ServiceRequest
+from care.emr.registries.system_questionnaire.system_questionnaire import (
+    InternalQuestionnaireRegistry,
+)
 from care.emr.resources.activity_definition.service_request import convert_ad_to_sr
+from care.emr.resources.questionnaire.spec import SubjectType
 from care.emr.resources.service_request.spec import (
     BaseServiceRequestSpec,
     ServiceRequestCreateSpec,
@@ -52,6 +56,10 @@ class ServiceRequestViewSet(
     pydantic_read_model = ServiceRequestReadSpec
     filterset_class = ServiceRequestFilters
     filter_backends = [filters.DjangoFilterBackend]
+    questionnaire_type = "service_request"
+    questionnaire_title = "Service Request"
+    questionnaire_description = "Service Request"
+    questionnaire_subject_type = SubjectType.patient.value
 
     def get_facility_obj(self):
         return get_object_or_404(
@@ -195,3 +203,6 @@ class ServiceRequestViewSet(
         return Response(
             self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
         )
+
+
+InternalQuestionnaireRegistry.register(ServiceRequestViewSet)
