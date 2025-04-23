@@ -74,6 +74,7 @@ class ActivityDefinitionViewSet(
         instance.observation_result_requirements = ids
         # Convert locations into list of ids
         ids = []
+        # TODO check for Authz
         for location in instance.locations:
             obj = (
                 FacilityLocation.objects.only("id")
@@ -84,7 +85,7 @@ class ActivityDefinitionViewSet(
                 error_msg = f"Location with id {location} not found"
                 raise ValidationError(error_msg)
             ids.append(obj.id)
-        instance.location = ids
+        instance.locations = ids
 
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
