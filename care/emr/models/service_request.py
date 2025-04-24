@@ -35,3 +35,10 @@ class ServiceRequest(EMRBaseModel):
         null=True,
         blank=True,
     )
+    activity_definition = models.ForeignKey(
+        "emr.ActivityDefinition",
+        on_delete=models.PROTECT,
+        default=None,
+        null=True,
+        blank=True,
+    )

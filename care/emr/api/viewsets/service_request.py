@@ -201,6 +201,7 @@ class ServiceRequestViewSet(
             request_params.service_request.model_dump(mode="json")
         )
         model_instance = serializer_obj.de_serialize(obj=service_request)
+        model_instance.activity_definition = activity_definition
         self.perform_update(model_instance)
         return Response(
             self.get_retrieve_pydantic_model().serialize(model_instance).to_json()

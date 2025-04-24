@@ -10,6 +10,7 @@ from care.emr.models.location import FacilityLocation
 from care.emr.models.service_request import ServiceRequest
 from care.emr.resources.activity_definition.spec import (
     ActivityDefinitionCategoryOptions,
+    ActivityDefinitionReadSpec,
 )
 from care.emr.resources.activity_definition.valueset import (
     ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET,
@@ -122,6 +123,7 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
     locations: list[dict]
     healthcare_service: dict | None = None
     encounter: dict
+    activity_definition: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -139,3 +141,7 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
                 obj.healthcare_service
             ).to_json()
         mapping["encounter"] = EncounterListSpec.serialize(obj.encounter).to_json()
+        if obj.activity_definition:
+            mapping["activity_definition"] = ActivityDefinitionReadSpec.serialize(
+                obj.activity_definition
+            ).to_json()
