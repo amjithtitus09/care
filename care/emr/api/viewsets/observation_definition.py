@@ -46,7 +46,7 @@ class ObservationDefinitionViewSet(
         if instance.facility and not AuthorizationController.call(
             "can_write_facility_observation_definition",
             self.request.user,
-            instance.facility,
+            get_object_or_404(Facility, external_id=instance.facility),
         ):
             raise PermissionDenied("Access Denied to Observation Definition")
 
