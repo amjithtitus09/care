@@ -26,6 +26,7 @@ from care.emr.resources.service_request.spec import (
     BaseServiceRequestSpec,
     ServiceRequestCreateSpec,
     ServiceRequestReadSpec,
+    ServiceRequestRetrieveSpec,
     ServiceRequestUpdateSpec,
 )
 from care.facility.models.facility import Facility
@@ -54,6 +55,7 @@ class ServiceRequestViewSet(
     pydantic_model = ServiceRequestCreateSpec
     pydantic_update_model = BaseServiceRequestSpec
     pydantic_read_model = ServiceRequestReadSpec
+    pydantic_retrieve_model = ServiceRequestRetrieveSpec
     filterset_class = ServiceRequestFilters
     filter_backends = [filters.DjangoFilterBackend]
     questionnaire_type = "service_request"
