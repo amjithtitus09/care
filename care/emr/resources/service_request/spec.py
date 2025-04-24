@@ -15,6 +15,7 @@ from care.emr.resources.activity_definition.valueset import (
     ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET,
 )
 from care.emr.resources.base import EMRResource
+from care.emr.resources.encounter.spec import EncounterListSpec
 from care.emr.resources.healthcare_service.spec import HealthcareServiceReadSpec
 from care.emr.resources.location.spec import FacilityLocationListSpec
 from care.emr.resources.observation.valueset import CARE_BODY_SITE_VALUESET
@@ -120,6 +121,7 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
 
     locations: list[dict]
     healthcare_service: dict | None = None
+    encounter: dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -128,7 +130,7 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
         for location in obj.locations:
             locations.append(
                 FacilityLocationListSpec.serialize(
-                    FacilityLocation().objects.get(id=location)
+                    FacilityLocation.objects.get(id=location)
                 ).to_json()
             )
         mapping["locations"] = locations
@@ -136,3 +138,4 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
             mapping["healthcare_service"] = HealthcareServiceReadSpec.serialize(
                 obj.healthcare_service
             ).to_json()
+        mapping["encounter"] = EncounterListSpec.serialize(obj.encounter).to_json()

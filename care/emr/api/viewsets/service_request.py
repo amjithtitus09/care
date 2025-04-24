@@ -161,7 +161,7 @@ class ServiceRequestViewSet(
                 raise ValidationError(
                     "You do not have permission to view service requests for this location"
                 )
-            return queryset.filter(location=location)
+            return queryset.filter(locations__overlap=[location.id])
         if "encounter" in self.request.GET:
             encounter = get_object_or_404(
                 Encounter, external_id=self.request.GET["encounter"]

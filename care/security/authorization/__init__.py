@@ -10,6 +10,7 @@ from .observation_definition import *  # noqa
 from .organization import *  # noqa
 from .patient import *  # noqa
 from .questionnaire import *  # noqa
+from .service_request import *  # noqa
 from .specimen_definition import *  # noqa
 from .user import *  # noqa
 from .user_schedule import *  # noqa
