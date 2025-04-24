@@ -70,6 +70,7 @@ from care.emr.api.viewsets.scheduling.availability_exceptions import (
 )
 from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
 from care.emr.api.viewsets.service_request import ServiceRequestViewSet
+from care.emr.api.viewsets.specimen import SpecimenViewSet
 from care.emr.api.viewsets.specimen_definition import SpecimenDefinitionViewSet
 from care.emr.api.viewsets.totp import TOTPViewSet
 from care.emr.api.viewsets.user import UserViewSet
@@ -211,6 +212,11 @@ facility_nested_router.register(
     r"activity_definition",
     ActivityDefinitionViewSet,
     basename="activity_definition",
+)
+facility_nested_router.register(
+    r"specimen",
+    SpecimenViewSet,
+    basename="specimen",
 )
 
 facility_nested_router.register(
