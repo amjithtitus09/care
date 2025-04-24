@@ -12,9 +12,9 @@ from care.emr.resources.specimen.valueset import (
     FASTING_STATUS_VALUESET,
     SPECIMEN_CONDITION_VALUESET,
 )
+from care.emr.resources.specimen_definition.spec import SpecimenDefinitionReadSpec
 from care.emr.resources.specimen_definition.valueset import SPECIMEN_TYPE_CODE_VALUESET
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
-from care.facility.models import Facility
 from care.users.models import User
 
 
@@ -90,41 +90,37 @@ class BaseSpecimenSpec(EMRResource):
     accession_identifier: list[str] = []
     status: SpecimenStatusOptions
     specimen_type: ValueSetBoundCoding[SPECIMEN_TYPE_CODE_VALUESET.slug]
-    subject: dict | None = None
     received_time: str | None = None
-    request: dict | None = None
-    collection: CollectionSpec
+    collection: CollectionSpec | None = None
     processing: list[ProcessingSpec] = []
     condition: list[ValueSetBoundCoding[SPECIMEN_CONDITION_VALUESET.slug]] = []
     note: str | None = None
 
 
+class SpecimenUpdateSpec(BaseSpecimenSpec):
+    """Specimen update specification"""
+
+    status: SpecimenStatusOptions | None = None
+    specimen_type: ValueSetBoundCoding[SPECIMEN_TYPE_CODE_VALUESET.slug] | None = None
+
+
 class SpecimenCreateSpec(BaseSpecimenSpec):
     """Specimen creation specification"""
 
-    facility: UUID4 | None = None
     subject_patient: UUID4
-    subject_encounter: UUID4 | None = None
+    subject_encounter: UUID4
     request: UUID4 | None = None
-    collection: CollectionSpec
-    processing: list[ProcessingSpec] = []
-
-    @field_validator("facility")
-    @classmethod
-    def validate_facility_exists(cls, facility):
-        if not Facility.objects.filter(external_id=facility).exists():
-            # Check if user is in the given facility
-            raise ValueError("Facility not found")
-        return facility
-
-    def perform_extra_deserialization(self, is_update, obj):
-        if self.facility:
-            obj.facility = Facility.objects.get(external_id=self.facility)
 
 
 class SpecimenReadSpec(BaseSpecimenSpec):
     """Specimen read specification"""
 
+    specimen_definition: dict | None = None
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+        if obj.specimen_definition:
+            mapping["specimen_definition"] = SpecimenDefinitionReadSpec.serialize(
+                obj.specimen_definition
+            ).to_json()

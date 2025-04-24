@@ -91,7 +91,7 @@ class BaseSpecimenDefinitionSpec(EMRResource):
     derived_from_uri: str | None = None
     status: SpecimenDefinitionStatusOptions
     description: str
-    type_collected: ValueSetBoundCoding[SPECIMEN_TYPE_CODE_VALUESET.slug] | None = None
+    type_collected: ValueSetBoundCoding[SPECIMEN_TYPE_CODE_VALUESET.slug]
     patient_preparation: list[
         ValueSetBoundCoding[PREPARE_PATIENT_PRIOR_SPECIMEN_CODE_VALUESET.slug]
     ] = []

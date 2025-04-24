@@ -8,6 +8,7 @@ from care.emr.models.encounter import Encounter
 from care.emr.models.healthcare_service import HealthcareService
 from care.emr.models.location import FacilityLocation
 from care.emr.models.service_request import ServiceRequest
+from care.emr.models.specimen import Specimen
 from care.emr.resources.activity_definition.spec import (
     ActivityDefinitionCategoryOptions,
     ActivityDefinitionReadSpec,
@@ -20,6 +21,7 @@ from care.emr.resources.encounter.spec import EncounterListSpec
 from care.emr.resources.healthcare_service.spec import HealthcareServiceReadSpec
 from care.emr.resources.location.spec import FacilityLocationListSpec
 from care.emr.resources.observation.valueset import CARE_BODY_SITE_VALUESET
+from care.emr.resources.specimen.spec import SpecimenReadSpec
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
 
 
@@ -124,6 +126,7 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
     healthcare_service: dict | None = None
     encounter: dict
     activity_definition: dict | None = None
+    specimens: list[dict] | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -145,3 +148,9 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
             mapping["activity_definition"] = ActivityDefinitionReadSpec.serialize(
                 obj.activity_definition
             ).to_json()
+        specimens = Specimen.objects.filter(service_request=obj).select_related(
+            "specimen_definition"
+        )
+        mapping["specimens"] = [
+            SpecimenReadSpec.serialize(specimen).to_json() for specimen in specimens
+        ]

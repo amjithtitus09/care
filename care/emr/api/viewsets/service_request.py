@@ -17,6 +17,7 @@ from care.emr.models.activity_definition import ActivityDefinition
 from care.emr.models.encounter import Encounter
 from care.emr.models.location import FacilityLocation
 from care.emr.models.service_request import ServiceRequest
+from care.emr.models.specimen_definition import SpecimenDefinition
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
 )
@@ -29,6 +30,12 @@ from care.emr.resources.service_request.spec import (
     ServiceRequestRetrieveSpec,
     ServiceRequestUpdateSpec,
 )
+from care.emr.resources.specimen.spec import (
+    BaseSpecimenSpec,
+    SpecimenReadSpec,
+    SpecimenUpdateSpec,
+)
+from care.emr.resources.specimen_definition.specimen import convert_sd_to_specimen
 from care.facility.models.facility import Facility
 from care.security.authorization.base import AuthorizationController
 
@@ -46,6 +53,11 @@ class ApplyActivityDefinitionRequest(BaseModel):
     activity_definition: UUID4
     service_request: ServiceRequestUpdateSpec
     encounter: UUID4
+
+
+class ApplySpecimenDefinitionRequest(BaseModel):
+    specimen_definition: UUID4
+    specimen: SpecimenUpdateSpec
 
 
 class ServiceRequestViewSet(
@@ -206,6 +218,49 @@ class ServiceRequestViewSet(
         return Response(
             self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
         )
+
+    @extend_schema(
+        request=ApplyActivityDefinitionRequest,
+    )
+    @action(methods=["POST"], detail=True)
+    def create_specimen(self, request, *args, **kwargs):
+        service_request = self.get_object()
+        sepcimen_data = BaseSpecimenSpec(**request.data)
+        self.authorize_update({}, service_request)
+        model_instance = sepcimen_data.de_serialize()
+        model_instance.patient = service_request.patient
+        model_instance.encounter = service_request.encounter
+        model_instance.facility = service_request.facility
+        model_instance.service_request = service_request
+        model_instance.save()
+        return Response(SpecimenReadSpec.serialize(model_instance).to_json())
+
+    @extend_schema(
+        request=ApplyActivityDefinitionRequest,
+    )
+    @action(methods=["POST"], detail=True)
+    def create_specimen_from_definition(self, request, *args, **kwargs):
+        facility = self.get_facility_obj()
+        service_request = self.get_object()
+        request_params = ApplySpecimenDefinitionRequest(**request.data)
+        # Authorize
+        specimen_definition = get_object_or_404(
+            SpecimenDefinition,
+            external_id=request_params.specimen_definition,
+            facility=facility,
+        )
+        specimen = convert_sd_to_specimen(specimen_definition)
+        self.authorize_update({}, service_request)
+        serializer_obj = SpecimenUpdateSpec.model_validate(
+            request_params.specimen.model_dump(mode="json")
+        )
+        model_instance = serializer_obj.de_serialize(obj=specimen)
+        model_instance.patient = service_request.patient
+        model_instance.encounter = service_request.encounter
+        model_instance.facility = service_request.facility
+        model_instance.service_request = service_request
+        model_instance.save()
+        return Response(SpecimenReadSpec.serialize(model_instance).to_json())
 
 
 InternalQuestionnaireRegistry.register(ServiceRequestViewSet)
