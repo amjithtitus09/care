@@ -84,7 +84,7 @@ class ActivityDefinitionReadSpec(BaseActivityDefinitionSpec):
 class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):
     """Activity definition retrieve specification"""
 
-    specimen_requirement: list[dict]
+    specimen_requirements: list[dict]
     observation_result_requirements: list[dict]
     locations: list[dict]
     healthcare_service: dict | None = None
