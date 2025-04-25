@@ -214,6 +214,8 @@ class ServiceRequestViewSet(
         )
         model_instance = serializer_obj.de_serialize(obj=service_request)
         model_instance.activity_definition = activity_definition
+        model_instance.created_by = self.request.user
+        model_instance.updated_by = self.request.user
         self.perform_update(model_instance)
         return Response(
             self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
@@ -232,6 +234,8 @@ class ServiceRequestViewSet(
         model_instance.encounter = service_request.encounter
         model_instance.facility = service_request.facility
         model_instance.service_request = service_request
+        model_instance.created_by = self.request.user
+        model_instance.updated_by = self.request.user
         model_instance.save()
         return Response(SpecimenReadSpec.serialize(model_instance).to_json())
 
@@ -259,6 +263,8 @@ class ServiceRequestViewSet(
         model_instance.encounter = service_request.encounter
         model_instance.facility = service_request.facility
         model_instance.service_request = service_request
+        model_instance.created_by = self.request.user
+        model_instance.updated_by = self.request.user
         model_instance.save()
         return Response(SpecimenReadSpec.serialize(model_instance).to_json())
 

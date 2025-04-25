@@ -114,6 +114,9 @@ class ServiceRequestCreateSpec(ServiceRequestWriteSpec):
 class ServiceRequestReadSpec(BaseServiceRequestSpec):
     """Read specification for service requests"""
 
+    created_date: datetime.datetime
+    modified_date: datetime.datetime
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
@@ -127,6 +130,8 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
     encounter: dict
     activity_definition: dict | None = None
     specimens: list[dict] | None = None
+    created_by: dict | None = None
+    updated_by: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -154,3 +159,4 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
         mapping["specimens"] = [
             SpecimenReadSpec.serialize(specimen).to_json() for specimen in specimens
         ]
+        cls.serialize_audit_users(mapping, obj)
