@@ -236,7 +236,7 @@ class ServiceRequestViewSet(
         return Response(SpecimenReadSpec.serialize(model_instance).to_json())
 
     @extend_schema(
-        request=ApplyActivityDefinitionRequest,
+        request=ApplySpecimenDefinitionRequest,
     )
     @action(methods=["POST"], detail=True)
     def create_specimen_from_definition(self, request, *args, **kwargs):
