@@ -1,4 +1,3 @@
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from care.emr.models import EMRBaseModel
@@ -13,7 +12,7 @@ class Specimen(EMRBaseModel):
         blank=True,
     )
 
-    accession_identifier = ArrayField(models.CharField(max_length=255), default=list)
+    accession_identifier = models.CharField(max_length=255, db_index=True)
     status = models.CharField(max_length=20)
     specimen_type = models.JSONField()
     patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)

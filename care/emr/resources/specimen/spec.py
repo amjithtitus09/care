@@ -88,7 +88,7 @@ class BaseSpecimenSpec(EMRResource):
     __exclude__ = ["facility", "subject", "request", "collection", "processing"]
 
     id: UUID4 | None = None
-    accession_identifier: list[str] = []
+    accession_identifier: str = ""
     status: SpecimenStatusOptions
     specimen_type: ValueSetBoundCoding[SPECIMEN_TYPE_CODE_VALUESET.slug]
     received_time: str | None = None
