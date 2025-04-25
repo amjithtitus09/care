@@ -85,7 +85,7 @@ class BaseSpecimenSpec(EMRResource):
     """Base model for specimen"""
 
     __model__ = Specimen
-    __exclude__ = ["facility", "subject", "request", "collection", "processing"]
+    __exclude__ = ["facility", "request"]
 
     id: UUID4 | None = None
     accession_identifier: str = ""
