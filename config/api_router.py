@@ -17,6 +17,7 @@ from care.emr.api.viewsets.device import (
     DeviceServiceHistoryViewSet,
     DeviceViewSet,
 )
+from care.emr.api.viewsets.diagnostic_report import DiagnosticReportViewSet
 from care.emr.api.viewsets.encounter import EncounterViewSet
 from care.emr.api.viewsets.facility import (
     AllFacilityViewSet,
@@ -206,6 +207,12 @@ facility_nested_router.register(
     r"healthcare_service",
     HealthcareServiceViewSet,
     basename="healthcare_service",
+)
+
+facility_nested_router.register(
+    r"diagnostic_report",
+    DiagnosticReportViewSet,
+    basename="diagnostic_report",
 )
 
 facility_nested_router.register(

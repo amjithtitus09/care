@@ -2,6 +2,7 @@ from .activity_definition import *  # noqa F403
 from .allergy_intolerance import *  # noqa F403
 from .condition import *  # noqa F403
 from .device import *  # noqa F403
+from .diagnostic_report import *  # noqa F403
 from .encounter import *  # noqa F403
 from .file_upload import *  # noqa F403
 from .healthcare_service import *  # noqa F403

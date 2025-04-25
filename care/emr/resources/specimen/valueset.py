@@ -100,9 +100,9 @@ SPECIMEN_PROCESSING_METHOD_VALUESET.register_valueset(
                 system="http://snomed.info/sct",
                 filter=[
                     {
-                        "property": "concept",
-                        "op": "descendent-of",
-                        "value": "9265001",
+                        "property": "constraint",
+                        "op": "=",
+                        "value": "< 9265001",
                     }
                 ],
             )

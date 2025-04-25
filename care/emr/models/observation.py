@@ -31,4 +31,12 @@ class Observation(EMRBaseModel):
     )
     component = models.JSONField(default=list)
 
+    diagnostic_report = models.ForeignKey(
+        "emr.DiagnosticReport",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        default=None,
+    )
+
     # TODO Add index for patient -> encounter -> system -> code
