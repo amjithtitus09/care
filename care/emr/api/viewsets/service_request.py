@@ -220,7 +220,7 @@ class ServiceRequestViewSet(
         )
 
     @extend_schema(
-        request=ApplyActivityDefinitionRequest,
+        request=BaseSpecimenSpec,
     )
     @action(methods=["POST"], detail=True)
     def create_specimen(self, request, *args, **kwargs):
