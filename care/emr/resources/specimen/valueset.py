@@ -84,3 +84,30 @@ SPECIMEN_CONDITION_VALUESET.register_valueset(
 )
 
 SPECIMEN_CONDITION_VALUESET.register_as_system()
+
+
+# Specimen Processing Method valueset
+SPECIMEN_PROCESSING_METHOD_VALUESET = CareValueset(
+    "Specimen Processing Method",
+    "system-specimen-processing-method-code",
+    ValueSetStatusOptions.active.value,
+)
+
+SPECIMEN_PROCESSING_METHOD_VALUESET.register_valueset(
+    ValueSetCompose(
+        include=[
+            ValueSetInclude(
+                system="http://snomed.info/sct",
+                filter=[
+                    {
+                        "property": "concept",
+                        "op": "descendent-of",
+                        "value": "9265001",
+                    }
+                ],
+            )
+        ]
+    )
+)
+
+SPECIMEN_PROCESSING_METHOD_VALUESET.register_as_system()

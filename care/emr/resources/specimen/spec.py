@@ -11,6 +11,7 @@ from care.emr.resources.specimen.valueset import (
     COLLECTION_METHOD_VALUESET,
     FASTING_STATUS_VALUESET,
     SPECIMEN_CONDITION_VALUESET,
+    SPECIMEN_PROCESSING_METHOD_VALUESET,
 )
 from care.emr.resources.specimen_definition.spec import SpecimenDefinitionReadSpec
 from care.emr.resources.specimen_definition.valueset import SPECIMEN_TYPE_CODE_VALUESET
@@ -68,7 +69,7 @@ class ProcessingSpec(BaseModel):
     """Specimen processing details"""
 
     description: str
-    method: Coding | None = None
+    method: ValueSetBoundCoding[SPECIMEN_PROCESSING_METHOD_VALUESET.slug] | None = None
     performer: UUID4 | None = None
     time_date_time: str
 
