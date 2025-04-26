@@ -6,6 +6,7 @@ from rest_framework_nested.routers import NestedSimpleRouter
 from care.emr.api.otp_viewsets.login import OTPLoginView
 from care.emr.api.otp_viewsets.patient import PatientOTPView
 from care.emr.api.otp_viewsets.slot import OTPSlotViewSet
+from care.emr.api.viewsets.account import AccountViewSet
 from care.emr.api.viewsets.activity_definition import ActivityDefinitionViewSet
 from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
@@ -231,6 +232,13 @@ facility_nested_router.register(
     ServiceRequestViewSet,
     basename="service_request",
 )
+
+facility_nested_router.register(
+    r"account",
+    AccountViewSet,
+    basename="account",
+)
+
 
 device_nested_router = NestedSimpleRouter(
     facility_nested_router, r"device", lookup="device"
