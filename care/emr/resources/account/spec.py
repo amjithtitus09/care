@@ -12,8 +12,8 @@ from care.emr.resources.patient.spec import PatientListSpec
 class AccountStatusOptions(str, Enum):
     active = "active"
     inactive = "inactive"
-    entered_in_error = "entered-in-error"
-    on_hold = "on-hold"
+    entered_in_error = "entered_in_error"
+    on_hold = "on_hold"
 
 
 class AccountBillingStatusOptions(str, Enum):
