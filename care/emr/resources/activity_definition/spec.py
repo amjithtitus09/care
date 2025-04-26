@@ -3,6 +3,7 @@ from enum import Enum
 from pydantic import UUID4
 
 from care.emr.models import ActivityDefinition
+from care.emr.models.charge_item_definition import ChargeItemDefinition
 from care.emr.models.healthcare_service import HealthcareService
 from care.emr.models.location import FacilityLocation
 from care.emr.models.observation_definition import ObservationDefinition
@@ -11,6 +12,7 @@ from care.emr.resources.activity_definition.valueset import (
     ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET,
 )
 from care.emr.resources.base import EMRResource
+from care.emr.resources.charge_item_definition.spec import ChargeItemReadSpec
 from care.emr.resources.healthcare_service.spec import HealthcareServiceReadSpec
 from care.emr.resources.location.spec import FacilityLocationListSpec
 from care.emr.resources.observation.valueset import CARE_BODY_SITE_VALUESET
@@ -63,6 +65,7 @@ class ActivityDefinitionWriteSpec(BaseActivityDefinitionSpec):
     specimen_requirements: list[UUID4]
     observation_result_requirements: list[UUID4]
     healthcare_service: UUID4 | None = None
+    charge_item_definitions: list[UUID4] = []
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.healthcare_service:
@@ -88,6 +91,7 @@ class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):
     observation_result_requirements: list[dict]
     locations: list[dict]
     healthcare_service: dict | None = None
+    charge_item_definitions: list[dict]
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -120,3 +124,11 @@ class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):
             mapping["healthcare_service"] = HealthcareServiceReadSpec.serialize(
                 obj.healthcare_service
             ).to_json()
+        charge_item_definitions = []
+        for charge_item_definition in obj.charge_item_definitions:
+            charge_item_definitions.append(
+                ChargeItemReadSpec.serialize(
+                    ChargeItemDefinition.objects.get(id=charge_item_definition)
+                ).to_json()
+            )
+        mapping["charge_item_definitions"] = charge_item_definitions

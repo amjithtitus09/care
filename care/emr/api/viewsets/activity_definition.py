@@ -10,6 +10,7 @@ from care.emr.api.viewsets.base import (
     EMRUpdateMixin,
 )
 from care.emr.models import ActivityDefinition
+from care.emr.models.charge_item_definition import ChargeItemDefinition
 from care.emr.models.location import FacilityLocation
 from care.emr.models.observation_definition import ObservationDefinition
 from care.emr.models.specimen_definition import SpecimenDefinition
@@ -89,6 +90,21 @@ class ActivityDefinitionViewSet(
                 raise ValidationError(error_msg)
             ids.append(obj.id)
         instance.locations = ids
+
+        ids = []
+        for charge_item_definition in instance.charge_item_definitions:
+            obj = (
+                ChargeItemDefinition.objects.only("id")
+                .filter(external_id=charge_item_definition, facility=instance.facility)
+                .first()
+            )
+            if not obj:
+                error_msg = (
+                    f"Charge Item Definition with id {charge_item_definition} not found"
+                )
+                raise ValidationError(error_msg)
+            ids.append(obj.id)
+        instance.charge_item_definitions = ids
 
     def validate_health_care_service(self, instance):
         if (
