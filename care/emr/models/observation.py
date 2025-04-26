@@ -13,7 +13,7 @@ class Observation(EMRBaseModel):
     subject_id = models.UUIDField()
     patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)
     encounter = models.ForeignKey("emr.Encounter", on_delete=models.CASCADE)
-    effective_datetime = models.DateTimeField()
+    effective_datetime = models.DateTimeField(null=True, blank=True, default=None)
     data_entered_by = models.ForeignKey(
         "users.User",
         on_delete=models.CASCADE,
