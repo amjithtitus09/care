@@ -9,7 +9,7 @@ from care.emr.resources.base import EMRResource
 from care.emr.resources.diagnostic_report.valueset import (
     DIAGNOSTIC_SERVICE_SECTIONS_CODE_VALUESET,
 )
-from care.emr.resources.observation.spec import ObservationReadSpec
+from care.emr.resources.observation.spec import ObservationRetrieveSpec
 from care.emr.resources.observation.valueset import CARE_OBSERVATION_VALUSET
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
 
@@ -66,6 +66,6 @@ class DiagnosticReportRetrieveSpec(DiagnosticReportListSpec):
 
         observations = Observation.objects.filter(diagnostic_report=obj)
         mapping["observations"] = [
-            ObservationReadSpec.serialize(observation).to_json()
+            ObservationRetrieveSpec.serialize(observation).to_json()
             for observation in observations
         ]

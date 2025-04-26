@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from pydantic import UUID4, BaseModel
@@ -42,6 +43,10 @@ class ApplyObservationDefinitionRequest(BaseModel):
 class UpdateObservationRequest(BaseModel):
     observation: ObservationUpdateSpec
     observation_id: UUID4
+
+
+class BatchUpdateObservationRequest(BaseModel):
+    observations: list[UpdateObservationRequest]
 
 
 class DiagnosticReportViewSet(
@@ -151,6 +156,7 @@ class DiagnosticReportViewSet(
         model_instance.encounter = diagnostic_report.encounter
         model_instance.patient = diagnostic_report.patient
         model_instance.subject_id = diagnostic_report.patient.external_id
+        model_instance.observation_definition = observation_definition
         model_instance.save()
         return Response(ObservationReadSpec.serialize(model_instance).to_json())
 
@@ -177,18 +183,20 @@ class DiagnosticReportViewSet(
         return Response(ObservationReadSpec.serialize(model_instance).to_json())
 
     @extend_schema(
-        request=UpdateObservationRequest,
+        request=BatchUpdateObservationRequest,
     )
     @action(detail=True, methods=["POST"])
-    def update_observation(self, request, *args, **kwargs):
-        request_params = UpdateObservationRequest(**request.data)
-        observation = get_object_or_404(
-            Observation, external_id=request_params.observation_id
-        )
-        serializer_obj = ObservationUpdateSpec.model_validate(
-            request_params.observation.model_dump(mode="json")
-        )
-        model_instance = serializer_obj.de_serialize(obj=observation)
-        model_instance.updated_by = self.request.user
-        model_instance.save()
-        return Response(ObservationReadSpec.serialize(model_instance).to_json())
+    def update_observations(self, request, *args, **kwargs):
+        request_params = BatchUpdateObservationRequest(**request.data)
+        with transaction.atomic():
+            for request_param in request_params.observations:
+                observation = get_object_or_404(
+                    Observation, external_id=request_param.observation_id
+                )
+                serializer_obj = ObservationUpdateSpec.model_validate(
+                    request_param.observation.model_dump(mode="json")
+                )
+                model_instance = serializer_obj.de_serialize(obj=observation)
+                model_instance.updated_by = self.request.user
+                model_instance.save()
+        return Response({"message": "Observations updated successfully"})

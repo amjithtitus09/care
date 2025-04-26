@@ -44,4 +44,12 @@ class Observation(EMRBaseModel):
         default=None,
     )
 
+    observation_definition = models.ForeignKey(
+        "emr.ObservationDefinition",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        default=None,
+    )
+
     # TODO Add index for patient -> encounter -> system -> code
