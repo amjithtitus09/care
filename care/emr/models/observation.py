@@ -15,7 +15,12 @@ class Observation(EMRBaseModel):
     encounter = models.ForeignKey("emr.Encounter", on_delete=models.CASCADE)
     effective_datetime = models.DateTimeField()
     data_entered_by = models.ForeignKey(
-        "users.User", on_delete=models.CASCADE, related_name="observations_entered"
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="observations_entered",
+        null=True,
+        blank=True,
+        default=None,
     )
     performer = models.JSONField(default=dict)
     value_type = models.CharField(max_length=255)

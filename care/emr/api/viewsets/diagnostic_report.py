@@ -1,5 +1,9 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
+from pydantic import UUID4, BaseModel
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -10,6 +14,8 @@ from care.emr.api.viewsets.base import (
 )
 from care.emr.models.diagnostic_report import DiagnosticReport
 from care.emr.models.encounter import Encounter
+from care.emr.models.observation import Observation
+from care.emr.models.observation_definition import ObservationDefinition
 from care.emr.models.service_request import ServiceRequest
 from care.emr.resources.diagnostic_report.spec import (
     DiagnosticReportCreateSpec,
@@ -17,8 +23,25 @@ from care.emr.resources.diagnostic_report.spec import (
     DiagnosticReportRetrieveSpec,
     DiagnosticReportUpdateSpec,
 )
+from care.emr.resources.observation.spec import (
+    ObservationReadSpec,
+    ObservationUpdateSpec,
+)
+from care.emr.resources.observation_definition.observation import (
+    convert_od_to_observation,
+)
 from care.facility.models.facility import Facility
 from care.security.authorization.base import AuthorizationController
+
+
+class ApplyObservationDefinitionRequest(BaseModel):
+    observation_definition: UUID4
+    observation: ObservationUpdateSpec
+
+
+class UpdateObservationRequest(BaseModel):
+    observation: ObservationUpdateSpec
+    observation_id: UUID4
 
 
 class DiagnosticReportViewSet(
@@ -101,11 +124,71 @@ class DiagnosticReportViewSet(
             return queryset.filter(encounter=encounter)
         raise ValidationError("Location or encounter is required")
 
-    def create_observation_from_definition(self, definition: dict):
-        pass
+    @extend_schema(
+        request=ApplyObservationDefinitionRequest,
+    )
+    @action(detail=True, methods=["POST"])
+    def create_observation_from_definition(self, request, *args, **kwargs):
+        facility = self.get_facility_obj()
+        request_params = ApplyObservationDefinitionRequest(**request.data)
+        diagnostic_report = self.get_object()
+        # Authorize
+        observation_definition = get_object_or_404(
+            ObservationDefinition,
+            external_id=request_params.observation_definition,
+            facility=facility,
+        )
+        observation_obj = convert_od_to_observation(
+            observation_definition, diagnostic_report.encounter
+        )
+        # self.authorize_update(request_params.service_request, service_request)
+        serializer_obj = ObservationUpdateSpec.model_validate(
+            request_params.observation.model_dump(mode="json")
+        )
+        model_instance = serializer_obj.de_serialize(obj=observation_obj)
+        model_instance.created_by = self.request.user
+        model_instance.updated_by = self.request.user
+        model_instance.encounter = diagnostic_report.encounter
+        model_instance.patient = diagnostic_report.patient
+        model_instance.subject_id = diagnostic_report.patient.external_id
+        model_instance.save()
+        return Response(ObservationReadSpec.serialize(model_instance).to_json())
 
-    def create_observation(self, definition: dict):
-        pass
+    @extend_schema(
+        request=ObservationUpdateSpec,
+    )
+    @action(detail=True, methods=["POST"])
+    def create_observation(self, request, *args, **kwargs):
+        request_params = ObservationUpdateSpec(**request.data)
+        diagnostic_report = self.get_object()
+        # Authorize
+        observation_obj = Observation()
+        # self.authorize_update(request_params.service_request, service_request)
+        serializer_obj = ObservationUpdateSpec.model_validate(
+            request_params.model_dump(mode="json")
+        )
+        model_instance = serializer_obj.de_serialize(obj=observation_obj)
+        model_instance.created_by = self.request.user
+        model_instance.updated_by = self.request.user
+        model_instance.encounter = diagnostic_report.encounter
+        model_instance.patient = diagnostic_report.patient
+        model_instance.subject_id = diagnostic_report.patient.external_id
+        model_instance.save()
+        return Response(ObservationReadSpec.serialize(model_instance).to_json())
 
-    def update_observation(self, definition: dict):
-        pass
+    @extend_schema(
+        request=UpdateObservationRequest,
+    )
+    @action(detail=True, methods=["POST"])
+    def update_observation(self, request, *args, **kwargs):
+        request_params = UpdateObservationRequest(**request.data)
+        observation = get_object_or_404(
+            Observation, external_id=request_params.observation_id
+        )
+        serializer_obj = ObservationUpdateSpec.model_validate(
+            request_params.observation.model_dump(mode="json")
+        )
+        model_instance = serializer_obj.de_serialize(obj=observation)
+        model_instance.updated_by = self.request.user
+        model_instance.save()
+        return Response(ObservationReadSpec.serialize(model_instance).to_json())

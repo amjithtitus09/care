@@ -52,63 +52,50 @@ class Component(BaseModel):
 class BaseObservationSpec(EMRResource):
     __model__ = Observation
 
-    id: str = Field("", description="Unique ID in the system")
+    id: UUID4 | None = Field(None, description="Unique ID in the system")
 
     status: ObservationStatus = Field(
         description="Status of the observation (final or amended)"
     )
 
-    category: Coding | None = Field(
-        None, description="List of codeable concepts derived from the questionnaire"
-    )
+    category: Coding | None = None
 
-    main_code: Coding | None = Field(
-        None, description="Code for the observation (LOINC binding)"
-    )
+    main_code: Coding | None = None
 
-    alternate_coding: CodeableConcept = dict
+    alternate_coding: CodeableConcept | None = None
 
     subject_type: SubjectType
 
     encounter: UUID4 | None = None
 
-    effective_datetime: datetime = Field(
-        ...,
-        description="Datetime when observation was recorded",
-    )
+    effective_datetime: datetime
 
-    performer: Performer | None = Field(
-        None,
-        description="Who performed the observation (currently supports RelatedPerson)",
-    )  # If none the observation is captured by the data entering person
+    performer: Performer | None = None
 
-    value_type: QuestionType = Field(
-        description="Type of value",
-    )
+    value_type: QuestionType
 
-    value: QuestionnaireSubmitResultValue = Field(
-        description="Value of the observation if not code. For codes, contains display text",
-    )
+    value: QuestionnaireSubmitResultValue
 
-    note: str | None = Field(None, description="Additional notes about the observation")
+    note: str | None = None
 
     body_site: ValueSetBoundCoding[CARE_BODY_SITE_VALUESET.slug] | None = None
 
     method: ValueSetBoundCoding[CARE_OBSERVATION_COLLECTION_METHOD.slug] | None = None
 
-    reference_range: list[ReferenceRange] = Field(
-        [], description="Reference ranges for interpretation"
-    )
+    reference_range: list[ReferenceRange] = []
 
-    interpretation: str | None = Field(
-        None, description="Interpretation based on the reference range"
-    )
+    interpretation: str | None = None
 
-    parent: UUID4 | None = Field(None, description="ID reference to parent observation")
+    parent: UUID4 | None = None
 
     questionnaire_response: UUID4 | None = None
 
     component: list[Component] = []
+
+
+class ObservationUpdateSpec(BaseObservationSpec):
+    effective_datetime: datetime | None = None
+    value: QuestionnaireSubmitResultValue | None = None
 
 
 class ObservationSpec(BaseObservationSpec):
@@ -128,9 +115,9 @@ class ObservationSpec(BaseObservationSpec):
 
 
 class ObservationReadSpec(BaseObservationSpec):
-    created_by: UserSpec = dict
-    updated_by: UserSpec = dict
-    data_entered_by: UserSpec = dict
+    created_by: UserSpec = {}
+    updated_by: UserSpec = {}
+    data_entered_by: UserSpec | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):

@@ -4,6 +4,7 @@ from enum import Enum
 from django.shortcuts import get_object_or_404
 from pydantic import UUID4
 
+from care.emr.models.diagnostic_report import DiagnosticReport
 from care.emr.models.encounter import Encounter
 from care.emr.models.healthcare_service import HealthcareService
 from care.emr.models.location import FacilityLocation
@@ -17,6 +18,7 @@ from care.emr.resources.activity_definition.valueset import (
     ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET,
 )
 from care.emr.resources.base import EMRResource
+from care.emr.resources.diagnostic_report.spec import DiagnosticReportListSpec
 from care.emr.resources.encounter.spec import EncounterListSpec
 from care.emr.resources.healthcare_service.spec import HealthcareServiceReadSpec
 from care.emr.resources.location.spec import FacilityLocationListSpec
@@ -132,6 +134,7 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
     specimens: list[dict] | None = None
     created_by: dict | None = None
     updated_by: dict | None = None
+    diagnostic_reports: list[dict] | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -159,4 +162,10 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
         mapping["specimens"] = [
             SpecimenReadSpec.serialize(specimen).to_json() for specimen in specimens
         ]
+        diagnostic_reports = DiagnosticReport.objects.filter(service_request=obj)
+        mapping["diagnostic_reports"] = [
+            DiagnosticReportListSpec.serialize(diagnostic_report).to_json()
+            for diagnostic_report in diagnostic_reports
+        ]
+
         cls.serialize_audit_users(mapping, obj)
