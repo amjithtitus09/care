@@ -68,7 +68,12 @@ def file_authorizer(user, file_type, associating_id, permission):
             allowed = AuthorizationController.call(
                 "can_update_encounter_obj", user, encounter_obj
             )
-
+    elif (
+        file_type == FileTypeChoices.diagnostic_report.value
+        or file_type == FileTypeChoices.service_request.value
+    ):
+        # TODO : AuthZ Pending
+        allowed = True
     if not allowed:
         raise PermissionDenied("Cannot View File")
 
