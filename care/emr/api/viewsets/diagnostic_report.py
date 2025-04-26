@@ -27,6 +27,7 @@ from care.emr.resources.observation.spec import ObservationUpdateSpec
 from care.emr.resources.observation_definition.observation import (
     convert_od_to_observation,
 )
+from care.emr.resources.questionnaire.spec import SubjectType
 from care.facility.models.facility import Facility
 from care.security.authorization.base import AuthorizationController
 
@@ -151,8 +152,10 @@ class DiagnosticReportViewSet(
                     request_param.observation.model_dump(mode="json")
                 )
                 model_instance = serializer_obj.de_serialize(obj=observation_obj)
+                model_instance.observation_definition = observation_definition
                 model_instance.created_by = self.request.user
             elif request_param.observation_id:
+                # TODO : Check if there is a diagnostic report, else reject update
                 observation = get_object_or_404(
                     Observation, external_id=request_param.observation_id
                 )
@@ -171,6 +174,8 @@ class DiagnosticReportViewSet(
             model_instance.updated_by = self.request.user
             model_instance.encounter = diagnostic_report.encounter
             model_instance.patient = diagnostic_report.patient
-            model_instance.subject_id = diagnostic_report.patient.external_id
+            model_instance.subject_id = diagnostic_report.encounter.external_id
+            model_instance.diagnostic_report = diagnostic_report
+            model_instance.subject_type = SubjectType.encounter.value
             model_instance.save()
         return Response({"message": "Observations updated successfully"})
