@@ -21,6 +21,9 @@ class AccountFilters(filters.FilterSet):
     status = filters.CharFilter(lookup_expr="iexact")
     name = filters.CharFilter(lookup_expr="icontains")
     billing_status = filters.CharFilter(lookup_expr="iexact")
+    patient = filters.UUIDFilter(
+        lookup_expr="iexact", field_name="patient__external_id"
+    )
 
 
 class AccountViewSet(
