@@ -52,7 +52,6 @@ class AccountCreateSpec(AccountSpec):
 class AccountReadSpec(AccountSpec):
     """Account read specification"""
 
-    version: int | None = None
     patient: dict
 
     @classmethod
