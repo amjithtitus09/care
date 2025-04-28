@@ -8,16 +8,21 @@ from care.emr.api.viewsets.base import (
     EMRListMixin,
     EMRRetrieveMixin,
     EMRUpdateMixin,
+    EMRUpsertMixin,
 )
 from care.emr.models.account import Account
 from care.emr.models.charge_item import ChargeItem
 from care.emr.models.encounter import Encounter
+from care.emr.registries.system_questionnaire.system_questionnaire import (
+    InternalQuestionnaireRegistry,
+)
 from care.emr.resources.account.default_account import get_default_account
 from care.emr.resources.charge_item.spec import (
     ChargeItemReadSpec,
     ChargeItemSpec,
     ChargeItemWriteSpec,
 )
+from care.emr.resources.questionnaire.spec import SubjectType
 from care.facility.models.facility import Facility
 
 
@@ -29,7 +34,12 @@ class ChargeItemDefinitionFilters(filters.FilterSet):
 
 
 class ChargeItemViewSet(
-    EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
+    EMRCreateMixin,
+    EMRRetrieveMixin,
+    EMRUpdateMixin,
+    EMRUpsertMixin,
+    EMRListMixin,
+    EMRBaseViewSet,
 ):
     database_model = ChargeItem
     pydantic_model = ChargeItemWriteSpec
@@ -37,6 +47,10 @@ class ChargeItemViewSet(
     pydantic_read_model = ChargeItemReadSpec
     filterset_class = ChargeItemDefinitionFilters
     filter_backends = [filters.DjangoFilterBackend]
+    questionnaire_type = "charge_item"
+    questionnaire_title = "Charge Item"
+    questionnaire_description = "Charge Item"
+    questionnaire_subject_type = SubjectType.encounter.value
 
     def get_facility_obj(self):
         return get_object_or_404(
@@ -62,3 +76,6 @@ class ChargeItemViewSet(
                 raise ValidationError("Account is not associated with the facility")
         # TODO: AuthZ pending
         return super().authorize_create(instance)
+
+
+InternalQuestionnaireRegistry.register(ChargeItemViewSet)
