@@ -12,7 +12,7 @@ from care.emr.resources.activity_definition.valueset import (
     ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET,
 )
 from care.emr.resources.base import EMRResource
-from care.emr.resources.charge_item_definition.spec import ChargeItemReadSpec
+from care.emr.resources.charge_item_definition.spec import ChargeItemDefinitionReadSpec
 from care.emr.resources.healthcare_service.spec import HealthcareServiceReadSpec
 from care.emr.resources.location.spec import FacilityLocationListSpec
 from care.emr.resources.observation.valueset import CARE_BODY_SITE_VALUESET
@@ -127,7 +127,7 @@ class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):
         charge_item_definitions = []
         for charge_item_definition in obj.charge_item_definitions:
             charge_item_definitions.append(
-                ChargeItemReadSpec.serialize(
+                ChargeItemDefinitionReadSpec.serialize(
                     ChargeItemDefinition.objects.get(id=charge_item_definition)
                 ).to_json()
             )

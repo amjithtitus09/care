@@ -11,8 +11,8 @@ from care.emr.api.viewsets.base import (
 )
 from care.emr.models.charge_item_definition import ChargeItemDefinition
 from care.emr.resources.charge_item_definition.spec import (
+    ChargeItemDefinitionReadSpec,
     ChargeItemDefinitionSpec,
-    ChargeItemReadSpec,
 )
 from care.facility.models import Facility
 
@@ -27,7 +27,7 @@ class ChargeItemDefinitionViewSet(
 ):
     database_model = ChargeItemDefinition
     pydantic_model = ChargeItemDefinitionSpec
-    pydantic_read_model = ChargeItemReadSpec
+    pydantic_read_model = ChargeItemDefinitionReadSpec
     filterset_class = ChargeItemDefinitionFilters
     filter_backends = [filters.DjangoFilterBackend]
 

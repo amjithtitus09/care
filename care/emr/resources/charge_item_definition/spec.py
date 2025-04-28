@@ -29,7 +29,7 @@ class ChargeItemDefinitionSpec(EMRResource):
     price_component: list[MonetoryComponent]
 
 
-class ChargeItemReadSpec(ChargeItemDefinitionSpec):
+class ChargeItemDefinitionReadSpec(ChargeItemDefinitionSpec):
     """Account read specification"""
 
     version: int | None = None
