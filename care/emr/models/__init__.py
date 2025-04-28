@@ -9,11 +9,13 @@ from .diagnostic_report import *  # noqa F403
 from .encounter import *  # noqa F403
 from .file_upload import *  # noqa F403
 from .healthcare_service import *  # noqa F403
+from .invoice import *  # noqa F403
 from .location import *  # noqa F403
 from .meta_artifact import *  # noqa F403
 from .observation import *  # noqa F403
 from .observation_definition import *  # noqa F403
 from .patient import *  # noqa F403
+from .payment_reconciliation import *  # noqa F403
 from .questionnaire import *  # noqa F403
 from .scheduling import *  # noqa F403
 from .service_request import *  # noqa F403

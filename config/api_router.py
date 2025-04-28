@@ -34,6 +34,7 @@ from care.emr.api.viewsets.facility_organization import (
 )
 from care.emr.api.viewsets.file_upload import FileUploadViewSet
 from care.emr.api.viewsets.healthcare_service import HealthcareServiceViewSet
+from care.emr.api.viewsets.invoice import InvoiceViewSet
 from care.emr.api.viewsets.location import (
     FacilityLocationEncounterViewSet,
     FacilityLocationViewSet,
@@ -54,6 +55,7 @@ from care.emr.api.viewsets.organization import (
     OrganizationViewSet,
 )
 from care.emr.api.viewsets.patient import PatientViewSet
+from care.emr.api.viewsets.payment_reconciliation import PaymentReconciliationViewSet
 from care.emr.api.viewsets.questionnaire import (
     QuestionnaireTagsViewSet,
     QuestionnaireViewSet,
@@ -251,6 +253,18 @@ facility_nested_router.register(
     r"charge_item",
     ChargeItemViewSet,
     basename="charge_item",
+)
+
+facility_nested_router.register(
+    r"invoice",
+    InvoiceViewSet,
+    basename="invoice",
+)
+
+facility_nested_router.register(
+    r"payment_reconciliation",
+    PaymentReconciliationViewSet,
+    basename="payment_reconciliation",
 )
 
 
