@@ -6,11 +6,12 @@ from care.emr.models.account import Account
 from care.emr.models.charge_item import ChargeItem
 from care.emr.models.encounter import Encounter
 from care.emr.resources.base import EMRResource
+from care.emr.resources.charge_item_definition.spec import ChargeItemDefinitionReadSpec
 from care.emr.resources.common.coding import Coding
 from care.emr.resources.common.monetory_component import MonetoryComponent
 
 
-class ChargeItemDefinitionStatusOptions(str, Enum):
+class ChargeItemStatusOptions(str, Enum):
     planned = "planned"
     billable = "billable"
     not_billable = "not_billable"
@@ -25,13 +26,15 @@ class ChargeItemOverrideReason(BaseModel):
 
 
 class ChargeItemSpec(EMRResource):
-    """Base model for ChargeItemDefinition"""
+    """Base model for ChargeItem"""
 
     __model__ = ChargeItem
     __exclude__ = ["encounter", "account"]
 
     id: UUID4 | None = None
-    status: ChargeItemDefinitionStatusOptions
+    title: str
+    description: str | None = None
+    status: ChargeItemStatusOptions
     code: Coding | None = None
     quantity: float
     unit_price_component: list[MonetoryComponent]
@@ -55,7 +58,12 @@ class ChargeItemReadSpec(ChargeItemSpec):
 
     total_price_component: list[MonetoryComponent]
     total_price: float
+    charge_item_definition: dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+        if obj.charge_item_definition:
+            mapping["charge_item_definition"] = ChargeItemDefinitionReadSpec.serialize(
+                obj.charge_item_definition
+            ).to_json()

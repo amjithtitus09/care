@@ -8,6 +8,8 @@ class ChargeItem(EMRBaseModel):
         "facility.Facility",
         on_delete=models.PROTECT,
     )
+    title = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
     patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)
     encounter = models.ForeignKey("emr.Encounter", on_delete=models.CASCADE)
     charge_item_definition = models.ForeignKey(
