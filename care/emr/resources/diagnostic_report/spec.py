@@ -9,6 +9,7 @@ from care.emr.resources.base import EMRResource
 from care.emr.resources.diagnostic_report.valueset import (
     DIAGNOSTIC_SERVICE_SECTIONS_CODE_VALUESET,
 )
+from care.emr.resources.encounter.spec import EncounterListSpec
 from care.emr.resources.observation.spec import ObservationRetrieveSpec
 from care.emr.resources.observation.valueset import CARE_OBSERVATION_VALUSET
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
@@ -55,6 +56,7 @@ class DiagnosticReportListSpec(DiagnosticReportSpecBase):
 
 class DiagnosticReportRetrieveSpec(DiagnosticReportListSpec):
     observations: list[dict] = []
+    encounter: dict
 
     created_by: dict | None = None
     updated_by: dict | None = None
@@ -69,3 +71,4 @@ class DiagnosticReportRetrieveSpec(DiagnosticReportListSpec):
             ObservationRetrieveSpec.serialize(observation).to_json()
             for observation in observations
         ]
+        mapping["encounter"] = EncounterListSpec.serialize(obj.encounter).to_json()
