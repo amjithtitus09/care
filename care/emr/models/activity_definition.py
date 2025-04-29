@@ -28,6 +28,7 @@ class ActivityDefinition(EMRBaseModel):
     locations = ArrayField(models.IntegerField(), default=list)
     latest = models.BooleanField(default=True)  # True when its the latest version
     charge_item_definitions = ArrayField(models.IntegerField(), default=list)
+    diagnostic_report_codes = models.JSONField(null=True, blank=True)
     healthcare_service = models.ForeignKey(
         "emr.HealthcareService",
         on_delete=models.PROTECT,

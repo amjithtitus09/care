@@ -15,7 +15,10 @@ from care.emr.resources.base import EMRResource
 from care.emr.resources.charge_item_definition.spec import ChargeItemDefinitionReadSpec
 from care.emr.resources.healthcare_service.spec import HealthcareServiceReadSpec
 from care.emr.resources.location.spec import FacilityLocationListSpec
-from care.emr.resources.observation.valueset import CARE_BODY_SITE_VALUESET
+from care.emr.resources.observation.valueset import (
+    CARE_BODY_SITE_VALUESET,
+    CARE_OBSERVATION_VALUSET,
+)
 from care.emr.resources.observation_definition.spec import ObservationDefinitionReadSpec
 from care.emr.resources.specimen_definition.spec import SpecimenDefinitionReadSpec
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
@@ -58,6 +61,9 @@ class BaseActivityDefinitionSpec(EMRResource):
     kind: ActivityDefinitionKindOptions
     code: ValueSetBoundCoding[ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET.slug]
     body_site: ValueSetBoundCoding[CARE_BODY_SITE_VALUESET.slug] | None = None
+    diagnostic_report_codes: list[
+        ValueSetBoundCoding[CARE_OBSERVATION_VALUSET.slug]
+    ] = []
 
 
 class ActivityDefinitionWriteSpec(BaseActivityDefinitionSpec):
