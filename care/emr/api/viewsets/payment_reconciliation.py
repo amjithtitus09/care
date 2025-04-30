@@ -9,6 +9,7 @@ from care.emr.api.viewsets.base import (
     EMRRetrieveMixin,
     EMRUpdateMixin,
 )
+from care.emr.models.account import Account
 from care.emr.models.invoice import Invoice
 from care.emr.models.payment_reconciliation import PaymentReconciliation
 from care.emr.resources.payment_reconciliation.spec import (
@@ -49,8 +50,14 @@ class PaymentReconciliationViewSet(
 
     def authorize_create(self, instance):
         facility = self.get_facility_obj()
-        invoice = get_object_or_404(Invoice, external_id=instance.target_invoice)
-        if invoice.facility != facility:
-            raise ValidationError("Invoice is not associated with the facility")
-        # TODO: AuthZ pending
+        account = get_object_or_404(Account, external_id=instance.account)
+        if account.facility != facility:
+            raise ValidationError("Account is not associated with the facility")
+        if instance.target_invoice:
+            invoice = get_object_or_404(
+                Invoice, external_id=instance.target_invoice, account=account
+            )
+            if invoice.facility != facility:
+                raise ValidationError("Invoice is not associated with the facility")
+            # TODO: AuthZ pending
         return super().authorize_create(instance)

@@ -5,6 +5,7 @@ from pydantic import UUID4
 from care.emr.models.account import Account
 from care.emr.models.charge_item import ChargeItem
 from care.emr.models.invoice import Invoice
+from care.emr.resources.account.spec import AccountReadSpec
 from care.emr.resources.base import EMRResource
 from care.emr.resources.charge_item.spec import ChargeItemReadSpec
 
@@ -64,6 +65,7 @@ class InvoiceRetrieveSpec(InvoiceReadSpec):
     total_price_component: list[dict]
     total_net: float
     total_gross: float
+    account: dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -72,3 +74,4 @@ class InvoiceRetrieveSpec(InvoiceReadSpec):
             ChargeItemReadSpec.serialize(charge_item)
             for charge_item in ChargeItem.objects.filter(id__in=obj.charge_items)
         ]
+        mapping["account"] = AccountReadSpec.serialize(obj.account).to_json()
