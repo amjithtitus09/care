@@ -65,14 +65,15 @@ class InvoiceViewSet(
         )
 
     def perform_create(self, instance):
+        instance.status = InvoiceStatusOptions.draft.value
         instance.facility = self.get_facility_obj()
-        instance.charge_items = list(
-            ChargeItem.objects.filter(
-                account=instance.account,
-                status=ChargeItemStatusOptions.billable.value,
-                external_id__in=instance.charge_items,
-            ).values_list("id", flat=True)
+        charge_items = ChargeItem.objects.filter(
+            account=instance.account,
+            status=ChargeItemStatusOptions.billable.value,
+            external_id__in=instance.charge_items,
         )
+        instance.charge_items = list(charge_items.values_list("id", flat=True))
+        charge_items.update(status=ChargeItemStatusOptions.billed.value)
         super().perform_create(instance)
 
     def authorize_create(self, instance):
