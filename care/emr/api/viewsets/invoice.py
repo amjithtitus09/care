@@ -138,7 +138,7 @@ class InvoiceViewSet(
     @extend_schema(
         request=RemoveChargeItemFromInvoiceRequest,
     )
-    @action(methods=["GET"], detail=True)
+    @action(methods=["POST"], detail=True)
     def remove_item_from_invoice(self, request, *args, **kwargs):
         # TODO : Add Account Lock
         invoice = self.get_object()
