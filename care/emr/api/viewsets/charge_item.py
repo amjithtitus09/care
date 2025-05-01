@@ -22,6 +22,7 @@ from care.emr.resources.charge_item.spec import (
     ChargeItemSpec,
     ChargeItemWriteSpec,
 )
+from care.emr.resources.charge_item.sync_charge_item_costs import sync_charge_item_costs
 from care.emr.resources.questionnaire.spec import SubjectType
 from care.facility.models.facility import Facility
 
@@ -57,13 +58,25 @@ class ChargeItemViewSet(
             Facility, external_id=self.kwargs["facility_external_id"]
         )
 
+    def get_serializer_create_context(self):
+        return {"facility": self.get_facility_obj()}
+
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
         if not instance.account_id:
             instance.account = get_default_account(
                 instance.patient, self.get_facility_obj()
             )
+        instance.total_price, instance.total_price_components = sync_charge_item_costs(
+            instance
+        )
         super().perform_create(instance)
+
+    def perform_update(self, instance):
+        instance.total_price, instance.total_price_components = sync_charge_item_costs(
+            instance
+        )
+        super().perform_update(instance)
 
     def authorize_create(self, instance):
         facility = self.get_facility_obj()

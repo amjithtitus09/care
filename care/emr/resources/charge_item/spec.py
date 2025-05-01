@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import UUID4, BaseModel
+from pydantic import UUID4, BaseModel, model_validator
 
 from care.emr.models.account import Account
 from care.emr.models.charge_item import ChargeItem
@@ -8,7 +8,10 @@ from care.emr.models.encounter import Encounter
 from care.emr.resources.base import EMRResource
 from care.emr.resources.charge_item_definition.spec import ChargeItemDefinitionReadSpec
 from care.emr.resources.common.coding import Coding
-from care.emr.resources.common.monetory_component import MonetoryComponent
+from care.emr.resources.common.monetory_component import (
+    MonetoryComponent,
+    MonetoryComponentType,
+)
 
 
 class ChargeItemStatusOptions(str, Enum):
@@ -37,9 +40,35 @@ class ChargeItemSpec(EMRResource):
     status: ChargeItemStatusOptions
     code: Coding | None = None
     quantity: float
-    unit_price_component: list[MonetoryComponent]
+    unit_price_components: list[MonetoryComponent]
     note: str | None = None
     override_reason: ChargeItemOverrideReason | None = None
+
+    @model_validator(mode="after")
+    def check_duplicate_codes(self):
+        codes = [
+            component.code for component in self.unit_price_components if component.code
+        ]
+        if len(codes) != len(set(codes)):
+            raise ValueError("Duplicate codes are not allowed.")
+        return self
+
+    @model_validator(mode="after")
+    def check_single_base_component(self):
+        component_types = [
+            component.monetory_component_type
+            for component in self.unit_price_components
+        ]
+        if component_types.count(MonetoryComponentType.base) > 1:
+            raise ValueError("Only one base component is allowed.")
+        return self
+
+    @model_validator(mode="after")
+    def validate_monetory_codes(self):
+        # Validate that the codes used in the components are defined
+        # in the facility or in the instance level
+        # TODO
+        return self
 
 
 class ChargeItemWriteSpec(ChargeItemSpec):
@@ -56,7 +85,7 @@ class ChargeItemWriteSpec(ChargeItemSpec):
 class ChargeItemReadSpec(ChargeItemSpec):
     """Account read specification"""
 
-    total_price_component: list[MonetoryComponent]
+    total_price_components: list[dict]
     total_price: float
     charge_item_definition: dict
 
