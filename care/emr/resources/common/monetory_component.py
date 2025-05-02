@@ -51,7 +51,7 @@ class MonetoryComponents(RootModel):
 
     @model_validator(mode="after")
     def check_duplicate_codes(self):
-        codes = [component.code for component in self.root if component.code]
+        codes = [component.code.code for component in self.root if component.code]
         if len(codes) != len(set(codes)):
             raise ValueError("Duplicate codes are not allowed.")
         return self
