@@ -118,10 +118,12 @@ class ServiceRequestReadSpec(BaseServiceRequestSpec):
 
     created_date: datetime.datetime
     modified_date: datetime.datetime
+    encounter: dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+        mapping["encounter"] = EncounterListSpec.serialize(obj.encounter).to_json()
 
 
 class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
@@ -129,7 +131,7 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
 
     locations: list[dict]
     healthcare_service: dict | None = None
-    encounter: dict
+
     activity_definition: dict | None = None
     specimens: list[dict] | None = None
     created_by: dict | None = None
@@ -151,7 +153,6 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
             mapping["healthcare_service"] = HealthcareServiceReadSpec.serialize(
                 obj.healthcare_service
             ).to_json()
-        mapping["encounter"] = EncounterListSpec.serialize(obj.encounter).to_json()
         if obj.activity_definition:
             mapping["activity_definition"] = ActivityDefinitionReadSpec.serialize(
                 obj.activity_definition

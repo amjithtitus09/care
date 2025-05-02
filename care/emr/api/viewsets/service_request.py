@@ -158,7 +158,12 @@ class ServiceRequestViewSet(
         raise ValidationError("You do not have permission to view this service request")
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(facility=self.get_facility_obj())
+        queryset = (
+            super()
+            .get_queryset()
+            .filter(facility=self.get_facility_obj())
+            .select_related("encounter", "encounter__patient")
+        )
         if self.action != "list":
             return queryset  # Authz is handled separately
         if self.request.user.is_superuser:
