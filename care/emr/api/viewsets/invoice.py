@@ -26,6 +26,8 @@ from care.emr.resources.invoice.spec import (
     InvoiceStatusOptions,
     InvoiceWriteSpec,
 )
+from care.emr.resources.invoice.sync_items import sync_invoice_items
+from care.emr.resources.scheduling.slot.spec import CANCELLED_STATUS_CHOICES
 from care.facility.models.facility import Facility
 
 
@@ -42,6 +44,10 @@ class AttachChargeItemToInvoiceRequest(BaseModel):
 
 class RemoveChargeItemFromInvoiceRequest(BaseModel):
     charge_item: UUID4
+
+
+class InvoiceCancelReasonRequest(BaseModel):
+    reason: str
 
 
 class InvoiceViewSet(
@@ -74,6 +80,7 @@ class InvoiceViewSet(
         )
         instance.charge_items = list(charge_items.values_list("id", flat=True))
         charge_items.update(status=ChargeItemStatusOptions.billed.value)
+        sync_invoice_items(instance)
         super().perform_create(instance)
 
     def authorize_create(self, instance):
@@ -87,6 +94,10 @@ class InvoiceViewSet(
     def perform_update(self, instance):
         old_invoice = Invoice.objects.get(id=instance.id)
         if old_invoice.status != instance.status:
+            if instance.status in CANCELLED_STATUS_CHOICES:
+                raise ValidationError(
+                    "Call the cancel invoice API to cancel the invoice"
+                )
             if (
                 old_invoice.status in INVOICE_CANCELLED_STATUS
                 and instance.status not in INVOICE_CANCELLED_STATUS
@@ -100,15 +111,21 @@ class InvoiceViewSet(
             ):
                 raise ValidationError("Invoice is already issued")
             if (
-                old_invoice.status not in INVOICE_CANCELLED_STATUS
-                and instance.status in INVOICE_CANCELLED_STATUS
+                old_invoice.status == InvoiceStatusOptions.draft.value
+                and instance.status == InvoiceStatusOptions.balanced.value
             ):
-                # TODO : Lock Account
+                raise ValidationError("Invoice needs to be issued before balancing")
+            if (
+                old_invoice.status == InvoiceStatusOptions.issued.value
+                and instance.status == InvoiceStatusOptions.balanced.value
+            ):
                 ChargeItem.objects.filter(
                     account=instance.account,
                     status=ChargeItemStatusOptions.billed.value,
                     id__in=instance.charge_items,
-                ).update(status=ChargeItemStatusOptions.billable.value)
+                ).update(
+                    status=ChargeItemStatusOptions.paid.value, paid_invoice=instance
+                )
         return super().perform_update(instance)
 
     def check_invoice_in_draft(self, instance):
@@ -119,7 +136,7 @@ class InvoiceViewSet(
     @extend_schema(
         request=AttachChargeItemToInvoiceRequest,
     )
-    @action(methods=["POST"], detail=False)
+    @action(methods=["POST"], detail=True)
     def attach_items_to_invoice(self, request, *args, **kwargs):
         # TODO : Add Account Lock
         invoice = self.get_object()
@@ -131,7 +148,10 @@ class InvoiceViewSet(
                 account=invoice.account,
                 status=ChargeItemStatusOptions.billable.value,
             )
-            invoice.charge_items = list(charge_items.values_list("id", flat=True))
+            invoice.charge_items = invoice.charge_items + list(
+                charge_items.values_list("id", flat=True)
+            )
+            sync_invoice_items(invoice)
             invoice.save()
             charge_items.update(status=ChargeItemStatusOptions.billed.value)
         return Response(InvoiceRetrieveSpec.serialize(invoice).to_json())
@@ -151,6 +171,7 @@ class InvoiceViewSet(
         try:
             with transaction.atomic():
                 invoice.charge_items.remove(charge_item.id)
+                sync_invoice_items(invoice)
                 invoice.save()
                 charge_item.status = ChargeItemStatusOptions.billable.value
                 charge_item.save()
@@ -159,7 +180,7 @@ class InvoiceViewSet(
 
         return Response(InvoiceRetrieveSpec.serialize(invoice).to_json())
 
-    @action(methods=["POST"], detail=False)
+    @action(methods=["POST"], detail=True)
     def attach_account_to_invoice(self, request, *args, **kwargs):
         # TODO : Add Account Lock
         invoice = self.get_object()
@@ -169,6 +190,25 @@ class InvoiceViewSet(
                 account=invoice.account, status=ChargeItemStatusOptions.billable.value
             )
             invoice.charge_items = charge_items.values_list("id", flat=True)
+            sync_invoice_items(invoice)
             invoice.save()
             charge_items.update(status=ChargeItemStatusOptions.billed.value)
+        return Response(InvoiceRetrieveSpec.serialize(invoice).to_json())
+
+    @action(methods=["POST"], detail=True)
+    def cancel_invoice(self, request, *args, **kwargs):
+        invoice = self.get_object()
+        if invoice.status in CANCELLED_STATUS_CHOICES:
+            raise ValidationError("Invoice is already cancelled")
+        request_params = InvoiceCancelReasonRequest(**request.data)
+        if request_params.reason not in CANCELLED_STATUS_CHOICES:
+            raise ValidationError("Invalid reason")
+        with transaction.atomic():
+            invoice.status = request_params.reason
+            ChargeItem.objects.filter(
+                account=invoice.account,
+                status=ChargeItemStatusOptions.billed.value,
+                id__in=invoice.charge_items,
+            ).update(status=ChargeItemStatusOptions.billable.value, paid_invoice=None)
+            invoice.save()
         return Response(InvoiceRetrieveSpec.serialize(invoice).to_json())

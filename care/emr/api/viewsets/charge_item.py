@@ -90,5 +90,12 @@ class ChargeItemViewSet(
         # TODO: AuthZ pending
         return super().authorize_create(instance)
 
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .select_related("paid_invoice", "charge_item_definition")
+        )
+
 
 InternalQuestionnaireRegistry.register(ChargeItemViewSet)

@@ -30,3 +30,10 @@ class ChargeItem(EMRBaseModel):
     service_resource_id = models.CharField(
         max_length=255, null=True, blank=True, default=None
     )
+    paid_invoice = models.ForeignKey(
+        "emr.Invoice",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        default=None,
+    )

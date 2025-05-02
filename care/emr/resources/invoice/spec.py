@@ -62,7 +62,7 @@ class InvoiceRetrieveSpec(InvoiceReadSpec):
     """Invoice retrieve specification"""
 
     charge_items: list[dict]
-    total_price_component: list[dict]
+    total_price_components: list[dict]
     total_net: float
     total_gross: float
     account: dict
@@ -70,8 +70,13 @@ class InvoiceRetrieveSpec(InvoiceReadSpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         super().perform_extra_serialization(mapping, obj)
-        mapping["charge_items"] = [
-            ChargeItemReadSpec.serialize(charge_item)
-            for charge_item in ChargeItem.objects.filter(id__in=obj.charge_items)
-        ]
+        if obj.status in (InvoiceStatusOptions.draft.value,):
+            mapping["charge_items"] = [
+                ChargeItemReadSpec.serialize(charge_item)
+                for charge_item in ChargeItem.objects.filter(
+                    id__in=obj.charge_items
+                ).select_related("paid_invoice", "charge_item_definition")
+            ]
+        else:
+            mapping["charge_items"] = obj.charge_items_copy
         mapping["account"] = AccountReadSpec.serialize(obj.account).to_json()

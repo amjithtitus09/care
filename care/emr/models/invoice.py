@@ -23,6 +23,7 @@ class Invoice(EMRBaseModel):
     payment_terms = models.TextField(null=True, blank=True)
     note = models.TextField(null=True, blank=True)
     charge_items = ArrayField(models.IntegerField(), default=list)
-    total_price_component = models.JSONField(default=dict)
+    charge_items_copy = models.JSONField(default=list)
+    total_price_components = models.JSONField(default=dict)
     total_net = models.FloatField(default=0)
     total_gross = models.FloatField(default=0)

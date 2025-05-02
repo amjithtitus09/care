@@ -20,6 +20,7 @@ class ChargeItemStatusOptions(str, Enum):
     not_billable = "not_billable"
     aborted = "aborted"
     billed = "billed"
+    paid = "paid"
     entered_in_error = "entered_in_error"
 
 
@@ -90,11 +91,18 @@ class ChargeItemReadSpec(ChargeItemSpec):
     total_price_components: list[dict]
     total_price: float
     charge_item_definition: dict
+    paid_invoice: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
+        from care.emr.resources.invoice.spec import InvoiceReadSpec
+
         mapping["id"] = obj.external_id
         if obj.charge_item_definition:
             mapping["charge_item_definition"] = ChargeItemDefinitionReadSpec.serialize(
                 obj.charge_item_definition
+            ).to_json()
+        if obj.paid_invoice:
+            mapping["paid_invoice"] = InvoiceReadSpec.serialize(
+                obj.paid_invoice
             ).to_json()
