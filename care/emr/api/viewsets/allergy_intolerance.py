@@ -3,7 +3,6 @@ import uuid
 from django.db import transaction
 from django_filters import CharFilter, FilterSet
 from django_filters import rest_framework as filters
-from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters as rest_framework_filters
 from rest_framework.exceptions import PermissionDenied
@@ -62,7 +61,7 @@ class AllergyIntoleranceViewSet(
     questionnaire_subject_type = SubjectType.patient.value
     filterset_class = AllergyIntoleranceFilters
     filter_backends = [
-        DjangoFilterBackend,
+        filters.DjangoFilterBackend,
         rest_framework_filters.OrderingFilter,
     ]
     ordering_fields = ["created_date", "modified_date"]
