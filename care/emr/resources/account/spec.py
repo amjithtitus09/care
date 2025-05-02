@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 
 from django.shortcuts import get_object_or_404
@@ -53,8 +54,20 @@ class AccountReadSpec(AccountSpec):
     """Account read specification"""
 
     patient: dict
+    total_net: float
+    total_gross: float
+    total_paid: float
+    total_balance: float
+    calculated_at: datetime.datetime
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["patient"] = PatientListSpec.serialize(obj.patient)
+
+
+class AccountRetrieveSpec(AccountReadSpec):
+    """Account retrieve specification"""
+
+    cached_items: list = []
+    total_price_components: dict

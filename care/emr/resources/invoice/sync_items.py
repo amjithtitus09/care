@@ -33,13 +33,20 @@ def update_amount(price_component, total_price_components):
 
 
 def sync_invoice_items(invoice: Invoice):
+    charge_items = ChargeItem.objects.filter(id__in=invoice.charge_items)
+    summary = calculate_charge_items_summary(charge_items)
+    invoice.total_net = summary["net"]
+    invoice.total_gross = summary["gross"]
+    invoice.total_price_components = summary["total_price_components"]
+    invoice.charge_items_copy = summary["charge_items_copy"]
+
+
+def calculate_charge_items_summary(charge_items):
     """
     Calculate the total net, gross, price components and copy the charge items
     net amount has tax excluded
     gross amount has tax included
     """
-
-    charge_items = ChargeItem.objects.filter(id__in=invoice.charge_items)
 
     costs = {}
     charge_items_copy = []
@@ -73,7 +80,10 @@ def sync_invoice_items(invoice: Invoice):
     final_price_components = []
     for price_component in total_price_components.values():
         final_price_components.extend(list(price_component.values()))
-    invoice.total_net = net
-    invoice.total_gross = gross
-    invoice.total_price_components = final_price_components
-    invoice.charge_items_copy = charge_items_copy
+
+    return {
+        "net": net,
+        "gross": gross,
+        "total_price_components": final_price_components,
+        "charge_items_copy": charge_items_copy,
+    }

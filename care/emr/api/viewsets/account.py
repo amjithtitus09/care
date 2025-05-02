@@ -1,5 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -12,8 +14,10 @@ from care.emr.models.account import Account
 from care.emr.resources.account.spec import (
     AccountCreateSpec,
     AccountReadSpec,
+    AccountRetrieveSpec,
     AccountSpec,
 )
+from care.emr.resources.account.sync_items import sync_account_items
 from care.facility.models.facility import Facility
 
 
@@ -31,6 +35,7 @@ class AccountViewSet(
     pydantic_model = AccountCreateSpec
     pydantic_update_model = AccountSpec
     pydantic_read_model = AccountReadSpec
+    pydantic_retrieve_model = AccountRetrieveSpec
     filterset_class = AccountFilters
     filter_backends = [filters.DjangoFilterBackend]
 
@@ -44,3 +49,10 @@ class AccountViewSet(
         instance.facility = self.get_facility_obj()
         instance.save()
         return instance
+
+    @action(methods=["POST"], detail=True)
+    def rebalance(self, request, *args, **kwargs):
+        account = self.get_object()
+        sync_account_items(account)
+        account.save()
+        return Response(AccountRetrieveSpec.serialize(account).to_json())
