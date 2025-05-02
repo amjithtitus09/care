@@ -120,11 +120,14 @@ class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):
         mapping["observation_result_requirements"] = observation_result_requirements
         locations = []
         for location in obj.locations:
-            locations.append(
-                FacilityLocationListSpec.serialize(
-                    FacilityLocation.objects.get(id=location)
-                ).to_json()
-            )
+            try:
+                locations.append(
+                    FacilityLocationListSpec.serialize(
+                        FacilityLocation.objects.get(id=location)
+                    ).to_json()
+                )
+            except Exception:  # noqa S110
+                pass
         mapping["locations"] = locations
         if obj.healthcare_service:
             mapping["healthcare_service"] = HealthcareServiceReadSpec.serialize(

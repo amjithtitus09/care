@@ -143,11 +143,14 @@ class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
         super().perform_extra_serialization(mapping, obj)
         locations = []
         for location in obj.locations:
-            locations.append(
-                FacilityLocationListSpec.serialize(
-                    FacilityLocation.objects.get(id=location)
-                ).to_json()
-            )
+            try:
+                locations.append(
+                    FacilityLocationListSpec.serialize(
+                        FacilityLocation.objects.get(id=location)
+                    ).to_json()
+                )
+            except Exception:  # noqa S110
+                pass
         mapping["locations"] = locations
         if obj.healthcare_service:
             mapping["healthcare_service"] = HealthcareServiceReadSpec.serialize(
