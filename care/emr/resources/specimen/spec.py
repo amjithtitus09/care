@@ -125,3 +125,19 @@ class SpecimenReadSpec(BaseSpecimenSpec):
             mapping["specimen_definition"] = SpecimenDefinitionReadSpec.serialize(
                 obj.specimen_definition
             ).to_json()
+
+
+class SpecimenRetrieveSpec(SpecimenReadSpec):
+    """Specimen retrieve specification"""
+
+    service_request: dict | None = None
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        super().perform_extra_serialization(mapping, obj)
+        from care.emr.resources.service_request.spec import ServiceRequestReadSpec
+
+        if obj.service_request:
+            mapping["service_request"] = ServiceRequestReadSpec.serialize(
+                obj.service_request
+            ).to_json()
