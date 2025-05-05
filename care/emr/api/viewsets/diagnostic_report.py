@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
 from pydantic import UUID4, BaseModel
 from rest_framework.decorators import action
@@ -47,6 +48,10 @@ class BatchUpdateObservationRequest(BaseModel):
     observations: list[UpsertObservationRequest]
 
 
+class DiagnosticReportFilters(filters.FilterSet):
+    status = filters.CharFilter(lookup_expr="iexact")
+
+
 class DiagnosticReportViewSet(
     EMRCreateMixin,
     EMRRetrieveMixin,
@@ -59,6 +64,8 @@ class DiagnosticReportViewSet(
     pydantic_update_model = DiagnosticReportUpdateSpec
     pydantic_read_model = DiagnosticReportListSpec
     pydantic_retrieve_model = DiagnosticReportRetrieveSpec
+    filterset_class = DiagnosticReportFilters
+    filter_backends = [filters.DjangoFilterBackend]
 
     def get_facility_obj(self):
         return get_object_or_404(

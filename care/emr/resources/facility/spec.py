@@ -54,7 +54,6 @@ class FacilityCreateSpec(FacilityBaseSpec):
         ):
             raise ValueError("Discount monetory components cannot be more than 100.")
         return self
-        return None
 
     @model_validator(mode="after")
     def validate_codes(self):
@@ -83,9 +82,6 @@ class FacilityCreateSpec(FacilityBaseSpec):
         return self
 
     def perform_extra_deserialization(self, is_update, obj):
-        import logging
-
-        logging.info(self.discount_monetory_components)
         obj.geo_organization = Organization.objects.filter(
             external_id=self.geo_organization, org_type="govt"
         ).first()
