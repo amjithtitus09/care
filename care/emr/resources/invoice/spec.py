@@ -53,6 +53,9 @@ class InvoiceWriteSpec(BaseInvoiceSpec):
 class InvoiceReadSpec(BaseInvoiceSpec):
     """Invoice read specification"""
 
+    total_net: float
+    total_gross: float
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
@@ -63,8 +66,6 @@ class InvoiceRetrieveSpec(InvoiceReadSpec):
 
     charge_items: list[dict]
     total_price_components: list[dict]
-    total_net: float
-    total_gross: float
     account: dict
 
     @classmethod
