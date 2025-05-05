@@ -41,45 +41,6 @@ DISCOUNT_MONETORY_COMPONENT_COUNT_LIMIT = 100
 class FacilityCreateSpec(FacilityBaseSpec):
     geo_organization: UUID4
     features: list[int]
-    discount_codes: list[Coding] = []
-    discount_monetory_components: list[MonetoryComponentDefinition] = []
-
-    @model_validator(mode="after")
-    def validate_count(self):
-        if len(self.discount_codes) >= DISCOUNT_CODE_COUNT_LIMIT:
-            raise ValueError("Discount codes cannot be more than 100.")
-        if (
-            len(self.discount_monetory_components)
-            >= DISCOUNT_MONETORY_COMPONENT_COUNT_LIMIT
-        ):
-            raise ValueError("Discount monetory components cannot be more than 100.")
-        return self
-
-    @model_validator(mode="after")
-    def validate_codes(self):
-        # Duplicate codes are not allowed
-        codes = [code.code for code in self.discount_codes]
-        if len(codes) != len(set(codes)):
-            raise ValueError("Duplicate codes are not allowed.")
-        # Redefining system codes are not allowed
-        system_codes = [[code.code, code.system] for code in settings.DISCOUNT_CODES]
-        for code in self.discount_codes:
-            if [code.code, code.system] in system_codes:
-                raise ValueError("Redefining system codes are not allowed.")
-        # All monetory components code must be defined
-        facility_codes = [[code.code, code.system] for code in self.discount_codes]
-        all_allowed_codes = system_codes + facility_codes
-        for definition in self.discount_monetory_components:
-            if (
-                definition.code
-                and [
-                    definition.code.code,
-                    definition.code.system,
-                ]
-                not in all_allowed_codes
-            ):
-                raise ValueError("All monetory components code must be defined.")
-        return self
 
     def perform_extra_deserialization(self, is_update, obj):
         obj.geo_organization = Organization.objects.filter(
@@ -128,3 +89,48 @@ class FacilityRetrieveSpec(FacilityReadSpec, FacilityPermissionsMixin):
         mapping["instance_tax_monetory_components"] = (
             settings.TAX_MONETORY_COMPONENT_DEFINITIONS
         )
+
+
+class FacilityMonetoryCodeSpec(EMRResource):
+    __model__ = Facility
+    __exclude__ = []
+
+    discount_codes: list[Coding] = []
+    discount_monetory_components: list[MonetoryComponentDefinition] = []
+
+    @model_validator(mode="after")
+    def validate_count(self):
+        if len(self.discount_codes) >= DISCOUNT_CODE_COUNT_LIMIT:
+            raise ValueError("Discount codes cannot be more than 100.")
+        if (
+            len(self.discount_monetory_components)
+            >= DISCOUNT_MONETORY_COMPONENT_COUNT_LIMIT
+        ):
+            raise ValueError("Discount monetory components cannot be more than 100.")
+        return self
+
+    @model_validator(mode="after")
+    def validate_codes(self):
+        # Duplicate codes are not allowed
+        codes = [code.code for code in self.discount_codes]
+        if len(codes) != len(set(codes)):
+            raise ValueError("Duplicate codes are not allowed.")
+        # Redefining system codes are not allowed
+        system_codes = [[code.code, code.system] for code in settings.DISCOUNT_CODES]
+        for code in self.discount_codes:
+            if [code.code, code.system] in system_codes:
+                raise ValueError("Redefining system codes are not allowed.")
+        # All monetory components code must be defined
+        facility_codes = [[code.code, code.system] for code in self.discount_codes]
+        all_allowed_codes = system_codes + facility_codes
+        for definition in self.discount_monetory_components:
+            if (
+                definition.code
+                and [
+                    definition.code.code,
+                    definition.code.system,
+                ]
+                not in all_allowed_codes
+            ):
+                raise ValueError("All monetory components code must be defined.")
+        return self
