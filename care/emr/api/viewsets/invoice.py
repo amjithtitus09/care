@@ -27,7 +27,6 @@ from care.emr.resources.invoice.spec import (
     InvoiceWriteSpec,
 )
 from care.emr.resources.invoice.sync_items import sync_invoice_items
-from care.emr.resources.scheduling.slot.spec import CANCELLED_STATUS_CHOICES
 from care.facility.models.facility import Facility
 
 
@@ -94,7 +93,7 @@ class InvoiceViewSet(
     def perform_update(self, instance):
         old_invoice = Invoice.objects.get(id=instance.id)
         if old_invoice.status != instance.status:
-            if instance.status in CANCELLED_STATUS_CHOICES:
+            if instance.status in INVOICE_CANCELLED_STATUS:
                 raise ValidationError(
                     "Call the cancel invoice API to cancel the invoice"
                 )
@@ -198,10 +197,10 @@ class InvoiceViewSet(
     @action(methods=["POST"], detail=True)
     def cancel_invoice(self, request, *args, **kwargs):
         invoice = self.get_object()
-        if invoice.status in CANCELLED_STATUS_CHOICES:
+        if invoice.status in INVOICE_CANCELLED_STATUS:
             raise ValidationError("Invoice is already cancelled")
         request_params = InvoiceCancelReasonRequest(**request.data)
-        if request_params.reason not in CANCELLED_STATUS_CHOICES:
+        if request_params.reason not in INVOICE_CANCELLED_STATUS:
             raise ValidationError("Invalid reason")
         with transaction.atomic():
             invoice.status = request_params.reason
