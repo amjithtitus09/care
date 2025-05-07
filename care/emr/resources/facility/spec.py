@@ -4,7 +4,7 @@ from pydantic import UUID4, model_validator
 from care.emr.models import Organization
 from care.emr.resources.base import EMRResource
 from care.emr.resources.common.coding import Coding
-from care.emr.resources.common.monetory_component import MonetoryComponentDefinition
+from care.emr.resources.common.monetary_component import MonetaryComponentDefinition
 from care.emr.resources.organization.spec import OrganizationReadSpec
 from care.emr.resources.permissions import FacilityPermissionsMixin
 from care.emr.resources.user.spec import UserSpec
@@ -35,7 +35,7 @@ class FacilityBaseSpec(FacilityBareMinimumSpec):
 
 
 DISCOUNT_CODE_COUNT_LIMIT = 100
-DISCOUNT_MONETORY_COMPONENT_COUNT_LIMIT = 100
+DISCOUNT_MONETARY_COMPONENT_COUNT_LIMIT = 100
 
 
 class FacilityCreateSpec(FacilityBaseSpec):
@@ -71,42 +71,42 @@ class FacilityReadSpec(FacilityBaseSpec):
 class FacilityRetrieveSpec(FacilityReadSpec, FacilityPermissionsMixin):
     flags: list[str] = []
     discount_codes: list[dict] = []
-    discount_monetory_components: list[dict] = []
+    discount_monetary_components: list[dict] = []
     instance_discount_codes: list[dict] = []
-    instance_discount_monetory_components: list[dict] = []
+    instance_discount_monetary_components: list[dict] = []
     instance_tax_codes: list[dict] = []
-    instance_tax_monetory_components: list[dict] = []
+    instance_tax_monetary_components: list[dict] = []
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         super().perform_extra_serialization(mapping, obj)
         mapping["flags"] = obj.get_facility_flags()
         mapping["instance_discount_codes"] = settings.DISCOUNT_CODES
-        mapping["instance_discount_monetory_components"] = (
-            settings.DISCOUNT_MONETORY_COMPONENT_DEFINITIONS
+        mapping["instance_discount_monetary_components"] = (
+            settings.DISCOUNT_MONETARY_COMPONENT_DEFINITIONS
         )
         mapping["instance_tax_codes"] = settings.TAX_CODES
-        mapping["instance_tax_monetory_components"] = (
-            settings.TAX_MONETORY_COMPONENT_DEFINITIONS
+        mapping["instance_tax_monetary_components"] = (
+            settings.TAX_MONETARY_COMPONENT_DEFINITIONS
         )
 
 
-class FacilityMonetoryCodeSpec(EMRResource):
+class FacilityMonetaryCodeSpec(EMRResource):
     __model__ = Facility
     __exclude__ = []
 
     discount_codes: list[Coding] = []
-    discount_monetory_components: list[MonetoryComponentDefinition] = []
+    discount_monetary_components: list[MonetaryComponentDefinition] = []
 
     @model_validator(mode="after")
     def validate_count(self):
         if len(self.discount_codes) >= DISCOUNT_CODE_COUNT_LIMIT:
             raise ValueError("Discount codes cannot be more than 100.")
         if (
-            len(self.discount_monetory_components)
-            >= DISCOUNT_MONETORY_COMPONENT_COUNT_LIMIT
+            len(self.discount_monetary_components)
+            >= DISCOUNT_MONETARY_COMPONENT_COUNT_LIMIT
         ):
-            raise ValueError("Discount monetory components cannot be more than 100.")
+            raise ValueError("Discount monetary components cannot be more than 100.")
         return self
 
     @model_validator(mode="after")
@@ -120,10 +120,10 @@ class FacilityMonetoryCodeSpec(EMRResource):
         for code in self.discount_codes:
             if [code.code, code.system] in system_codes:
                 raise ValueError("Redefining system codes are not allowed.")
-        # All monetory components code must be defined
+        # All monetary components code must be defined
         facility_codes = [[code.code, code.system] for code in self.discount_codes]
         all_allowed_codes = system_codes + facility_codes
-        for definition in self.discount_monetory_components:
+        for definition in self.discount_monetary_components:
             if (
                 definition.code
                 and [
@@ -132,5 +132,5 @@ class FacilityMonetoryCodeSpec(EMRResource):
                 ]
                 not in all_allowed_codes
             ):
-                raise ValueError("All monetory components code must be defined.")
+                raise ValueError("All monetary components code must be defined.")
         return self

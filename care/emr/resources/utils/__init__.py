@@ -1,10 +1,10 @@
 from pydantic import BaseModel, RootModel, model_validator
 
 from care.emr.resources.common.coding import Coding
-from care.emr.resources.common.monetory_component import MonetoryComponentDefinition
+from care.emr.resources.common.monetary_component import MonetaryComponentDefinition
 
 
-class MonetoryCodes(RootModel):
+class MonetaryCodes(RootModel):
     root: list[Coding] = []
 
     def __iter__(self):
@@ -18,8 +18,8 @@ class MonetoryCodes(RootModel):
         return self
 
 
-class MonetoryComponentDefinitions(RootModel):
-    root: list[MonetoryComponentDefinition] = []
+class MonetaryComponentDefinitions(RootModel):
+    root: list[MonetaryComponentDefinition] = []
 
     @model_validator(mode="after")
     def check_duplicate_codes(self):

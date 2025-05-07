@@ -5,7 +5,7 @@ from pydantic import BaseModel, RootModel, model_validator
 from care.emr.resources.common.coding import Coding
 
 
-class MonetoryComponentType(str, Enum):
+class MonetaryComponentType(str, Enum):
     base = "base"
     surcharge = "surcharge"
     discount = "discount"
@@ -13,8 +13,8 @@ class MonetoryComponentType(str, Enum):
     informational = "informational"
 
 
-class MonetoryComponent(BaseModel):
-    monetory_component_type: MonetoryComponentType
+class MonetaryComponent(BaseModel):
+    monetary_component_type: MonetaryComponentType
     code: Coding | None = None
     factor: float | None = None
     amount: float | None = None
@@ -22,7 +22,7 @@ class MonetoryComponent(BaseModel):
     @model_validator(mode="after")
     def base_no_factor(self):
         if (
-            self.monetory_component_type == MonetoryComponentType.base.value
+            self.monetary_component_type == MonetaryComponentType.base.value
             and not self.amount
         ):
             raise ValueError("Base component must have an amount.")
@@ -43,8 +43,8 @@ class MonetoryComponent(BaseModel):
         return self
 
 
-class MonetoryComponents(RootModel):
-    root: list[MonetoryComponent] = []
+class MonetaryComponents(RootModel):
+    root: list[MonetaryComponent] = []
 
     def __iter__(self):
         return iter(self.root)
@@ -58,13 +58,13 @@ class MonetoryComponents(RootModel):
 
     @model_validator(mode="after")
     def check_single_base_component(self):
-        component_types = [component.monetory_component_type for component in self.root]
-        if component_types.count(MonetoryComponentType.base) > 1:
+        component_types = [component.monetary_component_type for component in self.root]
+        if component_types.count(MonetaryComponentType.base) > 1:
             raise ValueError("Only one base component is allowed.")
         return self
 
 
-class MonetoryComponentDefinition(MonetoryComponent):
+class MonetaryComponentDefinition(MonetaryComponent):
     title: str
 
     @model_validator(mode="after")
@@ -79,6 +79,6 @@ class MonetoryComponentDefinition(MonetoryComponent):
 
     @model_validator(mode="after")
     def check_base_absent(self):
-        if self.monetory_component_type == MonetoryComponentType.base.value:
+        if self.monetary_component_type == MonetaryComponentType.base.value:
             raise ValueError("Base component is not allowed in definition.")
         return self

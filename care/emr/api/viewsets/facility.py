@@ -17,7 +17,7 @@ from care.emr.models import Organization, SchedulableUserResource
 from care.emr.models.organization import FacilityOrganizationUser, OrganizationUser
 from care.emr.resources.facility.spec import (
     FacilityCreateSpec,
-    FacilityMonetoryCodeSpec,
+    FacilityMonetaryCodeSpec,
     FacilityReadSpec,
     FacilityRetrieveSpec,
 )
@@ -134,13 +134,13 @@ class FacilityViewSet(EMRModelViewSet):
         return Response({"detail": "Method not allowed"}, status=405)
 
     @extend_schema(
-        request=FacilityMonetoryCodeSpec,
+        request=FacilityMonetaryCodeSpec,
     )
     @action(methods=["POST"], detail=True)
     def set_monetary_codes(self, request, *args, **kwargs):
         instance = self.get_object()
         self.authorize_update({}, instance)
-        serializer_obj = FacilityMonetoryCodeSpec.model_validate(
+        serializer_obj = FacilityMonetaryCodeSpec.model_validate(
             request.data,
             context={
                 "is_update": True,

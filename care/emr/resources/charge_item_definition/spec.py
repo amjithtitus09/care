@@ -4,7 +4,7 @@ from pydantic import UUID4
 
 from care.emr.models.charge_item_definition import ChargeItemDefinition
 from care.emr.resources.base import EMRResource
-from care.emr.resources.common.monetory_component import MonetoryComponent
+from care.emr.resources.common.monetary_component import MonetaryComponent
 
 
 class ChargeItemDefinitionStatusOptions(str, Enum):
@@ -26,7 +26,7 @@ class ChargeItemDefinitionSpec(EMRResource):
     derived_from_uri: str | None = None
     description: str | None = None
     purpose: str | None = None
-    price_component: list[MonetoryComponent]
+    price_component: list[MonetaryComponent]
 
 
 class ChargeItemDefinitionReadSpec(ChargeItemDefinitionSpec):

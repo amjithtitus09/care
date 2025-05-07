@@ -1,6 +1,6 @@
 import environ
 
-from care.emr.resources.utils import MonetoryCodes, MonetoryComponentDefinitions
+from care.emr.resources.utils import MonetaryCodes, MonetaryComponentDefinitions
 
 env = environ.Env()
 
@@ -27,41 +27,41 @@ MAX_QUESTIONNAIRE_TEXT_RESPONSE_SIZE = env.int(
     "MAX_QUESTIONNAIRE_TEXT_RESPONSE_SIZE", default=2500
 )
 
-TAX_CODES = MonetoryCodes(
+TAX_CODES = MonetaryCodes(
     env.json(
         "TAX_CODES",
         default=[
             {
                 "code": "igst",
                 "display": "IGST",
-                "system": "http://ohc.network/codes/monetory/tax",
+                "system": "http://ohc.network/codes/monetary/tax",
             },
             {
                 "code": "gst",
                 "display": "GST",
-                "system": "http://ohc.network/codes/monetory/tax",
+                "system": "http://ohc.network/codes/monetary/tax",
             },
             {
                 "code": "sgst",
                 "display": "SGST",
-                "system": "http://ohc.network/codes/monetory/tax",
+                "system": "http://ohc.network/codes/monetary/tax",
             },
         ],
     )
 )
 
-TAX_MONETORY_COMPONENT_DEFINITIONS = MonetoryComponentDefinitions(
+TAX_MONETARY_COMPONENT_DEFINITIONS = MonetaryComponentDefinitions(
     env.json(
-        "TAX_MONETORY_COMPONENT_DEFINITIONS",
+        "TAX_MONETARY_COMPONENT_DEFINITIONS",
         default=[
             {
                 "title": "IGST",
                 "code": {
                     "code": "igst",
                     "display": "IGST",
-                    "system": "http://ohc.network/codes/monetory/tax",
+                    "system": "http://ohc.network/codes/monetary/tax",
                 },
-                "monetory_component_type": "tax",
+                "monetary_component_type": "tax",
                 "factor": 10,
             },
             {
@@ -69,50 +69,50 @@ TAX_MONETORY_COMPONENT_DEFINITIONS = MonetoryComponentDefinitions(
                 "code": {
                     "code": "gst",
                     "display": "GST",
-                    "system": "http://ohc.network/codes/monetory/tax",
+                    "system": "http://ohc.network/codes/monetary/tax",
                 },
-                "monetory_component_type": "tax",
+                "monetary_component_type": "tax",
                 "factor": 10,
             },
         ],
     )
 )
 
-DISCOUNT_CODES = MonetoryCodes(
+DISCOUNT_CODES = MonetaryCodes(
     env.json(
         "DISCOUNT_CODES",
         default=[
             {
                 "code": "oldage",
                 "display": "Old Age Discount",
-                "system": "http://ohc.network/codes/monetory/discount",
+                "system": "http://ohc.network/codes/monetary/discount",
             },
             {
                 "code": "child",
                 "display": "Child Discount",
-                "system": "http://ohc.network/codes/monetory/discount",
+                "system": "http://ohc.network/codes/monetary/discount",
             },
             {
                 "code": "student",
                 "display": "Student Discount",
-                "system": "http://ohc.network/codes/monetory/discount",
+                "system": "http://ohc.network/codes/monetary/discount",
             },
         ],
     )
 )
 
-DISCOUNT_MONETORY_COMPONENT_DEFINITIONS = MonetoryComponentDefinitions(
+DISCOUNT_MONETARY_COMPONENT_DEFINITIONS = MonetaryComponentDefinitions(
     env.json(
-        "DISCOUNT_MONETORY_COMPONENT_DEFINITIONS",
+        "DISCOUNT_MONETARY_COMPONENT_DEFINITIONS",
         default=[
             {
                 "title": "Old Age Discount ?",
                 "code": {
                     "code": "oldage",
                     "display": "Old Age Discount",
-                    "system": "http://ohc.network/codes/monetory/discount",
+                    "system": "http://ohc.network/codes/monetary/discount",
                 },
-                "monetory_component_type": "discount",
+                "monetary_component_type": "discount",
                 "factor": 10,
             },
             {
@@ -120,9 +120,9 @@ DISCOUNT_MONETORY_COMPONENT_DEFINITIONS = MonetoryComponentDefinitions(
                 "code": {
                     "code": "child",
                     "display": "Child Discount",
-                    "system": "http://ohc.network/codes/monetory/discount",
+                    "system": "http://ohc.network/codes/monetary/discount",
                 },
-                "monetory_component_type": "discount",
+                "monetary_component_type": "discount",
                 "factor": 10,
             },
         ],

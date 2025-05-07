@@ -8,9 +8,9 @@ from care.emr.models.encounter import Encounter
 from care.emr.resources.base import EMRResource
 from care.emr.resources.charge_item_definition.spec import ChargeItemDefinitionReadSpec
 from care.emr.resources.common.coding import Coding
-from care.emr.resources.common.monetory_component import (
-    MonetoryComponent,
-    MonetoryComponentType,
+from care.emr.resources.common.monetary_component import (
+    MonetaryComponent,
+    MonetaryComponentType,
 )
 
 
@@ -41,7 +41,7 @@ class ChargeItemSpec(EMRResource):
     status: ChargeItemStatusOptions
     code: Coding | None = None
     quantity: float
-    unit_price_components: list[MonetoryComponent]
+    unit_price_components: list[MonetaryComponent]
     note: str | None = None
     override_reason: ChargeItemOverrideReason | None = None
 
@@ -59,15 +59,15 @@ class ChargeItemSpec(EMRResource):
     @model_validator(mode="after")
     def check_single_base_component(self):
         component_types = [
-            component.monetory_component_type
+            component.monetary_component_type
             for component in self.unit_price_components
         ]
-        if component_types.count(MonetoryComponentType.base) > 1:
+        if component_types.count(MonetaryComponentType.base) > 1:
             raise ValueError("Only one base component is allowed.")
         return self
 
     @model_validator(mode="after")
-    def validate_monetory_codes(self):
+    def validate_monetary_codes(self):
         # Validate that the codes used in the components are defined
         # in the facility or in the instance level
         # TODO
