@@ -22,6 +22,7 @@ from care.users.models import User
 class SpecimenStatusOptions(str, Enum):
     """Status options for specimen"""
 
+    draft = "draft"  # Not from FHIR
     available = "available"
     unavailable = "unavailable"
     unsatisfactory = "unsatisfactory"
