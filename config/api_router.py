@@ -34,6 +34,7 @@ from care.emr.api.viewsets.facility_organization import (
 )
 from care.emr.api.viewsets.file_upload import FileUploadViewSet
 from care.emr.api.viewsets.healthcare_service import HealthcareServiceViewSet
+from care.emr.api.viewsets.inventory.product_knowledge import ProductKnowledgeViewSet
 from care.emr.api.viewsets.invoice import InvoiceViewSet
 from care.emr.api.viewsets.location import (
     FacilityLocationEncounterViewSet,
@@ -113,6 +114,12 @@ router.register(
     "observation_definition",
     ObservationDefinitionViewSet,
     basename="observation_definition",
+)
+
+router.register(
+    "product_knowledge",
+    ProductKnowledgeViewSet,
+    basename="product_knowledge",
 )
 
 

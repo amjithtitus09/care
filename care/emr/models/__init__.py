@@ -16,6 +16,7 @@ from .observation import *  # noqa F403
 from .observation_definition import *  # noqa F403
 from .patient import *  # noqa F403
 from .payment_reconciliation import *  # noqa F403
+from .product_knowledge import *  # noqa F403
 from .questionnaire import *  # noqa F403
 from .scheduling import *  # noqa F403
 from .service_request import *  # noqa F403
