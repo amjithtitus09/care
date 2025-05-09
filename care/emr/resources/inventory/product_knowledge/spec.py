@@ -56,7 +56,7 @@ class BaseProductKnowledgeSpec(EMRResource):
     defenitional: ProductDefinitionSpec | None = None
 
 
-class PaymentReconciliationWriteSpec(BaseProductKnowledgeSpec):
+class ProductKnowledgeWriteSpec(BaseProductKnowledgeSpec):
     """Payment reconciliation write specification"""
 
     facility: UUID4 | None = None
@@ -66,7 +66,7 @@ class PaymentReconciliationWriteSpec(BaseProductKnowledgeSpec):
             obj.facility = Facility.objects.get(external_id=self.facility)
 
 
-class PaymentReconciliationReadSpec(BaseProductKnowledgeSpec):
+class ProductKnowledgeReadSpec(BaseProductKnowledgeSpec):
     """Invoice read specification"""
 
     @classmethod

@@ -7,7 +7,7 @@ class ProductKnowledge(EMRBaseModel):
     facility = models.ForeignKey(
         "facility.Facility", on_delete=models.PROTECT, null=True, blank=True
     )
-    slug = models.CharField(max_length=255, unique=True)
+    slug = models.CharField(max_length=255)
     product_type = models.CharField(max_length=255)
     code = models.JSONField(default=dict, null=True, blank=True)
     name = models.CharField(max_length=255)

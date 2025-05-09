@@ -20,10 +20,3 @@ class MonetaryCodes(RootModel):
 
 class MonetaryComponentDefinitions(RootModel):
     root: list[MonetaryComponentDefinition] = []
-
-    @model_validator(mode="after")
-    def check_duplicate_codes(self):
-        codes = [definition.code.code for definition in self.root if definition.code]
-        if len(codes) != len(set(codes)):
-            raise ValueError("Duplicate codes are not allowed.")
-        return self
