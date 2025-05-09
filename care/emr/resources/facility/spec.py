@@ -95,8 +95,8 @@ class FacilityMonetaryCodeSpec(EMRResource):
     __model__ = Facility
     __exclude__ = []
 
-    discount_codes: list[Coding] = []
-    discount_monetary_components: list[MonetaryComponentDefinition] = []
+    discount_codes: list[Coding]
+    discount_monetary_components: list[MonetaryComponentDefinition]
 
     @model_validator(mode="after")
     def validate_count(self):
