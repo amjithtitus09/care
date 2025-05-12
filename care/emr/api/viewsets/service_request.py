@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
@@ -21,7 +22,10 @@ from care.emr.models.specimen_definition import SpecimenDefinition
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
 )
-from care.emr.resources.activity_definition.service_request import convert_ad_to_sr
+from care.emr.resources.activity_definition.service_request import (
+    apply_ad_charge_definitions,
+    convert_ad_to_sr,
+)
 from care.emr.resources.questionnaire.spec import SubjectType
 from care.emr.resources.service_request.spec import (
     BaseServiceRequestSpec,
@@ -221,7 +225,9 @@ class ServiceRequestViewSet(
         model_instance.activity_definition = activity_definition
         model_instance.created_by = self.request.user
         model_instance.updated_by = self.request.user
-        self.perform_update(model_instance)
+        with transaction.atomic():
+            self.perform_update(model_instance)
+            apply_ad_charge_definitions(activity_definition, encounter, model_instance)
         return Response(
             self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
         )

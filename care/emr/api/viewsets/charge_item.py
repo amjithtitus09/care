@@ -13,12 +13,14 @@ from care.emr.api.viewsets.base import (
 from care.emr.models.account import Account
 from care.emr.models.charge_item import ChargeItem
 from care.emr.models.encounter import Encounter
+from care.emr.models.service_request import ServiceRequest
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
 )
 from care.emr.resources.account.default_account import get_default_account
 from care.emr.resources.charge_item.spec import (
     ChargeItemReadSpec,
+    ChargeItemResourceOptions,
     ChargeItemSpec,
     ChargeItemWriteSpec,
 )
@@ -32,6 +34,20 @@ class ChargeItemDefinitionFilters(filters.FilterSet):
     title = filters.CharFilter(lookup_expr="icontains")
     account = filters.UUIDFilter(field_name="account__external_id")
     encounter = filters.UUIDFilter(field_name="encounter__external_id")
+    service_resource = filters.CharFilter(lookup_expr="iexact")
+    service_resource_id = filters.CharFilter(lookup_expr="iexact")
+
+
+def validate_service_resource(service_resource, service_resource_id):
+    # TODO : Add Authz
+    try:
+        if service_resource == ChargeItemResourceOptions.service_request.value:
+            return ServiceRequest.objects.filter(
+                external_id=service_resource_id
+            ).exists()
+    except Exception:
+        return False
+    return False
 
 
 class ChargeItemViewSet(
@@ -61,21 +77,24 @@ class ChargeItemViewSet(
     def get_serializer_create_context(self):
         return {"facility": self.get_facility_obj()}
 
+    def validate_data(self, instance, model_obj=None):
+        if instance.service_resourceand and not validate_service_resource(
+            instance.service_resource, instance.service_resource_id
+        ):
+            raise ValidationError("Invalid service resource")
+        return super().validate_data(instance, model_obj)
+
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
         if not instance.account_id:
             instance.account = get_default_account(
                 instance.patient, self.get_facility_obj()
             )
-        instance.total_price, instance.total_price_components = sync_charge_item_costs(
-            instance
-        )
+        sync_charge_item_costs(instance)
         super().perform_create(instance)
 
     def perform_update(self, instance):
-        instance.total_price, instance.total_price_components = sync_charge_item_costs(
-            instance
-        )
+        sync_charge_item_costs(instance)
         super().perform_update(instance)
 
     def authorize_create(self, instance):

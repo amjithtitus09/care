@@ -24,6 +24,10 @@ class ChargeItemStatusOptions(str, Enum):
     entered_in_error = "entered_in_error"
 
 
+class ChargeItemResourceOptions(str, Enum):
+    service_request = "service_request"
+
+
 class ChargeItemOverrideReason(BaseModel):
     text: str
     code: Coding | None = None
@@ -44,6 +48,14 @@ class ChargeItemSpec(EMRResource):
     unit_price_components: list[MonetaryComponent]
     note: str | None = None
     override_reason: ChargeItemOverrideReason | None = None
+    service_resource: ChargeItemResourceOptions | None = None
+    service_resource_id: str | None = None
+
+    @model_validator(mode="after")
+    def validate_service_resource(self):
+        if self.service_resource and not self.service_resource_id:
+            raise ValueError("Service resource id is required.")
+        return self
 
     @model_validator(mode="after")
     def check_duplicate_codes(self):

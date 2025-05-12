@@ -46,5 +46,5 @@ def sync_charge_item_costs(charge_item):
             _component = calculate_amount(component, quantity, taxable_price)
             total_price += _component.amount
             components.append(_component.model_dump(mode="json", exclude_defaults=True))
-
-    return total_price, components
+    charge_item.total_price = total_price
+    charge_item.total_price_components = components
