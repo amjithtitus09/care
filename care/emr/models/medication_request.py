@@ -21,3 +21,10 @@ class MedicationRequest(EMRBaseModel):
     requester = models.ForeignKey(
         "users.User", on_delete=models.SET_NULL, null=True, blank=True
     )
+    requested_product = models.ForeignKey(
+        "emr.ProductKnowledge",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+    )
