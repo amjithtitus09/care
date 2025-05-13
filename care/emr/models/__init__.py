@@ -24,4 +24,5 @@ from .service_request import *  # noqa F403
 from .specimen import *  # noqa F403
 from .specimen_definition import *  # noqa F403
 from .supply_delivery import *  # noqa F403
+from .supply_request import *  # noqa F403
 from .valueset import *  # noqa F403
