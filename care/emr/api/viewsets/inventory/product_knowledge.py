@@ -18,6 +18,7 @@ from care.emr.resources.inventory.product_knowledge.spec import (
 class ProductKnowledgeFilters(filters.FilterSet):
     status = filters.CharFilter(lookup_expr="iexact")
     facility = filters.UUIDFilter(field_name="facility__external_id")
+    name = filters.CharFilter(lookup_expr="icontains")  # TODO : Need better searching
 
 
 class ProductKnowledgeViewSet(
