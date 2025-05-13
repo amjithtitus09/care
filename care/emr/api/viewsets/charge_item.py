@@ -78,7 +78,7 @@ class ChargeItemViewSet(
         return {"facility": self.get_facility_obj()}
 
     def validate_data(self, instance, model_obj=None):
-        if instance.service_resourceand and not validate_service_resource(
+        if instance.service_resource and not validate_service_resource(
             instance.service_resource, instance.service_resource_id
         ):
             raise ValidationError("Invalid service resource")
