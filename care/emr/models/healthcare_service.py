@@ -15,5 +15,8 @@ class HealthcareService(EMRBaseModel):
     styling_metadata = models.JSONField(null=True, blank=True)
     name = models.CharField(max_length=1024)
     service_type = models.JSONField(default=dict)
+    internal_type = models.CharField(
+        max_length=255, null=True, blank=True, default=None
+    )
     locations = ArrayField(models.IntegerField(), default=list)
     extra_details = models.TextField()

@@ -23,6 +23,7 @@ from care.security.authorization import AuthorizationController
 class HealthcareServiceFilters(filters.FilterSet):
     facility = filters.UUIDFilter(field_name="facility__external_id")
     name = filters.CharFilter(lookup_expr="icontains")
+    internal_type = filters.CharFilter(lookup_expr="iexact")
 
 
 class HealthcareServiceViewSet(

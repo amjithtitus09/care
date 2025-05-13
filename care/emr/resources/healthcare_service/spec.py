@@ -1,3 +1,5 @@
+from enum import Enum
+
 from pydantic import UUID4
 
 from care.emr.models.healthcare_service import HealthcareService
@@ -10,6 +12,11 @@ from care.emr.resources.location.spec import FacilityLocationListSpec
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
 
 
+class HealthcareServiceInternalType(str, Enum):
+    pharmacy = "pharmacy"
+    lab = "lab"
+
+
 class BaseHealthcareServiceSpec(EMRResource):
     """Base model for healthcare service"""
 
@@ -20,6 +27,7 @@ class BaseHealthcareServiceSpec(EMRResource):
     service_type: (
         ValueSetBoundCoding[HEALTHCARE_SERVICE_TYPE_CODE_VALUESET.slug] | None
     ) = None
+    internal_type: HealthcareServiceInternalType | None = None
     name: str
     styling_metadata: dict = {}
     extra_details: str = ""
