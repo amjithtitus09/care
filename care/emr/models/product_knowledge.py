@@ -8,9 +8,10 @@ class ProductKnowledge(EMRBaseModel):
         "facility.Facility", on_delete=models.PROTECT, null=True, blank=True
     )
     slug = models.CharField(max_length=255)
+    status = models.CharField(max_length=255)
     product_type = models.CharField(max_length=255)
     code = models.JSONField(default=dict, null=True, blank=True)
     name = models.CharField(max_length=255)
     names = models.JSONField(default=list, null=True, blank=True)
     storage_guidelines = models.JSONField(default=list, null=True, blank=True)
-    defenitional = models.JSONField(default=dict, null=True, blank=True)
+    definitional = models.JSONField(default=dict, null=True, blank=True)

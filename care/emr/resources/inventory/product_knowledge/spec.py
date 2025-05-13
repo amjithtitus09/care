@@ -22,6 +22,13 @@ class ProductNameTypes(str, Enum):
     preferred = "preferred"
 
 
+class ProductKnowledgeStatusOptions(str, Enum):
+    draft = "draft"
+    active = "active"
+    retired = "retired"
+    unknown = "unknown"
+
+
 class ProductName(BaseModel):
     name_type: ProductNameTypes
     name: str
@@ -48,12 +55,13 @@ class BaseProductKnowledgeSpec(EMRResource):
 
     id: UUID4 | None = None
     slug: str
+    status: ProductKnowledgeStatusOptions
     product_type: ProductTypeOptions
     code: Coding | None = None
     name: str
     names: list[ProductName] = []
     storage_guidelines: list[StorageGuideline] = []
-    defenitional: ProductDefinitionSpec | None = None
+    definitional: ProductDefinitionSpec | None = None
 
 
 class ProductKnowledgeWriteSpec(BaseProductKnowledgeSpec):
