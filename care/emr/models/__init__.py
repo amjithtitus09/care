@@ -9,8 +9,10 @@ from .diagnostic_report import *  # noqa F403
 from .encounter import *  # noqa F403
 from .file_upload import *  # noqa F403
 from .healthcare_service import *  # noqa F403
+from .inventory_item import *  # noqa F403
 from .invoice import *  # noqa F403
 from .location import *  # noqa F403
+from .medication_dispense import *  # noqa F403
 from .meta_artifact import *  # noqa F403
 from .observation import *  # noqa F403
 from .observation_definition import *  # noqa F403

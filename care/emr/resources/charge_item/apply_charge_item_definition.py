@@ -4,9 +4,13 @@ from care.emr.resources.charge_item.spec import ChargeItemStatusOptions
 from care.emr.resources.charge_item.sync_charge_item_costs import sync_charge_item_costs
 
 
-def apply_charge_item_definition(charge_item_definition, encounter, account=None):
+def apply_charge_item_definition(
+    charge_item_definition, encounter, account=None, quantity=None
+):
     if not account:
         account = get_default_account(encounter.patient, encounter.facility)
+    if not quantity:
+        quantity = 1.0
     charge_item = ChargeItem(
         facility=encounter.facility,
         title=charge_item_definition.title,
@@ -16,7 +20,7 @@ def apply_charge_item_definition(charge_item_definition, encounter, account=None
         charge_item_definition=charge_item_definition,
         account=account,
         status=ChargeItemStatusOptions.billable.value,
-        quantity=1.0,
+        quantity=quantity,
         unit_price_components=charge_item_definition.price_components,
     )
     sync_charge_item_costs(charge_item)
