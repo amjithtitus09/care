@@ -36,6 +36,7 @@ from care.emr.api.viewsets.file_upload import FileUploadViewSet
 from care.emr.api.viewsets.healthcare_service import HealthcareServiceViewSet
 from care.emr.api.viewsets.inventory.product import ProductViewSet
 from care.emr.api.viewsets.inventory.product_knowledge import ProductKnowledgeViewSet
+from care.emr.api.viewsets.inventory.supply_delivery import SupplyDeliveryViewSet
 from care.emr.api.viewsets.invoice import InvoiceViewSet
 from care.emr.api.viewsets.location import (
     FacilityLocationEncounterViewSet,
@@ -110,6 +111,7 @@ router.register("questionnaire", QuestionnaireViewSet, basename="questionnaire")
 router.register(
     "questionnaire_tag", QuestionnaireTagsViewSet, basename="questionnaire_tags"
 )
+router.register("supply_delivery", SupplyDeliveryViewSet, basename="supply_delivery")
 
 router.register(
     "observation_definition",
