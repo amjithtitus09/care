@@ -17,7 +17,7 @@ def apply_charge_item_definition(charge_item_definition, encounter, account=None
         account=account,
         status=ChargeItemStatusOptions.billable.value,
         quantity=1.0,
-        unit_price_components=charge_item_definition.price_component,
+        unit_price_components=charge_item_definition.price_components,
     )
     sync_charge_item_costs(charge_item)
     return charge_item

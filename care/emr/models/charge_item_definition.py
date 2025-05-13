@@ -15,4 +15,4 @@ class ChargeItemDefinition(EMRBaseModel):
     derived_from_uri = models.TextField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     purpose = models.TextField(null=True, blank=True)
-    price_component = models.JSONField(default=list)
+    price_components = models.JSONField(default=list)
