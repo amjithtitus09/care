@@ -8,8 +8,8 @@ from care.emr.api.viewsets.base import (
     EMRUpdateMixin,
 )
 from care.emr.models.product_knowledge import ProductKnowledge
-from care.emr.resources.inventory.product.spec import ProductUpdateSpec
 from care.emr.resources.inventory.product_knowledge.spec import (
+    BaseProductKnowledgeSpec,
     ProductKnowledgeReadSpec,
     ProductKnowledgeWriteSpec,
 )
@@ -25,7 +25,7 @@ class ProductKnowledgeViewSet(
 ):
     database_model = ProductKnowledge
     pydantic_model = ProductKnowledgeWriteSpec
-    pydantic_update_model = ProductUpdateSpec
+    pydantic_update_model = BaseProductKnowledgeSpec
     pydantic_read_model = ProductKnowledgeReadSpec
     filterset_class = ProductKnowledgeFilters
     filter_backends = [filters.DjangoFilterBackend]
