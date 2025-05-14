@@ -21,3 +21,6 @@ class SupplyDelivery(EMRBaseModel):
         on_delete=models.CASCADE,
     )
     delivery_type = models.CharField(max_length=255)
+    supply_request = models.ForeignKey(
+        "emr.SupplyRequest", on_delete=models.CASCADE, null=True, blank=True
+    )

@@ -11,6 +11,7 @@ from care.emr.models.supply_delivery import SupplyDelivery
 from care.emr.resources.inventory.supply_delivery.spec import (
     BaseSupplyDeliverySpec,
     SupplyDeliveryReadSpec,
+    SupplyDeliveryRetrieveSpec,
     SupplyDeliveryWriteSpec,
 )
 
@@ -20,6 +21,7 @@ class SupplyDeliveryFilters(filters.FilterSet):
     origin = filters.UUIDFilter(field_name="origin__external_id")
     destination = filters.UUIDFilter(field_name="destination__external_id")
     supplied_item = filters.UUIDFilter(field_name="supplied_item__external_id")
+    supply_request = filters.UUIDFilter(field_name="supply_request__external_id")
 
 
 class SupplyDeliveryViewSet(
@@ -29,5 +31,6 @@ class SupplyDeliveryViewSet(
     pydantic_model = SupplyDeliveryWriteSpec
     pydantic_update_model = BaseSupplyDeliverySpec
     pydantic_read_model = SupplyDeliveryReadSpec
+    pydantic_retrieve_model = SupplyDeliveryRetrieveSpec
     filterset_class = SupplyDeliveryFilters
     filter_backends = [filters.DjangoFilterBackend]
