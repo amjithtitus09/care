@@ -1,4 +1,5 @@
 from django_filters import rest_framework as filters
+from rest_framework.exceptions import ValidationError
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -6,12 +7,17 @@ from care.emr.api.viewsets.base import (
     EMRListMixin,
     EMRRetrieveMixin,
     EMRUpdateMixin,
+    EMRUpsertMixin,
 )
 from care.emr.models.supply_delivery import SupplyDelivery
+from care.emr.resources.inventory.inventory_item.resync_product_availability import (
+    resync_product_availability,
+)
 from care.emr.resources.inventory.supply_delivery.spec import (
     BaseSupplyDeliverySpec,
     SupplyDeliveryReadSpec,
     SupplyDeliveryRetrieveSpec,
+    SupplyDeliveryStatusOptions,
     SupplyDeliveryWriteSpec,
 )
 
@@ -25,7 +31,12 @@ class SupplyDeliveryFilters(filters.FilterSet):
 
 
 class SupplyDeliveryViewSet(
-    EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
+    EMRCreateMixin,
+    EMRRetrieveMixin,
+    EMRUpdateMixin,
+    EMRListMixin,
+    EMRUpsertMixin,
+    EMRBaseViewSet,
 ):
     database_model = SupplyDelivery
     pydantic_model = SupplyDeliveryWriteSpec
@@ -34,3 +45,18 @@ class SupplyDeliveryViewSet(
     pydantic_retrieve_model = SupplyDeliveryRetrieveSpec
     filterset_class = SupplyDeliveryFilters
     filter_backends = [filters.DjangoFilterBackend]
+
+    def perform_create(self, instance):
+        instance.status = SupplyDeliveryStatusOptions.in_progress.value
+        return super().perform_create(instance)
+
+    def perform_update(self, instance):
+        old_instance = self.get_object()
+        if instance.status != old_instance.status:
+            if old_instance.status == SupplyDeliveryStatusOptions.completed.value:
+                raise ValidationError("Supply delivery already completed")
+            if instance.status == SupplyDeliveryStatusOptions.completed.value:
+                # Handle Product Inventory and resync
+                resync_product_availability(
+                    instance.supplied_item, instance.destination
+                )

@@ -6,6 +6,7 @@ from care.emr.api.viewsets.base import (
     EMRListMixin,
     EMRRetrieveMixin,
     EMRUpdateMixin,
+    EMRUpsertMixin,
 )
 from care.emr.models.supply_request import SupplyRequest
 from care.emr.resources.inventory.supply_request.spec import (
@@ -22,7 +23,12 @@ class SupplyRequestFilters(filters.FilterSet):
 
 
 class SupplyRequestViewSet(
-    EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
+    EMRCreateMixin,
+    EMRRetrieveMixin,
+    EMRUpdateMixin,
+    EMRListMixin,
+    EMRUpsertMixin,
+    EMRBaseViewSet,
 ):
     database_model = SupplyRequest
     pydantic_model = SupplyRequestWriteSpec

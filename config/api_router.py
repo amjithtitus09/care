@@ -34,6 +34,7 @@ from care.emr.api.viewsets.facility_organization import (
 )
 from care.emr.api.viewsets.file_upload import FileUploadViewSet
 from care.emr.api.viewsets.healthcare_service import HealthcareServiceViewSet
+from care.emr.api.viewsets.inventory.inventory_item import InventoryItemViewSet
 from care.emr.api.viewsets.inventory.product import ProductViewSet
 from care.emr.api.viewsets.inventory.product_knowledge import ProductKnowledgeViewSet
 from care.emr.api.viewsets.inventory.supply_delivery import SupplyDeliveryViewSet
@@ -329,6 +330,12 @@ facility_location_nested_router.register(
     r"association",
     FacilityLocationEncounterViewSet,
     basename="association",
+)
+
+facility_location_nested_router.register(
+    r"product",
+    InventoryItemViewSet,
+    basename="product",
 )
 
 router.register("patient", PatientViewSet, basename="patient")

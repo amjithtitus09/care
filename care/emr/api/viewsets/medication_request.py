@@ -35,6 +35,9 @@ class MedicationRequestFilter(filters.FilterSet):
     encounter = filters.UUIDFilter(field_name="encounter__external_id")
     status = MultiSelectFilter(field_name="status")
     name = filters.CharFilter(field_name="medication__display", lookup_expr="icontains")
+    encounter_class = filters.CharFilter(
+        field_name="encounter__class", lookup_expr="iexact"
+    )
 
 
 class MedicationRequestViewSet(
