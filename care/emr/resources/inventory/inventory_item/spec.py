@@ -2,10 +2,10 @@ from enum import Enum
 
 from pydantic import UUID4
 
+from care.emr.models.inventory_item import InventoryItem
 from care.emr.resources.base import EMRResource
 from care.emr.resources.inventory.product.spec import ProductReadSpec
 from care.emr.resources.location.spec import FacilityLocationListSpec
-from care.facility.models.facility import InventoryItem
 
 
 class InventoryItemStatusOptions(str, Enum):
