@@ -60,3 +60,4 @@ class SupplyDeliveryViewSet(
                 resync_product_availability(
                     instance.supplied_item, instance.destination
                 )
+        return super().perform_update(instance)
