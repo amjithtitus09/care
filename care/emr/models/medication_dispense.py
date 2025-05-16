@@ -19,7 +19,7 @@ class MedicationDispense(EMRBaseModel):
     authorizing_prescription = models.ForeignKey(
         MedicationRequest, on_delete=models.SET_NULL, null=True, blank=True
     )
-    product = models.ForeignKey("emr.Product", on_delete=models.CASCADE)
+    item = models.ForeignKey("emr.InventoryItem", on_delete=models.CASCADE)
     charge_item = models.ForeignKey(
         "emr.ChargeItem", on_delete=models.CASCADE, null=True, blank=True
     )

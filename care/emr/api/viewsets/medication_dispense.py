@@ -35,9 +35,9 @@ class MedicationDispenseViewSet(
 
     def perform_create(self, instance):
         with transaction.atomic():
-            if instance.product.charge_item_definition:
+            if instance.item.product.charge_item_definition:
                 charge_item = apply_charge_item_definition(
-                    instance.product.charge_item_definition,
+                    instance.item.product.charge_item_definition,
                     instance.encounter,
                     quantity=instance.quantity,
                 )
