@@ -21,6 +21,11 @@ from care.emr.resources.medication.dispense.spec import (
 
 class MedicationDispenseFilters(filters.FilterSet):
     status = filters.CharFilter(lookup_expr="iexact")
+    category = filters.CharFilter(lookup_expr="iexact")
+    encounter = filters.UUIDFilter(field_name="encounter__external_id")
+    patient = filters.UUIDFilter(field_name="patient__external_id")
+    location = filters.UUIDFilter(field_name="location__external_id")
+    item = filters.UUIDFilter(field_name="item__external_id")
 
 
 class MedicationDispenseViewSet(

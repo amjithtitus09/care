@@ -95,7 +95,7 @@ class MedicationDispenseWriteSpec(BaseMedicationDispenseSpec):
     authorizing_prescription: UUID4 | None = None
     item: UUID4
     quantity: float
-    days_supply: float
+    days_supply: float | None = None
 
     def perform_extra_deserialization(self, is_update, obj):
         obj.encounter = get_object_or_404(

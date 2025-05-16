@@ -24,4 +24,4 @@ class MedicationDispense(EMRBaseModel):
         "emr.ChargeItem", on_delete=models.CASCADE, null=True, blank=True
     )
     quantity = models.FloatField()
-    days_supply = models.FloatField()
+    days_supply = models.FloatField(null=True, blank=True)

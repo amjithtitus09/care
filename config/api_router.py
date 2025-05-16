@@ -134,6 +134,12 @@ router.register(
     basename="product_knowledge",
 )
 
+router.register(
+    r"medication/dispense",
+    MedicationDispenseViewSet,
+    basename="medication-dispense",
+)
+
 
 router.register("organization", OrganizationViewSet, basename="organization")
 
@@ -376,11 +382,7 @@ patient_nested_router.register(
     MedicationAdministrationViewSet,
     basename="medication-administration",
 )
-patient_nested_router.register(
-    r"medication/dispense",
-    MedicationDispenseViewSet,
-    basename="medication-dispense",
-)
+
 
 patient_nested_router.register(
     r"thread",
