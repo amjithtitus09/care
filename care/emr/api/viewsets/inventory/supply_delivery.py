@@ -10,8 +10,8 @@ from care.emr.api.viewsets.base import (
     EMRUpsertMixin,
 )
 from care.emr.models.supply_delivery import SupplyDelivery
-from care.emr.resources.inventory.inventory_item.resync_product_availability import (
-    resync_product_availability,
+from care.emr.resources.inventory.inventory_item.create_inventory_item import (
+    create_inventory_item,
 )
 from care.emr.resources.inventory.supply_delivery.spec import (
     BaseSupplyDeliverySpec,
@@ -55,9 +55,10 @@ class SupplyDeliveryViewSet(
         if instance.status != old_instance.status:
             if old_instance.status == SupplyDeliveryStatusOptions.completed.value:
                 raise ValidationError("Supply delivery already completed")
-            if instance.status == SupplyDeliveryStatusOptions.completed.value:
+            if (
+                instance.status == SupplyDeliveryStatusOptions.completed.value
+                and not instance.origin
+            ):
                 # Handle Product Inventory and resync
-                resync_product_availability(
-                    instance.supplied_item, instance.destination
-                )
+                create_inventory_item(instance.supplied_item, instance.destination)
         return super().perform_update(instance)

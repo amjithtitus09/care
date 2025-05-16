@@ -6,7 +6,12 @@ from care.emr.models import EMRBaseModel
 class SupplyDelivery(EMRBaseModel):
     status = models.CharField(max_length=255)
     supplied_item_quantity = models.FloatField(null=True, blank=True)
-    supplied_item = models.ForeignKey("emr.Product", on_delete=models.CASCADE)
+    supplied_item = models.ForeignKey(
+        "emr.Product", on_delete=models.CASCADE, null=True, blank=True
+    )
+    supplied_inventory_item = models.ForeignKey(
+        "emr.InventoryItem", on_delete=models.CASCADE, null=True, blank=True
+    )
     supplied_item_condition = models.CharField(max_length=255)
     origin = models.ForeignKey(
         "emr.FacilityLocation",
@@ -23,4 +28,7 @@ class SupplyDelivery(EMRBaseModel):
     delivery_type = models.CharField(max_length=255)
     supply_request = models.ForeignKey(
         "emr.SupplyRequest", on_delete=models.CASCADE, null=True, blank=True
+    )
+    supplier = models.ForeignKey(
+        "emr.Organization", on_delete=models.CASCADE, null=True, blank=True
     )
