@@ -4,6 +4,7 @@ from enum import Enum
 from django.shortcuts import get_object_or_404
 from pydantic import UUID4, model_validator
 
+from care.emr.models.inventory_item import InventoryItem
 from care.emr.models.location import FacilityLocation
 from care.emr.models.organization import Organization
 from care.emr.models.product import Product
@@ -19,7 +20,6 @@ from care.emr.resources.organization.spec import (
     OrganizationTypeChoices,
 )
 from care.emr.resources.user.spec import UserSpec
-from care.facility.models.facility import InventoryItem
 
 
 class SupplyDeliveryStatusOptions(str, Enum):
