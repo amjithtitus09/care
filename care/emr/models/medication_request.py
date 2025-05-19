@@ -28,3 +28,6 @@ class MedicationRequest(EMRBaseModel):
         blank=True,
         default=None,
     )
+    dispense_status = models.CharField(
+        max_length=100, null=True, blank=True, default=None
+    )

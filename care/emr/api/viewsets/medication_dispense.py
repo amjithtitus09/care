@@ -7,6 +7,7 @@ from care.emr.api.viewsets.base import (
     EMRListMixin,
     EMRRetrieveMixin,
     EMRUpdateMixin,
+    EMRUpsertMixin,
 )
 from care.emr.models.medication_dispense import MedicationDispense
 from care.emr.resources.charge_item.apply_charge_item_definition import (
@@ -17,6 +18,7 @@ from care.emr.resources.medication.dispense.spec import (
     MedicationDispenseUpdateSpec,
     MedicationDispenseWriteSpec,
 )
+from care.emr.resources.medication.request.spec import MedicationRequestDispenseStatus
 
 
 class MedicationDispenseFilters(filters.FilterSet):
@@ -29,7 +31,12 @@ class MedicationDispenseFilters(filters.FilterSet):
 
 
 class MedicationDispenseViewSet(
-    EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
+    EMRCreateMixin,
+    EMRRetrieveMixin,
+    EMRUpdateMixin,
+    EMRListMixin,
+    EMRUpsertMixin,
+    EMRBaseViewSet,
 ):
     database_model = MedicationDispense
     pydantic_model = MedicationDispenseWriteSpec
@@ -49,3 +56,8 @@ class MedicationDispenseViewSet(
                 charge_item.save()
                 instance.charge_item = charge_item
             super().perform_create(instance)
+            if instance.authorizing_prescription:
+                instance.authorizing_prescription.dispense_status = (
+                    MedicationRequestDispenseStatus.partial.value
+                )
+                instance.authorizing_prescription.save()

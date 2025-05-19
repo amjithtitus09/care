@@ -79,6 +79,12 @@ class MedicationRequestCategory(str, Enum):
     discharge = "discharge"
 
 
+class MedicationRequestDispenseStatus(str, Enum):
+    complete = "complete"
+    partial = "partial"
+    incomplete = "incomplete"
+
+
 class TimingUnit(str, Enum):
     s = "s"
     min = "min"
@@ -173,6 +179,8 @@ class BaseMedicationRequestSpec(MedicationRequestResource):
     authored_on: datetime
 
     note: str | None = Field(None)
+
+    dispense_status: MedicationRequestDispenseStatus | None = None
 
 
 class MedicationRequestSpec(BaseMedicationRequestSpec):
