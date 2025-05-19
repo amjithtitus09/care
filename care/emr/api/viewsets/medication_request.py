@@ -91,6 +91,7 @@ class MedicationRequestSummaryFilters(filters.FilterSet):
     category = filters.CharFilter(lookup_expr="iexact")
     patient_external_id = filters.UUIDFilter(field_name="patient__external_id")
     encounter_external_id = filters.UUIDFilter(field_name="encounter__external_id")
+    dispense_status = filters.CharFilter(lookup_expr="iexact")
 
 
 class MedicationRequestSummaryViewSet(EMRBaseViewSet):
