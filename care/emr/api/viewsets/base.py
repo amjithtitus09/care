@@ -216,6 +216,8 @@ class EMRDestroyMixin:
 class EMRUpsertMixin:
     @action(detail=False, methods=["POST"])
     def upsert(self, request, *args, **kwargs):
+        if type(request.data) is not dict:
+            raise ValidationError("Invalid request data")
         datapoints = request.data.get("datapoints", [])
         results = []
         errored = False
