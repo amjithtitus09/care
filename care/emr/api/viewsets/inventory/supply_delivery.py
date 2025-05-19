@@ -1,3 +1,4 @@
+from django.db import transaction
 from django_filters import rest_framework as filters
 from rest_framework.exceptions import ValidationError
 
@@ -12,6 +13,9 @@ from care.emr.api.viewsets.base import (
 from care.emr.models.supply_delivery import SupplyDelivery
 from care.emr.resources.inventory.inventory_item.create_inventory_item import (
     create_inventory_item,
+)
+from care.emr.resources.inventory.inventory_item.sync_inventory_item import (
+    sync_inventory_item,
 )
 from care.emr.resources.inventory.supply_delivery.spec import (
     BaseSupplyDeliverySpec,
@@ -51,14 +55,19 @@ class SupplyDeliveryViewSet(
         return super().perform_create(instance)
 
     def perform_update(self, instance):
-        old_instance = self.get_object()
-        if instance.status != old_instance.status:
-            if old_instance.status == SupplyDeliveryStatusOptions.completed.value:
-                raise ValidationError("Supply delivery already completed")
-            if (
-                instance.status == SupplyDeliveryStatusOptions.completed.value
-                and not instance.origin
-            ):
-                # Handle Product Inventory and resync
-                create_inventory_item(instance.supplied_item, instance.destination)
-        return super().perform_update(instance)
+        with transaction.atomic():
+            old_instance = self.get_object()
+            if instance.status != old_instance.status:
+                if old_instance.status == SupplyDeliveryStatusOptions.completed.value:
+                    raise ValidationError("Supply delivery already completed")
+                if (
+                    instance.status == SupplyDeliveryStatusOptions.completed.value
+                    and not instance.origin
+                ):
+                    # Handle Product Inventory and resync
+                    instance.supplied_inventory_item = create_inventory_item(
+                        instance.supplied_item, instance.destination
+                    )
+            if instance.supplied_inventory_item:
+                sync_inventory_item(instance.supplied_inventory_item)
+            return super().perform_update(instance)

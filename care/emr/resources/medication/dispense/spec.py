@@ -26,6 +26,14 @@ class MedicationDispenseStatus(str, Enum):
     declined = "declined"
 
 
+MEDICATION_DISPENSE_CANCELLED_STATUSES = [
+    MedicationDispenseStatus.cancelled.value,
+    MedicationDispenseStatus.entered_in_error.value,
+    MedicationDispenseStatus.stopped.value,
+    MedicationDispenseStatus.declined.value,
+]
+
+
 class MedicationDispenseNotPerformedReason(str, Enum):
     outofstock = "outofstock"
     washout = "washout"

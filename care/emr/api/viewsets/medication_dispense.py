@@ -18,6 +18,9 @@ from care.emr.resources.charge_item.apply_charge_item_definition import (
     apply_charge_item_definition,
 )
 from care.emr.resources.encounter.spec import EncounterListSpec
+from care.emr.resources.inventory.inventory_item.sync_inventory_item import (
+    sync_inventory_item,
+)
 from care.emr.resources.medication.dispense.spec import (
     MedicationDispenseReadSpec,
     MedicationDispenseUpdateSpec,
@@ -61,11 +64,17 @@ class MedicationDispenseViewSet(
                 charge_item.save()
                 instance.charge_item = charge_item
             super().perform_create(instance)
+            sync_inventory_item(instance.item)
             if instance.authorizing_prescription:
                 instance.authorizing_prescription.dispense_status = (
                     MedicationRequestDispenseStatus.partial.value
                 )
                 instance.authorizing_prescription.save()
+
+    def perform_update(self, instance):
+        with transaction.atomic():
+            sync_inventory_item(instance.item)
+            return super().perform_update(instance)
 
     @action(methods=["GET"], detail=False)
     def summary(self, request, *args, **kwargs):

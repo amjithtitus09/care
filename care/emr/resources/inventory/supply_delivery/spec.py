@@ -29,6 +29,12 @@ class SupplyDeliveryStatusOptions(str, Enum):
     entered_in_error = "entered_in_error"
 
 
+SUPPLY_DELIVERY_CANCELLED_STATUSES = [
+    SupplyDeliveryStatusOptions.abandoned.value,
+    SupplyDeliveryStatusOptions.entered_in_error.value,
+]
+
+
 class SupplyDeliveryTypeOptions(str, Enum):
     product = "product"
     device = "device"
