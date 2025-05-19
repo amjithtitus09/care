@@ -1,5 +1,8 @@
 from django.db import transaction
+from django.db.models import Count
 from django_filters import rest_framework as filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -9,10 +12,12 @@ from care.emr.api.viewsets.base import (
     EMRUpdateMixin,
     EMRUpsertMixin,
 )
+from care.emr.models.encounter import Encounter
 from care.emr.models.medication_dispense import MedicationDispense
 from care.emr.resources.charge_item.apply_charge_item_definition import (
     apply_charge_item_definition,
 )
+from care.emr.resources.encounter.spec import EncounterListSpec
 from care.emr.resources.medication.dispense.spec import (
     MedicationDispenseReadSpec,
     MedicationDispenseUpdateSpec,
@@ -61,3 +66,30 @@ class MedicationDispenseViewSet(
                     MedicationRequestDispenseStatus.partial.value
                 )
                 instance.authorizing_prescription.save()
+
+    @action(methods=["GET"], detail=False)
+    def summary(self, request, *args, **kwargs):
+        # TODO : Add AuthZ
+        queryset = (
+            self.filter_queryset(self.get_queryset())
+            .values("encounter_id")
+            .annotate(dcount=Count("encounter_id"))
+        )
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request)
+        if page is not None:
+            encounters = Encounter.objects.filter(
+                id__in=[x["encounter_id"] for x in page]
+            )
+            encounters = {
+                x.id: EncounterListSpec.serialize(x).to_json() for x in encounters
+            }
+            data = [
+                {
+                    "encounter": encounters.get(x["encounter_id"], None),
+                    "count": x["dcount"],
+                }
+                for x in page
+            ]
+            return paginator.get_paginated_response(data)
+        return Response({})
