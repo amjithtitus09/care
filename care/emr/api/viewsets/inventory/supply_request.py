@@ -13,6 +13,7 @@ from care.emr.resources.inventory.supply_request.spec import (
     SupplyRequestReadSpec,
     SupplyRequestWriteSpec,
 )
+from care.utils.filters.null_filter import NullFilter
 
 
 class SupplyRequestFilters(filters.FilterSet):
@@ -20,6 +21,7 @@ class SupplyRequestFilters(filters.FilterSet):
     deliver_from = filters.UUIDFilter(field_name="deliver_from__external_id")
     deliver_to = filters.UUIDFilter(field_name="deliver_to__external_id")
     item = filters.UUIDFilter(field_name="item__external_id")
+    deliver_from_isnull = NullFilter(field_name="deliver_from")
 
 
 class SupplyRequestViewSet(

@@ -24,6 +24,7 @@ from care.emr.resources.inventory.supply_delivery.spec import (
     SupplyDeliveryStatusOptions,
     SupplyDeliveryWriteSpec,
 )
+from care.utils.filters.null_filter import NullFilter
 
 
 class SupplyDeliveryFilters(filters.FilterSet):
@@ -32,6 +33,7 @@ class SupplyDeliveryFilters(filters.FilterSet):
     destination = filters.UUIDFilter(field_name="destination__external_id")
     supplied_item = filters.UUIDFilter(field_name="supplied_item__external_id")
     supply_request = filters.UUIDFilter(field_name="supply_request__external_id")
+    origin_isnull = NullFilter(field_name="origin")
 
 
 class SupplyDeliveryViewSet(
