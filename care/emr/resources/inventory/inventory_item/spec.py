@@ -34,19 +34,14 @@ class InventoryItemReadSpec(BaseInventoryItemSpec):
 
     net_content: float
     product: float
+    location: dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["product"] = ProductReadSpec.serialize(obj.product).to_json()
+        mapping["location"] = FacilityLocationListSpec.serialize(obj.location).to_json()
 
 
 class InventoryItemRetrieveSpec(InventoryItemReadSpec):
-    """Inventory item retrieve specification"""
-
-    location: dict
-
-    @classmethod
-    def perform_extra_serialization(cls, mapping, obj):
-        super().perform_extra_serialization(mapping, obj)
-        mapping["location"] = FacilityLocationListSpec.serialize(obj.location).to_json()
+    pass
