@@ -15,3 +15,4 @@ class ProductKnowledge(EMRBaseModel):
     names = models.JSONField(default=list, null=True, blank=True)
     storage_guidelines = models.JSONField(default=list, null=True, blank=True)
     definitional = models.JSONField(default=dict, null=True, blank=True)
+    base_unit = models.JSONField(default=dict, null=True, blank=True)

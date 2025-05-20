@@ -58,6 +58,7 @@ class BaseProductKnowledgeSpec(EMRResource):
     status: ProductKnowledgeStatusOptions
     product_type: ProductTypeOptions
     code: Coding | None = None
+    base_unit: Coding | None = None
     name: str
     names: list[ProductName] = []
     storage_guidelines: list[StorageGuideline] = []
