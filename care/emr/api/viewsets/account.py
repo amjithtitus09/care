@@ -56,3 +56,6 @@ class AccountViewSet(
         sync_account_items(account)
         account.save()
         return Response(AccountRetrieveSpec.serialize(account).to_json())
+
+    def get_queryset(self):
+        return super().get_queryset().filter(facility=self.get_facility_obj())
