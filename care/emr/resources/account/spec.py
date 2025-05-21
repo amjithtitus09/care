@@ -59,6 +59,8 @@ class AccountReadSpec(AccountSpec):
     total_paid: float
     total_balance: float
     calculated_at: datetime.datetime
+    created_date: datetime.datetime
+    modified_date: datetime.datetime
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
