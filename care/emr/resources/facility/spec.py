@@ -2,6 +2,7 @@ from django.conf import settings
 from pydantic import UUID4, model_validator
 
 from care.emr.models import Organization
+from care.emr.models.patient import PatientIdentifierConfigCache
 from care.emr.resources.base import EMRResource
 from care.emr.resources.common.coding import Coding
 from care.emr.resources.common.monetary_component import MonetaryComponentDefinition
@@ -54,6 +55,7 @@ class FacilityReadSpec(FacilityBaseSpec):
     cover_image_url: str
     read_cover_image_url: str
     geo_organization: dict = {}
+    created_by: dict = {}
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -76,6 +78,9 @@ class FacilityRetrieveSpec(FacilityReadSpec, FacilityPermissionsMixin):
     instance_discount_monetary_components: list[dict] = []
     instance_tax_codes: list[dict] = []
     instance_tax_monetary_components: list[dict] = []
+    # Identifiers
+    patient_instance_identifier_configs: list[dict] = []
+    patient_facility_identifier_configs: list[dict] = []
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -88,6 +93,12 @@ class FacilityRetrieveSpec(FacilityReadSpec, FacilityPermissionsMixin):
         mapping["instance_tax_codes"] = settings.TAX_CODES
         mapping["instance_tax_monetary_components"] = (
             settings.TAX_MONETARY_COMPONENT_DEFINITIONS
+        )
+        mapping["patient_instance_identifier_configs"] = (
+            PatientIdentifierConfigCache.get_instance_config()
+        )
+        mapping["patient_facility_identifier_configs"] = (
+            PatientIdentifierConfigCache.get_facility_config(obj.id)
         )
 
 
@@ -134,3 +145,20 @@ class FacilityMonetaryCodeSpec(EMRResource):
             ):
                 raise ValueError("All monetary components code must be defined.")
         return self
+
+
+class FacilityMinimalReadSpec(FacilityBaseSpec):
+    features: list[int]
+    cover_image_url: str
+    read_cover_image_url: str
+    geo_organization: dict = {}
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+        mapping["read_cover_image_url"] = obj.read_cover_image_url()
+        mapping["facility_type"] = REVERSE_FACILITY_TYPES[obj.facility_type]
+        if obj.geo_organization:
+            mapping["geo_organization"] = OrganizationReadSpec.serialize(
+                obj.geo_organization
+            ).to_json()

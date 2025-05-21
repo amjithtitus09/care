@@ -17,6 +17,7 @@ from care.emr.models import Organization, SchedulableUserResource
 from care.emr.models.organization import FacilityOrganizationUser, OrganizationUser
 from care.emr.resources.facility.spec import (
     FacilityCreateSpec,
+    FacilityMinimalReadSpec,
     FacilityMonetaryCodeSpec,
     FacilityReadSpec,
     FacilityRetrieveSpec,
@@ -193,8 +194,7 @@ class AllFacilityViewSet(EMRModelReadOnlyViewSet):
     authentication_classes = ()
 
     database_model = Facility
-    pydantic_read_model = FacilityReadSpec
-    pydantic_retrieve_model = FacilityRetrieveSpec
+    pydantic_read_model = FacilityMinimalReadSpec
     filterset_class = FacilityFilters
     filter_backends = (filters.DjangoFilterBackend, drf_filters.SearchFilter)
     lookup_field = "external_id"

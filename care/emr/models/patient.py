@@ -156,12 +156,12 @@ class PatientIdentifierConfigCache:
 
     @classmethod
     def get_config(cls, config_id: int) -> PatientIdentifierConfig:
-        from care.emr.resources.patient_identifier.spec import PatientListSpec
+        from care.emr.resources.patient_identifier.spec import PatientIdentifierListSpec
 
         if config_id not in cls.configs:
-            cls.configs[config_id] = PatientListSpec.serialize(
+            cls.configs[config_id] = PatientIdentifierListSpec.serialize(
                 PatientIdentifierConfig.objects.get(id=config_id)
-            )
+            ).to_json()
         return cls.configs[config_id]
 
     @classmethod
@@ -173,22 +173,22 @@ class PatientIdentifierConfigCache:
 
     @classmethod
     def get_instance_config(cls):
-        from care.emr.resources.patient_identifier.spec import PatientListSpec
+        from care.emr.resources.patient_identifier.spec import PatientIdentifierListSpec
 
         if cls.instance_configs is None:
             cls.instance_configs = [
-                PatientListSpec.serialize(x).to_json
+                PatientIdentifierListSpec.serialize(x).to_json()
                 for x in PatientIdentifierConfig.objects.filter(facility__isnull=True)
             ]
         return cls.instance_configs
 
     @classmethod
     def get_facility_config(cls, facility_id):
-        from care.emr.resources.patient_identifier.spec import PatientListSpec
+        from care.emr.resources.patient_identifier.spec import PatientIdentifierListSpec
 
         if facility_id not in cls.facility_configs:
             cls.facility_configs[facility_id] = [
-                PatientListSpec.serialize(x).to_json
+                PatientIdentifierListSpec.serialize(x).to_json()
                 for x in PatientIdentifierConfig.objects.filter(facility_id=facility_id)
             ]
         return cls.facility_configs[facility_id]
