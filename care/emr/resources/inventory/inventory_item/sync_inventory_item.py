@@ -9,7 +9,6 @@ from care.emr.models.inventory_item import InventoryItem
 from care.emr.models.medication_dispense import MedicationDispense
 from care.emr.models.supply_delivery import SupplyDelivery
 from care.emr.resources.inventory.supply_delivery.spec import (
-    SUPPLY_DELIVERY_CANCELLED_STATUSES,
     SupplyDeliveryStatusOptions,
 )
 from care.emr.resources.medication.dispense.spec import (
@@ -26,10 +25,11 @@ def sync_inventory_item(inventory_item: InventoryItem):
     - Dispense Requests created from this location
     """
     current_location = inventory_item.location
-    product = inventory_item.product
     delivery_requests_incoming = SupplyDelivery.objects.filter(
-        destination=current_location, status=SupplyDeliveryStatusOptions.completed.value
-    ).filter(supplied_inventory_item__product=product)
+        destination=current_location,
+        status=SupplyDeliveryStatusOptions.completed.value,
+        supplied_inventory_item=inventory_item,
+    )
     delivery_requests_incoming_quantity = (
         delivery_requests_incoming.aggregate(
             total_quantity=Sum("supplied_item_quantity")
@@ -37,8 +37,9 @@ def sync_inventory_item(inventory_item: InventoryItem):
         or 0
     )
     delivery_requests_in_progress = SupplyDelivery.objects.filter(
-        supplied_inventory_item=inventory_item
-    ).exclude(status__in=SUPPLY_DELIVERY_CANCELLED_STATUSES)
+        supplied_inventory_item=inventory_item,
+        status=SupplyDeliveryStatusOptions.in_progress.value,
+    )
     delivery_requests_in_progress_quantity = (
         delivery_requests_in_progress.aggregate(
             total_quantity=Sum("supplied_item_quantity")
@@ -55,5 +56,6 @@ def sync_inventory_item(inventory_item: InventoryItem):
         - delivery_requests_in_progress_quantity
         - dispenses
     )
+
     inventory_item.net_content = total_quantity
     inventory_item.save()
