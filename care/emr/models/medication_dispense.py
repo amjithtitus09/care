@@ -11,7 +11,7 @@ class MedicationDispense(EMRBaseModel):
     when_prepared = models.DateTimeField(null=True, blank=True)
     when_handed_over = models.DateTimeField(null=True, blank=True)
     note = models.TextField(null=True, blank=True)
-    dosage_instruction = models.JSONField(default=dict, null=True, blank=True)
+    dosage_instruction = models.JSONField(default=list, null=True, blank=True)
     substitution = models.JSONField(default=dict, null=True, blank=True)
     encounter = models.ForeignKey("emr.Encounter", on_delete=models.CASCADE)
     patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)

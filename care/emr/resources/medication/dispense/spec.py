@@ -12,7 +12,7 @@ from care.emr.models.medication_request import MedicationRequest
 from care.emr.resources.base import EMRResource
 from care.emr.resources.charge_item.spec import ChargeItemReadSpec
 from care.emr.resources.inventory.inventory_item.spec import InventoryItemReadSpec
-from care.emr.resources.medication.administration.spec import Dosage
+from care.emr.resources.medication.request.spec import DosageInstruction
 
 
 class MedicationDispenseStatus(str, Enum):
@@ -93,7 +93,7 @@ class BaseMedicationDispenseSpec(EMRResource):
     when_prepared: datetime | None = None
     when_handed_over: datetime | None = None
     note: str | None = None
-    dosage_instruction: Dosage | None = None
+    dosage_instruction: list[DosageInstruction] = []
     substitution: MedicationDispenseSubstitution | None = None
 
 
