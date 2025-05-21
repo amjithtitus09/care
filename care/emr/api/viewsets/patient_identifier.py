@@ -1,6 +1,6 @@
 from django.core.exceptions import PermissionDenied
 from django_filters import rest_framework as filters
-from pydantic import ValidationError
+from rest_framework.exceptions import ValidationError
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -9,7 +9,10 @@ from care.emr.api.viewsets.base import (
     EMRRetrieveMixin,
     EMRUpdateMixin,
 )
-from care.emr.models.patient import PatientIdentifierConfig
+from care.emr.models.patient import (
+    PatientIdentifierConfig,
+    PatientIdentifierConfigCache,
+)
 from care.emr.resources.patient_identifier.spec import (
     BasePatientIdentifierSpec,
     PatientIdentifierCreateSpec,
@@ -39,6 +42,20 @@ class PatientIdentifierConfigViewSet(
 
     def authorize_update(self, request_obj, model_instance):
         self.authorize_create(model_instance)
+
+    def clean_cache(self, instance):
+        if instance.facility:
+            PatientIdentifierConfigCache.clear_facility_cache(instance.facility_id)
+        else:
+            PatientIdentifierConfigCache.clear_instance_cache()
+
+    def perform_create(self, instance):
+        self.clean_cache(instance)
+        return super().perform_create(instance)
+
+    def perform_update(self, instance):
+        self.clean_cache(instance)
+        return super().perform_update(instance)
 
     def validate_data(self, instance, model_obj=None):
         # Validate that the system is not present at the instance or the facility level

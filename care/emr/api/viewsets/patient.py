@@ -1,5 +1,6 @@
 import datetime
 
+from django.db import transaction
 from django.utils import timezone
 from django_filters import CharFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
@@ -12,13 +13,15 @@ from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.models import Organization, PatientUser, TokenBooking
-from care.emr.models.patient import Patient
+from care.emr.models.patient import Patient, PatientIdentifier, PatientIdentifierConfig
 from care.emr.resources.patient.spec import (
     PatientCreateSpec,
+    PatientIdentifierConfigRequest,
     PatientListSpec,
     PatientPartialSpec,
     PatientRetrieveSpec,
     PatientUpdateSpec,
+    validate_identifier_config,
 )
 from care.emr.resources.scheduling.slot.spec import TokenBookingReadSpec
 from care.emr.resources.user.spec import UserSpec
@@ -99,6 +102,21 @@ class PatientViewSet(EMRModelViewSet):
         return AuthorizationController.call(
             "get_filtered_patients", qs, self.request.user
         )
+
+    def perform_create(self, instance):
+        identifiers = instance._identifiers  # noqa: SLF001
+        with transaction.atomic():
+            super().perform_create(instance)
+            for identifier in identifiers:
+                PatientIdentifier.objects.create(
+                    patient=instance,
+                    config=get_object_or_404(
+                        PatientIdentifierConfig, external_id=identifier.config
+                    ),
+                    value=identifier.value,
+                )
+            instance.build_instance_identifiers()
+            instance.save()
 
     class SearchRequestSpec(BaseModel):
         name: str = ""
@@ -196,3 +214,42 @@ class PatientViewSet(EMRModelViewSet):
                 ]
             }
         )
+
+    @extend_schema(
+        request=PatientIdentifierConfigRequest, responses={200: PatientRetrieveSpec}
+    )
+    @action(detail=True, methods=["POST"])
+    def update_identifier(self, request, *args, **kwargs):
+        request_data = PatientIdentifierConfigRequest(**self.request.data)
+        patient = self.get_object()
+        self.authorize_update({}, patient)
+        request_config = get_object_or_404(
+            PatientIdentifierConfig, external_id=request_data.config
+        )
+        value = request_data.value
+        if not value and request_config.config["required"]:
+            raise ValidationError("Value is required")
+        if value:
+            try:
+                validate_identifier_config(
+                    {"config": request_config.config, "id": request_config.external_id},
+                    value,
+                )
+            except ValueError as e:
+                raise ValidationError(str(e))
+
+        patient_identifier = PatientIdentifier.objects.filter(
+            patient=patient, config=request_config
+        ).first()
+        if patient_identifier and not value:
+            patient_identifier.delete()
+        if not patient_identifier:
+            patient_identifier = PatientIdentifier.objects.create(
+                patient=patient, config=request_config, value=value
+            )
+        patient_identifier.value = value
+        patient_identifier.save()
+        patient.build_instance_identifiers()
+        patient.save()
+
+        return Response(PatientRetrieveSpec.serialize(patient).to_json())

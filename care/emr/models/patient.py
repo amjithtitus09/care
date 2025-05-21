@@ -44,8 +44,8 @@ class Patient(EMRBaseModel):
 
     users_cache = ArrayField(models.IntegerField(), default=list)
 
-    # instance_identifiers = models.JSONField(default=list, null=True, blank=True)
-    # facility_identifiers = models.JSONField(default=list, null=True, blank=True)
+    instance_identifiers = models.JSONField(default=list, null=True, blank=True)
+    facility_identifiers = models.JSONField(default=list, null=True, blank=True)
 
     def get_age(self) -> str:
         start = self.date_of_birth or date(self.year_of_birth, 1, 1)
@@ -94,6 +94,12 @@ class Patient(EMRBaseModel):
             )
             self.users_cache = users
 
+    def build_instance_identifiers(self):
+        self.instance_identifiers = [
+            {"config": str(x.config.external_id), "value": x.value}
+            for x in PatientIdentifier.objects.filter(patient=self)
+        ]
+
     def save(self, *args, **kwargs) -> None:
         if self.date_of_birth and not self.year_of_birth:
             self.year_of_birth = self.date_of_birth.year
@@ -128,6 +134,7 @@ class PatientUser(EMRBaseModel):
 
 
 class PatientIdentifierConfig(EMRBaseModel):
+    status = models.CharField(max_length=255)
     facility = models.ForeignKey(
         "facility.Facility", on_delete=models.CASCADE, null=True, blank=True
     )
@@ -155,12 +162,12 @@ class PatientIdentifierConfigCache:
     facility_configs = {}
 
     @classmethod
-    def get_config(cls, config_id: int) -> PatientIdentifierConfig:
+    def get_config(cls, config_id) -> PatientIdentifierConfig:
         from care.emr.resources.patient_identifier.spec import PatientIdentifierListSpec
 
         if config_id not in cls.configs:
             cls.configs[config_id] = PatientIdentifierListSpec.serialize(
-                PatientIdentifierConfig.objects.get(id=config_id)
+                PatientIdentifierConfig.objects.get(external_id=config_id)
             ).to_json()
         return cls.configs[config_id]
 
@@ -172,7 +179,7 @@ class PatientIdentifierConfigCache:
             cls.configs.pop(config_id, None)
 
     @classmethod
-    def get_instance_config(cls):
+    def get_instance_config(cls) -> list[dict]:
         from care.emr.resources.patient_identifier.spec import PatientIdentifierListSpec
 
         if cls.instance_configs is None:

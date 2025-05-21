@@ -16,6 +16,12 @@ class PatientIdentifierUse(str, Enum):
     old = "old"
 
 
+class PatientIdentifierStatus(str, Enum):
+    draft = "draft"
+    active = "active"
+    inactive = "inactive"
+
+
 class PatientIdentifierRetrieveConfig(BaseModel):
     retrieve_with_dob: bool = False
     retrieve_with_year_of_birth: bool = False
@@ -40,6 +46,7 @@ class BasePatientIdentifierSpec(EMRResource):
 
     id: UUID4 | None = None
     config: IdentifierConfig
+    status: PatientIdentifierStatus
 
 
 class PatientIdentifierCreateSpec(BasePatientIdentifierSpec):

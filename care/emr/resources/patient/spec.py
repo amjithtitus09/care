@@ -1,12 +1,17 @@
 import datetime
+import re
 import uuid
 from enum import Enum
 
 from django.utils import timezone
-from pydantic import UUID4, Field, field_validator
+from pydantic import UUID4, BaseModel, Field, field_validator, model_validator
 
 from care.emr.models import Organization
-from care.emr.models.patient import Patient
+from care.emr.models.patient import (
+    Patient,
+    PatientIdentifier,
+    PatientIdentifierConfigCache,
+)
 from care.emr.resources.base import EMRResource, PhoneNumber
 from care.emr.resources.permissions import PatientPermissionsMixin
 
@@ -32,7 +37,7 @@ class GenderChoices(str, Enum):
 
 class PatientBaseSpec(EMRResource):
     __model__ = Patient
-    __exclude__ = ["geo_organization"]
+    __exclude__ = ["geo_organization", "identifiers"]
     __store_metadata__ = True
 
     id: UUID4 | None = None
@@ -47,11 +52,33 @@ class PatientBaseSpec(EMRResource):
     blood_group: BloodGroupChoices | None = None
 
 
+def validate_identifier_config(config, value):
+    if (
+        config["config"]["unique"]
+        and PatientIdentifier.objects.filter(
+            config__external_id=config["id"],
+            value=value,
+        ).exists()
+    ):
+        raise ValueError(
+            f"Identifier config {config['config']['system']} is not unique"
+        )
+    if config["config"]["regex"] and not re.match(config["config"]["regex"], value):
+        raise ValueError(f"Identifier config {config['config']['system']} is not valid")
+
+
+class PatientIdentifierConfigRequest(BaseModel):
+    config: UUID4
+    value: str
+
+
 class PatientCreateSpec(PatientBaseSpec):
     geo_organization: UUID4
     date_of_birth: datetime.date | None = None
 
     age: int | None = None
+
+    identifiers: list[PatientIdentifierConfigRequest] = []
 
     @field_validator("geo_organization")
     @classmethod
@@ -61,6 +88,20 @@ class PatientCreateSpec(PatientBaseSpec):
         ).exists():
             raise ValueError("Geo Organization does not exist")
         return geo_organization
+
+    @model_validator(mode="after")
+    def validate_identifiers(self):
+        instance_identifier_configs = PatientIdentifierConfigCache.get_instance_config()
+        configs = {str(x.config): x for x in self.identifiers}
+        for identifier_config in instance_identifier_configs:
+            if identifier_config["id"] in configs:
+                value = configs[identifier_config["id"]].value
+                validate_identifier_config(identifier_config, value)
+            elif identifier_config["config"]["required"]:
+                raise ValueError(
+                    f"Identifier config {identifier_config['config']['system']} is required"
+                )
+        return self
 
     def perform_extra_deserialization(self, is_update, obj):
         obj.geo_organization = Organization.objects.get(
@@ -72,6 +113,7 @@ class PatientCreateSpec(PatientBaseSpec):
             obj.year_of_birth = timezone.now().date().year - self.age
         else:
             obj.year_of_birth = self.date_of_birth.year
+        obj._identifiers = self.identifiers  # noqa: SLF001
 
 
 class PatientUpdateSpec(PatientBaseSpec):
@@ -145,6 +187,8 @@ class PatientRetrieveSpec(PatientListSpec, PatientPermissionsMixin):
     created_by: dict | None = None
     updated_by: dict | None = None
 
+    instance_identifiers: list[dict] = []
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         from care.emr.resources.organization.spec import OrganizationReadSpec
@@ -159,3 +203,11 @@ class PatientRetrieveSpec(PatientListSpec, PatientPermissionsMixin):
             mapping["created_by"] = UserSpec.serialize(obj.created_by).to_json()
         if obj.updated_by:
             mapping["updated_by"] = UserSpec.serialize(obj.updated_by).to_json()
+        if obj.instance_identifiers:
+            mapping["instance_identifiers"] = [
+                {
+                    "config": PatientIdentifierConfigCache.get_config(x["config"]),
+                    "value": x["value"],
+                }
+                for x in obj.instance_identifiers
+            ]
