@@ -77,6 +77,7 @@ class SupplyDeliveryViewSet(
                     instance.supplied_inventory_item = create_inventory_item(
                         instance.supplied_item, instance.destination
                     )
+            super().perform_update(instance)
             if instance.supplied_inventory_item:
                 sync_inventory_item(instance.supplied_inventory_item)
-            return super().perform_update(instance)
+            return instance
