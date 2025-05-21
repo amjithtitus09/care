@@ -1,9 +1,11 @@
 from enum import Enum
 
+from django.shortcuts import get_object_or_404
 from pydantic import UUID4, BaseModel
 
-from care.emr.models.patient import FacilityPatientIdentifierConfig
+from care.emr.models.patient import PatientIdentifierConfig
 from care.emr.resources.base import EMRResource
+from care.facility.models.facility import Facility
 
 
 class PatientIdentifierUse(str, Enum):
@@ -21,7 +23,7 @@ class PatientIdentifierRetrieveConfig(BaseModel):
     retrieve_without_extra: bool = False
 
 
-class PatientIdentifierConfig(BaseModel):
+class IdentifierConfig(BaseModel):
     use: PatientIdentifierUse
     description: str = ""
     system: str
@@ -33,14 +35,22 @@ class PatientIdentifierConfig(BaseModel):
 
 
 class BasePatientIdentifierSpec(EMRResource):
-    __model__ = FacilityPatientIdentifierConfig
+    __model__ = PatientIdentifierConfig
     __exclude__ = []
 
     id: UUID4 | None = None
-    config: PatientIdentifierConfig
+    config: IdentifierConfig
 
 
-class PatientListSpec(BasePatientIdentifierSpec):
+class PatientIdentifierCreateSpec(BasePatientIdentifierSpec):
+    facility: UUID4 | None = None
+
+    def perform_extra_deserialization(self, is_update, obj):
+        if self.facility:
+            obj.facilty = get_object_or_404(Facility, external_id=self.facility)
+
+
+class PatientIdentifierListSpec(BasePatientIdentifierSpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id

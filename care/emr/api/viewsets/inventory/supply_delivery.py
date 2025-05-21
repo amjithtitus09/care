@@ -32,8 +32,15 @@ class SupplyDeliveryFilters(filters.FilterSet):
     origin = filters.UUIDFilter(field_name="origin__external_id")
     destination = filters.UUIDFilter(field_name="destination__external_id")
     supplied_item = filters.UUIDFilter(field_name="supplied_item__external_id")
+    supplied_item_product_knowledge = filters.UUIDFilter(
+        field_name="supplied_item__product_knowledge__external_id"
+    )
+    supplied_inventory_item_product_knowledge = filters.UUIDFilter(
+        field_name="supplied_inventory_item__product__product_knowledge__external_id"
+    )
     supply_request = filters.UUIDFilter(field_name="supply_request__external_id")
     origin_isnull = NullFilter(field_name="origin")
+    supplier = filters.UUIDFilter(field_name="supplier__external_id")
 
 
 class SupplyDeliveryViewSet(
