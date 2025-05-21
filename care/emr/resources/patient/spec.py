@@ -14,6 +14,8 @@ from care.emr.models.patient import (
 )
 from care.emr.resources.base import EMRResource, PhoneNumber
 from care.emr.resources.permissions import PatientPermissionsMixin
+from care.emr.utils.datetime_type import StrictTZAwareDateTime
+from care.utils.time_util import care_now
 
 
 class BloodGroupChoices(str, Enum):
@@ -48,8 +50,17 @@ class PatientBaseSpec(EMRResource):
     address: str
     permanent_address: str
     pincode: int
-    deceased_datetime: datetime.datetime | None = None
+    deceased_datetime: StrictTZAwareDateTime | None = None
     blood_group: BloodGroupChoices | None = None
+
+    @field_validator("deceased_datetime")
+    @classmethod
+    def validate_deceased_datetime(cls, deceased_datetime):
+        if deceased_datetime is None:
+            return None
+        if deceased_datetime > care_now():
+            raise ValueError("Deceased datetime cannot be in the future")
+        return deceased_datetime
 
 
 def validate_identifier_config(config, value):
@@ -124,7 +135,6 @@ class PatientUpdateSpec(PatientBaseSpec):
     address: str | None = None
     permanent_address: str | None = None
     pincode: int | None = None
-    deceased_datetime: datetime.datetime | None = None
     blood_group: BloodGroupChoices | None = None
     date_of_birth: datetime.date | None = None
     age: int | None = None
