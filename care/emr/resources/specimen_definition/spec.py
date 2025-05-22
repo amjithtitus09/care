@@ -20,7 +20,6 @@ class SpecimenDefinitionStatusOptions(str, Enum):
     draft = "draft"
     active = "active"
     retired = "retired"
-    unknown = "unknown"
 
 
 class PreferenceOptions(str, Enum):

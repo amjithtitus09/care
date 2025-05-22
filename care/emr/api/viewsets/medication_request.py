@@ -95,6 +95,9 @@ class MedicationRequestSummaryFilters(filters.FilterSet):
     exclude_dispense_status = MultiSelectFilter(
         field_name="dispense_status", exclude=True
     )
+    encounter_class = filters.CharFilter(
+        field_name="encounter__encounter_class", lookup_expr="iexact"
+    )
 
 
 class MedicationRequestSummaryViewSet(EMRBaseViewSet):
