@@ -65,7 +65,7 @@ class SupplyDeliveryViewSet(
 
     def perform_update(self, instance):
         with transaction.atomic():
-            old_instance = self.get_object()
+            old_instance = self.database_model.objects.get(id=instance.id)
             if instance.status != old_instance.status:
                 if old_instance.status == SupplyDeliveryStatusOptions.completed.value:
                     raise ValidationError("Supply delivery already completed")

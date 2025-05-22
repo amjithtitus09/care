@@ -221,6 +221,7 @@ class EMRUpsertMixin:
         datapoints = request.data.get("datapoints", [])
         results = []
         errored = False
+        unhandled = False
         try:
             with transaction.atomic():
                 for datapoint in datapoints:
@@ -235,10 +236,16 @@ class EMRUpsertMixin:
                         results.append(result)
                     except Exception as e:
                         errored = True
-                        results.append(emr_exception_handler(e, {}).data)
+                        handler = emr_exception_handler(e, {})
+                        if not getattr(handler, "data", None):
+                            unhandled = True
+                            raise e
+                        results.append(handler.data)
                 if errored:
                     raise Exception
-        except Exception:
+        except Exception as e:
+            if unhandled:
+                raise e
             return Response(results, status=400)
         return Response(results)
 
