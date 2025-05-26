@@ -27,3 +27,4 @@ class Invoice(EMRBaseModel):
     total_price_components = models.JSONField(default=dict)
     total_net = models.FloatField(default=0)
     total_gross = models.FloatField(default=0)
+    issue_date = models.DateField(null=True, blank=True, default=None)

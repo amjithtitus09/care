@@ -27,10 +27,11 @@ from care.emr.resources.medication.dispense.spec import (
     MedicationDispenseWriteSpec,
 )
 from care.emr.resources.medication.request.spec import MedicationRequestDispenseStatus
+from care.utils.filters.multiselect import MultiSelectFilter
 
 
 class MedicationDispenseFilters(filters.FilterSet):
-    status = filters.CharFilter(lookup_expr="iexact")
+    status = MultiSelectFilter(field_name="status")
     category = filters.CharFilter(lookup_expr="iexact")
     encounter = filters.UUIDFilter(field_name="encounter__external_id")
     patient = filters.UUIDFilter(field_name="patient__external_id")

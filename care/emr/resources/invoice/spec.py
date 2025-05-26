@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 
 from pydantic import UUID4
@@ -36,6 +37,7 @@ class BaseInvoiceSpec(EMRResource):
     cancelled_reason: str | None = None
     payment_terms: str | None = None
     note: str | None = None
+    issue_date: datetime.date | None = None
 
 
 class InvoiceWriteSpec(BaseInvoiceSpec):
