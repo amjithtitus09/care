@@ -236,7 +236,7 @@ class PatientViewSet(EMRModelViewSet):
                     value,
                 )
             except ValueError as e:
-                raise ValidationError(str(e))
+                raise ValidationError(str(e)) from e
 
         patient_identifier = PatientIdentifier.objects.filter(
             patient=patient, config=request_config

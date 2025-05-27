@@ -71,11 +71,11 @@ def validate_identifier_config(config, value):
             value=value,
         ).exists()
     ):
-        raise ValueError(
-            f"Identifier config {config['config']['system']} is not unique"
-        )
+        err = f"Identifier config {config['config']['system']} is not unique"
+        raise ValueError(err)
     if config["config"]["regex"] and not re.match(config["config"]["regex"], value):
-        raise ValueError(f"Identifier config {config['config']['system']} is not valid")
+        err = f"Identifier config {config['config']['system']} is not valid"
+        raise ValueError(err)
 
 
 class PatientIdentifierConfigRequest(BaseModel):
@@ -109,9 +109,8 @@ class PatientCreateSpec(PatientBaseSpec):
                 value = configs[identifier_config["id"]].value
                 validate_identifier_config(identifier_config, value)
             elif identifier_config["config"]["required"]:
-                raise ValueError(
-                    f"Identifier config {identifier_config['config']['system']} is required"
-                )
+                err = f"Identifier config {identifier_config['config']['system']} is required"
+                raise ValueError(err)
         return self
 
     def perform_extra_deserialization(self, is_update, obj):

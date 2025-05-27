@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
@@ -12,10 +13,12 @@ from care.emr.api.viewsets.base import (
 )
 from care.emr.models.account import Account
 from care.emr.resources.account.spec import (
+    AccountBillingStatusOptions,
     AccountCreateSpec,
     AccountReadSpec,
     AccountRetrieveSpec,
     AccountSpec,
+    AccountStatusOptions,
 )
 from care.emr.resources.account.sync_items import sync_account_items
 from care.facility.models.facility import Facility
@@ -44,6 +47,25 @@ class AccountViewSet(
             Facility,
             external_id=self.kwargs["facility_external_id"],
         )
+
+    def validate_data(self, instance, model_obj=None):
+        qs = Account.objects.filter(
+            facility=self.get_facility_obj(),
+            patient__external_id=instance.patient,
+        )
+        if model_obj:
+            qs = qs.exclude(id=model_obj.id)
+        if (
+            instance.status == AccountStatusOptions.active.value
+            and instance.billing_status == AccountBillingStatusOptions.open.value
+        ) and qs.filter(
+            status=AccountStatusOptions.active.value,
+            billing_status=AccountBillingStatusOptions.open.value,
+        ).exists():
+            err = "Active account already exists for this patient"
+            raise ValidationError(err)
+
+        return super().validate_data(instance, model_obj)
 
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
