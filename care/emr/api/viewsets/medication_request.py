@@ -38,6 +38,7 @@ class MedicationRequestFilter(filters.FilterSet):
     encounter_class = filters.CharFilter(
         field_name="encounter__class", lookup_expr="iexact"
     )
+    priority = filters.CharFilter(lookup_expr="iexact")
 
 
 class MedicationRequestViewSet(
