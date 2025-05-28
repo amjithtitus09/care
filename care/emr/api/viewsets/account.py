@@ -49,9 +49,13 @@ class AccountViewSet(
         )
 
     def validate_data(self, instance, model_obj=None):
+        if model_obj:
+            patient = model_obj.patient.patient.external_id
+        else:
+            patient = instance.patient
         qs = Account.objects.filter(
             facility=self.get_facility_obj(),
-            patient__external_id=instance.patient,
+            patient__external_id=patient,
         )
         if model_obj:
             qs = qs.exclude(id=model_obj.id)
