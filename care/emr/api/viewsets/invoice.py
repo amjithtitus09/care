@@ -206,7 +206,6 @@ class InvoiceViewSet(
             invoice.status = request_params.reason
             ChargeItem.objects.filter(
                 account=invoice.account,
-                status=ChargeItemStatusOptions.billed.value,
                 id__in=invoice.charge_items,
             ).update(status=ChargeItemStatusOptions.billable.value, paid_invoice=None)
             invoice.save()
