@@ -14,6 +14,7 @@ class InventoryItemFilters(filters.FilterSet):
         field_name="product__product_knowledge__external_id"
     )
     status = filters.CharFilter(lookup_expr="iexact")
+    net_content_gt = filters.NumberFilter(field_name="net_content", lookup_expr="gt")
 
 
 class InventoryItemViewSet(EMRRetrieveMixin, EMRListMixin, EMRBaseViewSet):

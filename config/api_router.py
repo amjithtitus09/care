@@ -88,6 +88,7 @@ from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
 from care.emr.api.viewsets.service_request import ServiceRequestViewSet
 from care.emr.api.viewsets.specimen import SpecimenViewSet
 from care.emr.api.viewsets.specimen_definition import SpecimenDefinitionViewSet
+from care.emr.api.viewsets.tag_config import TagConfigViewSet
 from care.emr.api.viewsets.totp import TOTPViewSet
 from care.emr.api.viewsets.user import UserViewSet
 from care.emr.api.viewsets.valueset import ValueSetViewSet
@@ -121,6 +122,8 @@ router.register(
 router.register("supply_delivery", SupplyDeliveryViewSet, basename="supply_delivery")
 
 router.register("supply_request", SupplyRequestViewSet, basename="supply_request")
+
+router.register("tag_config", TagConfigViewSet, basename="tag_config")
 
 
 router.register(
