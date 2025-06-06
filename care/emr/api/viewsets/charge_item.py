@@ -7,6 +7,7 @@ from care.emr.api.viewsets.base import (
     EMRCreateMixin,
     EMRListMixin,
     EMRRetrieveMixin,
+    EMRTagMixin,
     EMRUpdateMixin,
     EMRUpsertMixin,
 )
@@ -26,6 +27,7 @@ from care.emr.resources.charge_item.spec import (
 )
 from care.emr.resources.charge_item.sync_charge_item_costs import sync_charge_item_costs
 from care.emr.resources.questionnaire.spec import SubjectType
+from care.emr.resources.tag.config_spec import TagResource
 from care.facility.models.facility import Facility
 
 
@@ -56,6 +58,7 @@ class ChargeItemViewSet(
     EMRUpdateMixin,
     EMRUpsertMixin,
     EMRListMixin,
+    EMRTagMixin,
     EMRBaseViewSet,
 ):
     database_model = ChargeItem
@@ -68,6 +71,7 @@ class ChargeItemViewSet(
     questionnaire_title = "Charge Item"
     questionnaire_description = "Charge Item"
     questionnaire_subject_type = SubjectType.encounter.value
+    resource_type = TagResource.charge_item
 
     def get_facility_obj(self):
         return get_object_or_404(

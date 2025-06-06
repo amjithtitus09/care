@@ -12,6 +12,7 @@ from care.emr.api.viewsets.base import (
     EMRCreateMixin,
     EMRListMixin,
     EMRRetrieveMixin,
+    EMRTagMixin,
     EMRUpdateMixin,
 )
 from care.emr.models.activity_definition import ActivityDefinition
@@ -40,6 +41,7 @@ from care.emr.resources.specimen.spec import (
     SpecimenUpdateSpec,
 )
 from care.emr.resources.specimen_definition.specimen import convert_sd_to_specimen
+from care.emr.resources.tag.config_spec import TagResource
 from care.facility.models.facility import Facility
 from care.security.authorization.base import AuthorizationController
 
@@ -65,7 +67,12 @@ class ApplySpecimenDefinitionRequest(BaseModel):
 
 
 class ServiceRequestViewSet(
-    EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
+    EMRCreateMixin,
+    EMRRetrieveMixin,
+    EMRUpdateMixin,
+    EMRListMixin,
+    EMRTagMixin,
+    EMRBaseViewSet,
 ):
     database_model = ServiceRequest
     pydantic_model = ServiceRequestCreateSpec
@@ -78,6 +85,7 @@ class ServiceRequestViewSet(
     questionnaire_title = "Service Request"
     questionnaire_description = "Service Request"
     questionnaire_subject_type = SubjectType.patient.value
+    resource_type = TagResource.service_request
 
     def get_facility_obj(self):
         return get_object_or_404(

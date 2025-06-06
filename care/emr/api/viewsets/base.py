@@ -2,7 +2,7 @@ import json
 
 from django.db import transaction
 from django.http.response import Http404
-from pydantic import ValidationError
+from pydantic import UUID4, BaseModel, ValidationError
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as RestFrameworkValidationError
@@ -13,7 +13,9 @@ from rest_framework.viewsets import GenericViewSet
 
 from care.emr.models import QuestionnaireResponse
 from care.emr.models.base import EMRBaseModel
+from care.emr.models.tag_config import TagConfig
 from care.emr.resources.base import EMRResource
+from care.emr.tagging.base import SingleFacilityTagManager
 
 
 def emr_exception_handler(exc, context):
@@ -67,8 +69,15 @@ class EMRRetrieveMixin:
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         self.authorize_retrieve(instance)
-        data = self.get_retrieve_pydantic_model().serialize(instance, request.user)
-        return Response(data.to_json())
+        data = (
+            self.get_retrieve_pydantic_model()
+            .serialize(instance, request.user)
+            .to_json()
+        )
+        if getattr(self, "TAGS_ENABLED", False):
+            tag_manager = self.tag_manager()
+            data["tags"] = tag_manager.render_tags(instance, request.user)
+        return Response(data)
 
 
 class EMRCreateMixin:
@@ -77,6 +86,8 @@ class EMRCreateMixin:
         instance.updated_by = self.request.user
         with transaction.atomic():
             instance.save()
+            if getattr(self, "TAGS_ENABLED", False):
+                self.perform_set_tags(instance, self.request.data.get("tags", []))
             if getattr(self, "CREATE_QUESTIONNAIRE_RESPONSE", False):
                 QuestionnaireResponse.objects.create(
                     subject_id=self.fetch_patient_from_instance(instance).external_id,
@@ -114,23 +125,31 @@ class EMRCreateMixin:
         self.validate_data(instance, None)
         self.authorize_create(instance)
         model_instance = instance.de_serialize()
+        if getattr(self, "TAGS_ENABLED", False):
+            tag_manager = self.tag_manager()
+            tag_manager.set_tags(
+                self.resource_type, model_instance, instance.tags, self.request.user
+            )
         self.perform_create(model_instance)
         return self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
 
 
 class EMRListMixin:
+    def serialize_list(self, obj):
+        response = self.get_read_pydantic_model().serialize(obj).to_json()
+        if getattr(self, "TAGS_ENABLED", False):
+            tag_manager = self.tag_manager()
+            response["tags"] = tag_manager.render_tags(obj)
+        return response
+
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
         if page is not None:
-            data = [
-                self.get_read_pydantic_model().serialize(obj).to_json() for obj in page
-            ]
+            data = [self.serialize_list(obj) for obj in page]
             return paginator.get_paginated_response(data)
-        data = [
-            self.get_read_pydantic_model().serialize(obj).to_json() for obj in queryset
-        ]
+        data = [self.serialize_list(obj) for obj in queryset]
         return Response(data)
 
 
@@ -297,6 +316,50 @@ class EMRBaseViewSet(GenericViewSet):
 
 class EMRQuestionnaireResponseMixin:
     CREATE_QUESTIONNAIRE_RESPONSE = True
+
+
+class TagRequest(BaseModel):
+    tags: list[UUID4]
+
+
+class EMRTagMixin:
+    resource_type = None
+    tag_manager = SingleFacilityTagManager
+    TAGS_ENABLED = True
+
+    def perform_set_tags(self, instance, tags):
+        tags = TagRequest.model_validate({"tags": tags})
+        tag_manager = self.tag_manager()
+        tag_manager.set_tags(
+            self.resource_type,
+            instance,
+            tags.tags,
+            self.request.user,
+        )
+
+    @action(detail=True, methods=["POST"])
+    def set_tags(self, request, *args, **kwargs):
+        # TODO Facility AuthZ missing
+        if not self.resource_type:
+            return Response({})
+        instance = self.get_object()
+        self.perform_set_tags(instance, request.data.get("tags", []))
+        return self.retrieve(request, *args, **kwargs)
+
+    @action(detail=True, methods=["POST"])
+    def remove_tags(self, request, *args, **kwargs):
+        # TODO Facility AuthZ missing
+        if not self.resource_type:
+            return Response({})
+        instance = self.get_object()
+        tags = TagRequest.model_validate(request.data)
+        tag_manager = self.tag_manager()
+        tag_manager.unset_tags(
+            instance,
+            TagConfig.objects.filter(external_id__in=tags.tags),
+            request.user,
+        )
+        return self.retrieve(request, *args, **kwargs)
 
 
 class EMRModelViewSet(

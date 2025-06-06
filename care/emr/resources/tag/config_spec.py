@@ -30,6 +30,9 @@ class TagCategoryChoices(str, Enum):
 
 class TagResource(str, Enum):
     encounter = "encounter"
+    activity_definition = "activity_definition"
+    service_request = "service_request"
+    charge_item = "charge_item"
 
 
 class TagStatus(str, Enum):
@@ -134,6 +137,7 @@ class TagConfigReadSpec(TagConfigBaseSpec):
     system_generated: bool
     has_children: bool
     parent: dict
+    resource: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):

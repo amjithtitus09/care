@@ -32,6 +32,8 @@ class Encounter(EMRBaseModel):
 
     discharge_summary_advice = models.TextField(null=True, blank=True)
 
+    tags = ArrayField(models.IntegerField(), default=list)
+
     def sync_organization_cache(self):
         orgs = set()
         for encounter_organization in EncounterOrganization.objects.filter(

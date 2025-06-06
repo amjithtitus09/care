@@ -18,6 +18,7 @@ from care.emr.api.viewsets.base import (
     EMRCreateMixin,
     EMRListMixin,
     EMRRetrieveMixin,
+    EMRTagMixin,
     EMRUpdateMixin,
 )
 from care.emr.api.viewsets.device import disassociate_device_from_encounter
@@ -38,6 +39,8 @@ from care.emr.resources.encounter.spec import (
     EncounterUpdateSpec,
 )
 from care.emr.resources.facility_organization.spec import FacilityOrganizationReadSpec
+from care.emr.resources.tag.config_spec import TagResource
+from care.emr.tagging.filters import SingleFacilityTagFilter
 from care.emr.tasks.discharge_summary import generate_discharge_summary_task
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
@@ -75,7 +78,12 @@ class EncounterFilters(filters.FilterSet):
 
 
 class EncounterViewSet(
-    EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
+    EMRCreateMixin,
+    EMRRetrieveMixin,
+    EMRUpdateMixin,
+    EMRListMixin,
+    EMRTagMixin,
+    EMRBaseViewSet,
 ):
     database_model = Encounter
     pydantic_model = EncounterCreateSpec
@@ -83,7 +91,8 @@ class EncounterViewSet(
     pydantic_read_model = EncounterListSpec
     pydantic_retrieve_model = EncounterRetrieveSpec
     filterset_class = EncounterFilters
-    filter_backends = [filters.DjangoFilterBackend]
+    filter_backends = [filters.DjangoFilterBackend, SingleFacilityTagFilter]
+    resource_type = TagResource.encounter
 
     def validate_data(self, instance, model_obj=None):
         if model_obj is None:

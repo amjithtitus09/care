@@ -7,6 +7,7 @@ from care.emr.api.viewsets.base import (
     EMRCreateMixin,
     EMRListMixin,
     EMRRetrieveMixin,
+    EMRTagMixin,
     EMRUpdateMixin,
 )
 from care.emr.models import ActivityDefinition
@@ -19,6 +20,7 @@ from care.emr.resources.activity_definition.spec import (
     ActivityDefinitionRetrieveSpec,
     ActivityDefinitionWriteSpec,
 )
+from care.emr.resources.tag.config_spec import TagResource
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
 
@@ -31,7 +33,12 @@ class ActivityDefinitionFilters(filters.FilterSet):
 
 
 class ActivityDefinitionViewSet(
-    EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
+    EMRCreateMixin,
+    EMRRetrieveMixin,
+    EMRUpdateMixin,
+    EMRListMixin,
+    EMRTagMixin,
+    EMRBaseViewSet,
 ):
     database_model = ActivityDefinition
     pydantic_model = ActivityDefinitionWriteSpec
@@ -39,6 +46,7 @@ class ActivityDefinitionViewSet(
     pydantic_retrieve_model = ActivityDefinitionRetrieveSpec
     filterset_class = ActivityDefinitionFilters
     filter_backends = [filters.DjangoFilterBackend]
+    resource_type = TagResource.activity_definition
 
     def get_facility_obj(self):
         return get_object_or_404(
