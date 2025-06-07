@@ -13,7 +13,6 @@ from rest_framework.viewsets import GenericViewSet
 
 from care.emr.models import QuestionnaireResponse
 from care.emr.models.base import EMRBaseModel
-from care.emr.models.tag_config import TagConfig
 from care.emr.resources.base import EMRResource
 from care.emr.tagging.base import SingleFacilityTagManager
 
@@ -84,7 +83,7 @@ class EMRCreateMixin:
         with transaction.atomic():
             instance.save()
             if getattr(self, "TAGS_ENABLED", False):
-                self.perform_set_tags(instance, self.request.data.get("tags", []))
+                self.perform_set_tags(instance, self.request.data)
             if getattr(self, "CREATE_QUESTIONNAIRE_RESPONSE", False):
                 QuestionnaireResponse.objects.create(
                     subject_id=self.fetch_patient_from_instance(instance).external_id,
@@ -122,11 +121,6 @@ class EMRCreateMixin:
         self.validate_data(instance, None)
         self.authorize_create(instance)
         model_instance = instance.de_serialize()
-        if getattr(self, "TAGS_ENABLED", False):
-            tag_manager = self.tag_manager()
-            tag_manager.set_tags(
-                self.resource_type, model_instance, instance.tags, self.request.user
-            )
         self.perform_create(model_instance)
         return self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
 
@@ -312,7 +306,7 @@ class EMRQuestionnaireResponseMixin:
 
 
 class TagRequest(BaseModel):
-    tags: list[UUID4]
+    tags: list[UUID4] = []
 
 
 class EMRTagMixin:
@@ -320,15 +314,22 @@ class EMRTagMixin:
     tag_manager = SingleFacilityTagManager
     TAGS_ENABLED = True
 
-    def perform_set_tags(self, instance, tags):
-        tags = TagRequest.model_validate({"tags": tags})
+    def get_facility_from_instance(self, instance):
+        return instance.facility  # Overide as needed
+
+    def perform_set_tags(self, instance, data):
+        tag_request = TagRequest.model_validate(data)
         tag_manager = self.tag_manager()
-        tag_manager.set_tags(
-            self.resource_type,
-            instance,
-            tags.tags,
-            self.request.user,
-        )
+        try:
+            tag_manager.set_tags(
+                self.resource_type,
+                instance,
+                tag_request.tags,
+                self.request.user,
+                self.get_facility_from_instance(instance),
+            )
+        except ValueError as e:
+            raise RestFrameworkValidationError(str(e)) from e
 
     @action(detail=True, methods=["POST"])
     def set_tags(self, request, *args, **kwargs):
@@ -336,7 +337,7 @@ class EMRTagMixin:
         if not self.resource_type:
             return Response({})
         instance = self.get_object()
-        self.perform_set_tags(instance, request.data.get("tags", []))
+        self.perform_set_tags(instance, request.data)
         return self.retrieve(request, *args, **kwargs)
 
     @action(detail=True, methods=["POST"])
@@ -345,11 +346,11 @@ class EMRTagMixin:
         if not self.resource_type:
             return Response({})
         instance = self.get_object()
-        tags = TagRequest.model_validate(request.data)
+        tag_request = TagRequest.model_validate(request.data)
         tag_manager = self.tag_manager()
         tag_manager.unset_tags(
             instance,
-            TagConfig.objects.filter(external_id__in=tags.tags),
+            tag_request.tags,
             request.user,
         )
         return self.retrieve(request, *args, **kwargs)

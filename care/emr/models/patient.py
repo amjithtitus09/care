@@ -47,6 +47,9 @@ class Patient(EMRBaseModel):
     instance_identifiers = models.JSONField(default=list, null=True, blank=True)
     facility_identifiers = models.JSONField(default=list, null=True, blank=True)
 
+    instance_tags = ArrayField(models.IntegerField(), default=list)
+    facility_tags = models.JSONField(default=dict, null=True, blank=True)
+
     def get_age(self) -> str:
         start = self.date_of_birth or date(self.year_of_birth, 1, 1)
         end = (self.deceased_datetime or timezone.now()).date()

@@ -198,6 +198,7 @@ class EncounterViewSet(
             facility = get_object_or_404(
                 Facility, external_id=self.request.GET["facility"]
             )
+
             return AuthorizationController.call(
                 "get_filtered_encounters", qs, self.request.user, facility
             )

@@ -33,6 +33,7 @@ class TagResource(str, Enum):
     activity_definition = "activity_definition"
     service_request = "service_request"
     charge_item = "charge_item"
+    patient = "patient"
 
 
 class TagStatus(str, Enum):

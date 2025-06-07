@@ -24,7 +24,9 @@ from care.emr.resources.patient.spec import (
     validate_identifier_config,
 )
 from care.emr.resources.scheduling.slot.spec import TokenBookingReadSpec
+from care.emr.resources.tag.config_spec import TagResource
 from care.emr.resources.user.spec import UserSpec
+from care.emr.tagging.base import PatientFacilityTagManager, PatientInstanceTagManager
 from care.security.authorization import AuthorizationController
 from care.security.models import RoleModel
 from care.users.models import User
@@ -253,3 +255,61 @@ class PatientViewSet(EMRModelViewSet):
         patient.save()
 
         return Response(PatientRetrieveSpec.serialize(patient).to_json())
+
+    class PatientTagRequest(BaseModel):
+        tags: list[UUID4]
+        facility: UUID4 | None = None
+
+    @action(detail=True, methods=["POST"])
+    def set_instance_tags(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.authorize_update({}, instance)
+        tag_request = self.PatientTagRequest.model_validate(request.data)
+        tag_manager = PatientInstanceTagManager()
+        tag_manager.set_tags(
+            TagResource.patient,
+            instance,
+            tag_request.tags,
+            self.request.user,
+        )
+        return self.retrieve(request, *args, **kwargs)
+
+    @action(detail=True, methods=["POST"])
+    def remove_instance_tags(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.authorize_update({}, instance)
+        tag_request = self.PatientTagRequest.model_validate(request.data)
+        tag_manager = PatientInstanceTagManager()
+        tag_manager.unset_tags(
+            instance,
+            tag_request.tags,
+            request.user,
+        )
+        return self.retrieve(request, *args, **kwargs)
+
+    @action(detail=True, methods=["POST"])
+    def set_facility_tags(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.authorize_update({}, instance)
+        tag_request = self.PatientTagRequest.model_validate(request.data)
+        tag_manager = PatientFacilityTagManager(tag_request.facility)
+        tag_manager.set_tags(
+            TagResource.patient,
+            instance,
+            tag_request.tags,
+            self.request.user,
+        )
+        return self.retrieve(request, *args, **kwargs)
+
+    @action(detail=True, methods=["POST"])
+    def remove_facility_tags(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.authorize_update({}, instance)
+        tag_request = self.PatientTagRequest.model_validate(request.data)
+        tag_manager = PatientFacilityTagManager(tag_request.facility)
+        tag_manager.unset_tags(
+            instance,
+            tag_request.tags,
+            request.user,
+        )
+        return self.retrieve(request, *args, **kwargs)

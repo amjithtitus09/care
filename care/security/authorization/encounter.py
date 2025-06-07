@@ -111,6 +111,7 @@ class EncounterAccess(AuthorizationHandler):
         )
 
     def get_filtered_encounters(self, qs, user, facility):
+        qs = qs.filter(facility=facility)
         if user.is_superuser:
             return qs
         roles = self.get_role_from_permissions(

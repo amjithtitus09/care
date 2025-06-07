@@ -36,9 +36,10 @@ class TagFilter(BaseFilterBackend):
 
 class SingleFacilityTagFilter(TagFilter):
     def filter_queryset(self, request, queryset, view):
-        tags = request.query_params.get("tags", "").split(",")
+        tags = request.query_params.get("tags", "").strip()
         if not tags:
             return queryset
+        tags = tags.split(",")
         tag_uuids = []
         for tag in tags:
             try:
