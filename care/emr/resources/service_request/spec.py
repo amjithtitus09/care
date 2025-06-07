@@ -24,6 +24,7 @@ from care.emr.resources.healthcare_service.spec import HealthcareServiceReadSpec
 from care.emr.resources.location.spec import FacilityLocationListSpec
 from care.emr.resources.observation.valueset import CARE_BODY_SITE_VALUESET
 from care.emr.resources.specimen.spec import SpecimenReadSpec
+from care.emr.tagging.base import SingleFacilityTagManager
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
 
 
@@ -119,11 +120,13 @@ class ServiceRequestReadSpec(BaseServiceRequestSpec):
     created_date: datetime.datetime
     modified_date: datetime.datetime
     encounter: dict
+    tags: list[dict] = []
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["encounter"] = EncounterListSpec.serialize(obj.encounter).to_json()
+        mapping["tags"] = SingleFacilityTagManager().render_tags(obj)
 
 
 class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):

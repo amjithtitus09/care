@@ -42,3 +42,4 @@ class ServiceRequest(EMRBaseModel):
         null=True,
         blank=True,
     )
+    tags = ArrayField(models.IntegerField(), default=list)

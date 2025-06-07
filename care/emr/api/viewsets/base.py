@@ -74,9 +74,6 @@ class EMRRetrieveMixin:
             .serialize(instance, request.user)
             .to_json()
         )
-        if getattr(self, "TAGS_ENABLED", False):
-            tag_manager = self.tag_manager()
-            data["tags"] = tag_manager.render_tags(instance, request.user)
         return Response(data)
 
 
@@ -136,11 +133,7 @@ class EMRCreateMixin:
 
 class EMRListMixin:
     def serialize_list(self, obj):
-        response = self.get_read_pydantic_model().serialize(obj).to_json()
-        if getattr(self, "TAGS_ENABLED", False):
-            tag_manager = self.tag_manager()
-            response["tags"] = tag_manager.render_tags(obj)
-        return response
+        return self.get_read_pydantic_model().serialize(obj).to_json()
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())

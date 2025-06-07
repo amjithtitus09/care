@@ -21,6 +21,7 @@ from care.emr.resources.observation.valueset import (
 )
 from care.emr.resources.observation_definition.spec import ObservationDefinitionReadSpec
 from care.emr.resources.specimen_definition.spec import SpecimenDefinitionReadSpec
+from care.emr.tagging.base import SingleFacilityTagManager
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
 
 
@@ -84,10 +85,12 @@ class ActivityDefinitionReadSpec(BaseActivityDefinitionSpec):
     """Activity definition read specification"""
 
     version: int | None = None
+    tags: list[dict] = []
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+        mapping["tags"] = SingleFacilityTagManager().render_tags(obj)
 
 
 class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):

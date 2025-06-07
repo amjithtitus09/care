@@ -36,3 +36,4 @@ class ActivityDefinition(EMRBaseModel):
         null=True,
         blank=True,
     )
+    tags = ArrayField(models.IntegerField(), default=list)

@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from care.emr.models.base import EMRBaseModel
@@ -37,3 +38,4 @@ class ChargeItem(EMRBaseModel):
         blank=True,
         default=None,
     )
+    tags = ArrayField(models.IntegerField(), default=list)
