@@ -1,6 +1,5 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from pydantic import UUID4
 
 from care.emr.models.tag_config import TagConfig
 from care.emr.resources.tag.config_spec import TagConfigReadSpec
@@ -105,8 +104,10 @@ class PatientInstanceTagManager(SingleFacilityTagManager):
 
 
 class PatientFacilityTagManager(SingleFacilityTagManager):
-    def __init__(self, facility_id: UUID4) -> None:
-        self.facility = get_object_or_404(Facility, external_id=facility_id)
+    def __init__(self, facility) -> None:
+        if isinstance(facility, str):
+            facility = get_object_or_404(Facility, external_id=facility)
+        self.facility = facility
 
     def get_resource_tag(self, resource):
         return (resource.facility_tags or {}).get(self.facility.id, [])

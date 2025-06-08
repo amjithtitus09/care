@@ -27,6 +27,7 @@ from care.emr.resources.scheduling.slot.spec import TokenBookingReadSpec
 from care.emr.resources.tag.config_spec import TagResource
 from care.emr.resources.user.spec import UserSpec
 from care.emr.tagging.base import PatientFacilityTagManager, PatientInstanceTagManager
+from care.facility.models.facility import Facility
 from care.security.authorization import AuthorizationController
 from care.security.models import RoleModel
 from care.users.models import User
@@ -313,3 +314,13 @@ class PatientViewSet(EMRModelViewSet):
             request.user,
         )
         return self.retrieve(request, *args, **kwargs)
+
+    def get_serializer_retrieve_context(self):
+        return self.get_serializer_list_context()
+
+    def get_serializer_list_context(self):
+        facility = self.request.GET.get("facility", None)
+        if facility:
+            facility = get_object_or_404(Facility, external_id=facility)
+            # TODO: Check Facility Authz
+        return {"facility": self.request.GET.get("facility", None)}

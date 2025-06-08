@@ -42,7 +42,7 @@ class EMRResource(BaseModel):
         return getattr("_is_update", False)
 
     @classmethod
-    def serialize(cls, obj: __model__, user=None):
+    def serialize(cls, obj: __model__, user=None, *args, **kwargs):
         """
         Creates a pydantic object from a database object
         """
@@ -55,9 +55,15 @@ class EMRResource(BaseModel):
             for field in getattr(obj, "meta", {}):
                 if field in cls.model_fields:
                     constructed[field] = obj.meta[field]
-        cls.perform_extra_serialization(constructed, obj)
+        cls.perform_extra_serialization(constructed, obj, *args, **kwargs)
         if user:
-            cls.perform_extra_user_serialization(constructed, obj, user=user)
+            cls.perform_extra_user_serialization(
+                constructed,
+                obj,
+                *args,
+                **kwargs,
+                user=user,
+            )
         return cls.model_construct(**constructed)
 
     def perform_extra_deserialization(self, is_update, obj):

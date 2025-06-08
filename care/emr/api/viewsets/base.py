@@ -62,6 +62,9 @@ def emr_exception_handler(exc, context):
 
 
 class EMRRetrieveMixin:
+    def get_serializer_retrieve_context(self):
+        return {}
+
     def authorize_retrieve(self, model_instance):
         pass
 
@@ -70,7 +73,7 @@ class EMRRetrieveMixin:
         self.authorize_retrieve(instance)
         data = (
             self.get_retrieve_pydantic_model()
-            .serialize(instance, request.user)
+            .serialize(instance, request.user, **self.get_serializer_retrieve_context())
             .to_json()
         )
         return Response(data)
@@ -126,8 +129,15 @@ class EMRCreateMixin:
 
 
 class EMRListMixin:
+    def get_serializer_list_context(self):
+        return {}
+
     def serialize_list(self, obj):
-        return self.get_read_pydantic_model().serialize(obj).to_json()
+        return (
+            self.get_read_pydantic_model()
+            .serialize(obj, **self.get_serializer_list_context())
+            .to_json()
+        )
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())

@@ -14,6 +14,7 @@ from care.emr.models.patient import (
 )
 from care.emr.resources.base import EMRResource, PhoneNumber
 from care.emr.resources.permissions import PatientPermissionsMixin
+from care.emr.tagging.base import PatientFacilityTagManager, PatientInstanceTagManager
 from care.emr.utils.datetime_type import StrictTZAwareDateTime
 from care.utils.time_util import care_now
 
@@ -39,7 +40,7 @@ class GenderChoices(str, Enum):
 
 class PatientBaseSpec(EMRResource):
     __model__ = Patient
-    __exclude__ = ["geo_organization", "identifiers"]
+    __exclude__ = ["geo_organization", "identifiers", "instance_tags", "facility_tags"]
     __store_metadata__ = True
 
     id: UUID4 | None = None
@@ -170,9 +171,17 @@ class PatientListSpec(PatientBaseSpec):
     created_date: datetime.datetime
     modified_date: datetime.datetime
 
+    instance_tags: list[dict] = []
+    facility_tags: list[dict] = []
+
     @classmethod
-    def perform_extra_serialization(cls, mapping, obj):
+    def perform_extra_serialization(cls, mapping, obj, *args, **kwargs):
         mapping["id"] = obj.external_id
+        mapping["instance_tags"] = PatientInstanceTagManager().render_tags(obj)
+        if kwargs.get("facility"):
+            mapping["facility_tags"] = PatientFacilityTagManager(
+                kwargs["facility"]
+            ).render_tags(obj)
 
 
 class PatientPartialSpec(EMRResource):
