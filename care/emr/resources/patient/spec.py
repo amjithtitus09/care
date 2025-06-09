@@ -13,6 +13,7 @@ from care.emr.models.patient import (
     PatientIdentifierConfigCache,
 )
 from care.emr.resources.base import EMRResource, PhoneNumber
+from care.emr.resources.patient_identifier.spec import PatientIdentifierListSpec
 from care.emr.resources.permissions import PatientPermissionsMixin
 from care.emr.tagging.base import PatientFacilityTagManager, PatientInstanceTagManager
 from care.emr.utils.datetime_type import StrictTZAwareDateTime
@@ -199,13 +200,18 @@ class PatientPartialSpec(EMRResource):
         mapping["id"] = str(uuid.uuid4())
 
 
+class PatientIdentifierResponse(BaseModel):
+    config: PatientIdentifierListSpec
+    value: str
+
+
 class PatientRetrieveSpec(PatientListSpec, PatientPermissionsMixin):
     geo_organization: dict = {}
 
     created_by: dict | None = None
     updated_by: dict | None = None
 
-    instance_identifiers: list[dict] = []
+    instance_identifiers: list[PatientIdentifierResponse] = []
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj, *args, **kwargs):

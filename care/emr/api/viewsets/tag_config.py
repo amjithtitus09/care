@@ -1,3 +1,5 @@
+from django_filters import rest_framework as filters
+
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
     EMRCreateMixin,
@@ -14,6 +16,24 @@ from care.emr.resources.tag.config_spec import (
 )
 
 
+class SpecimenDefinitionFilters(filters.FilterSet):
+    facility = filters.UUIDFilter(
+        lookup_expr="exact", field_name="facility__external_id"
+    )
+    facility_organization = filters.UUIDFilter(
+        lookup_expr="exact", field_name="facility_organization__external_id"
+    )
+    organization = filters.UUIDFilter(
+        lookup_expr="exact", field_name="organization__external_id"
+    )
+    slug = filters.CharFilter(lookup_expr="icontains")
+    status = filters.CharFilter(lookup_expr="iexact")
+    display = filters.CharFilter(lookup_expr="icontains")
+    category = filters.CharFilter(lookup_expr="iexact")
+    parent = filters.UUIDFilter(lookup_expr="exact", field_name="parent__external_id")
+    resource = filters.CharFilter(lookup_expr="iexact")
+
+
 class TagConfigViewSet(
     EMRCreateMixin, EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
 ):
@@ -23,3 +43,5 @@ class TagConfigViewSet(
     pydantic_read_model = TagConfigReadSpec
     pydantic_retrieve_model = TagConfigRetrieveSpec
     # TODO AuthZ for Retrieve and Update
+    filterset_class = SpecimenDefinitionFilters
+    filter_backends = [filters.DjangoFilterBackend]
