@@ -85,10 +85,6 @@ class SingleFacilityTagManager(BaseTagManager):
         return rendered_tags
 
 
-class MultiFacilityTagManager(BaseTagManager):
-    pass
-
-
 class PatientInstanceTagManager(SingleFacilityTagManager):
     def get_resource_tag(self, resource):
         return resource.instance_tags or []

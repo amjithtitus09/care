@@ -208,11 +208,11 @@ class PatientRetrieveSpec(PatientListSpec, PatientPermissionsMixin):
     instance_identifiers: list[dict] = []
 
     @classmethod
-    def perform_extra_serialization(cls, mapping, obj):
+    def perform_extra_serialization(cls, mapping, obj, *args, **kwargs):
         from care.emr.resources.organization.spec import OrganizationReadSpec
         from care.emr.resources.user.spec import UserSpec
 
-        super().perform_extra_serialization(mapping, obj)
+        super().perform_extra_serialization(mapping, obj, *args, **kwargs)
         if obj.geo_organization:
             mapping["geo_organization"] = OrganizationReadSpec.serialize(
                 obj.geo_organization

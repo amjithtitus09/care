@@ -31,11 +31,11 @@ class EMRResource(BaseModel):
         return {}
 
     @classmethod
-    def perform_extra_serialization(cls, mapping, obj):
+    def perform_extra_serialization(cls, mapping, obj, *args, **kwargs):
         mapping["id"] = obj.external_id
 
     @classmethod
-    def perform_extra_user_serialization(cls, mapping, obj, user):
+    def perform_extra_user_serialization(cls, mapping, obj, user, *args, **kwargs):
         pass
 
     def is_update(self):
