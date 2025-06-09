@@ -16,7 +16,7 @@ from care.emr.resources.tag.config_spec import (
 )
 
 
-class SpecimenDefinitionFilters(filters.FilterSet):
+class TagConfigFilters(filters.FilterSet):
     facility = filters.UUIDFilter(
         lookup_expr="exact", field_name="facility__external_id"
     )
@@ -43,5 +43,5 @@ class TagConfigViewSet(
     pydantic_read_model = TagConfigReadSpec
     pydantic_retrieve_model = TagConfigRetrieveSpec
     # TODO AuthZ for Retrieve and Update
-    filterset_class = SpecimenDefinitionFilters
+    filterset_class = TagConfigFilters
     filter_backends = [filters.DjangoFilterBackend]
