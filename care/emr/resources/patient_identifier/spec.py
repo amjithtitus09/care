@@ -42,7 +42,7 @@ class IdentifierConfig(BaseModel):
 
 class BasePatientIdentifierSpec(EMRResource):
     __model__ = PatientIdentifierConfig
-    __exclude__ = []
+    __exclude__ = ["facility"]
 
     id: UUID4 | None = None
     config: IdentifierConfig
@@ -54,7 +54,8 @@ class PatientIdentifierCreateSpec(BasePatientIdentifierSpec):
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.facility:
-            obj.facilty = get_object_or_404(Facility, external_id=self.facility)
+            facility = get_object_or_404(Facility, external_id=self.facility)
+            obj.facility = facility
 
 
 class PatientIdentifierListSpec(BasePatientIdentifierSpec):

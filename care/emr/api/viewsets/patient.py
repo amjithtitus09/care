@@ -229,6 +229,7 @@ class PatientViewSet(EMRModelViewSet):
         request_config = get_object_or_404(
             PatientIdentifierConfig, external_id=request_data.config
         )
+        # TODO: Check Facility Authz
         value = request_data.value
         if not value and request_config.config["required"]:
             raise ValidationError("Value is required")
@@ -251,10 +252,15 @@ class PatientViewSet(EMRModelViewSet):
                 patient=patient, config=request_config, value=value
             )
         patient_identifier.value = value
+        if request_config.facility:
+            patient_identifier.facility = request_config.facility
         patient_identifier.save()
-        patient.build_instance_identifiers()
+        if request_config.facility:
+            patient.build_facility_identifiers(request_config.facility.id)
+        else:
+            patient.build_instance_identifiers()
         patient.save()
-
+        # TODO : Retrieve will not send the facility identifiers
         return Response(PatientRetrieveSpec.serialize(patient).to_json())
 
     class PatientTagRequest(BaseModel):

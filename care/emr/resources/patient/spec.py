@@ -17,6 +17,7 @@ from care.emr.resources.patient_identifier.spec import PatientIdentifierListSpec
 from care.emr.resources.permissions import PatientPermissionsMixin
 from care.emr.tagging.base import PatientFacilityTagManager, PatientInstanceTagManager
 from care.emr.utils.datetime_type import StrictTZAwareDateTime
+from care.facility.models.facility import Facility
 from care.utils.time_util import care_now
 
 
@@ -41,7 +42,13 @@ class GenderChoices(str, Enum):
 
 class PatientBaseSpec(EMRResource):
     __model__ = Patient
-    __exclude__ = ["geo_organization", "identifiers", "instance_tags", "facility_tags"]
+    __exclude__ = [
+        "geo_organization",
+        "instance_identifiers",
+        "facility_identifiers",
+        "instance_tags",
+        "facility_tags",
+    ]
     __store_metadata__ = True
 
     id: UUID4 | None = None
@@ -212,6 +219,7 @@ class PatientRetrieveSpec(PatientListSpec, PatientPermissionsMixin):
     updated_by: dict | None = None
 
     instance_identifiers: list[PatientIdentifierResponse] = []
+    facility_identifiers: list[PatientIdentifierResponse] = []
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj, *args, **kwargs):
@@ -235,3 +243,17 @@ class PatientRetrieveSpec(PatientListSpec, PatientPermissionsMixin):
                 }
                 for x in obj.instance_identifiers
             ]
+        if kwargs.get("facility"):
+            facility = (
+                Facility.objects.only("id")
+                .filter(external_id=kwargs["facility"])
+                .first()
+            )
+            if facility:
+                mapping["facility_identifiers"] = [
+                    {
+                        "config": PatientIdentifierConfigCache.get_config(x["config"]),
+                        "value": x["value"],
+                    }
+                    for x in obj.facility_identifiers.get(str(facility.id), [])
+                ]

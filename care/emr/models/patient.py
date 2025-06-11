@@ -45,7 +45,7 @@ class Patient(EMRBaseModel):
     users_cache = ArrayField(models.IntegerField(), default=list)
 
     instance_identifiers = models.JSONField(default=list, null=True, blank=True)
-    facility_identifiers = models.JSONField(default=list, null=True, blank=True)
+    facility_identifiers = models.JSONField(default=dict, null=True, blank=True)
 
     instance_tags = ArrayField(models.IntegerField(), default=list)
     facility_tags = models.JSONField(default=dict, null=True, blank=True)
@@ -101,6 +101,16 @@ class Patient(EMRBaseModel):
         self.instance_identifiers = [
             {"config": str(x.config.external_id), "value": x.value}
             for x in PatientIdentifier.objects.filter(patient=self)
+        ]
+
+    def build_facility_identifiers(self, facility_id):
+        if not self.facility_identifiers:
+            self.facility_identifiers = {}
+        self.facility_identifiers[facility_id] = [
+            {"config": str(x.config.external_id), "value": x.value}
+            for x in PatientIdentifier.objects.filter(
+                patient=self, config__facility_id=facility_id
+            )
         ]
 
     def save(self, *args, **kwargs) -> None:
