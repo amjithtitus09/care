@@ -16,6 +16,7 @@ class SupplyRequestStatusOptions(str, Enum):
     active = "active"
     suspended = "suspended"
     cancelled = "cancelled"
+    processed = "processed"
     completed = "completed"
     entered_in_error = "entered_in_error"
 
