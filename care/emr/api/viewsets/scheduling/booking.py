@@ -135,14 +135,19 @@ class TokenBookingViewSet(
         facility = self.get_facility_obj()
         self.authorize_update({}, existing_booking)
         if not AuthorizationController.call(
-            "can_create_appointment", self.request.user, facility
+            "can_reschedule_appointment", self.request.user, facility
         ):
-            raise PermissionDenied("You do not have permission to create appointments")
+            raise PermissionDenied(
+                "You do not have permission to reschedule appointments"
+            )
         new_slot = get_object_or_404(
             TokenSlot,
             external_id=request_data.new_slot,
-            resource=existing_booking.token_slot.resource,
+            resource__facility_id=facility.id,
         )
+        if existing_booking.token_slot.id == new_slot.id:
+            raise ValidationError("Cannot reschedule to the same slot")
+
         with transaction.atomic():
             self.cancel_appointment_handler(
                 existing_booking,
