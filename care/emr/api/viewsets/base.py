@@ -2,6 +2,7 @@ import json
 
 from django.db import transaction
 from django.http.response import Http404
+from drf_spectacular.utils import extend_schema
 from pydantic import UUID4, BaseModel, ValidationError
 from rest_framework import status
 from rest_framework.decorators import action
@@ -344,6 +345,7 @@ class EMRTagMixin:
         except ValueError as e:
             raise RestFrameworkValidationError(str(e)) from e
 
+    @extend_schema(request=TagRequest)
     @action(detail=True, methods=["POST"])
     def set_tags(self, request, *args, **kwargs):
         # TODO Facility AuthZ missing
@@ -353,6 +355,7 @@ class EMRTagMixin:
         self.perform_set_tags(instance, request.data)
         return self.retrieve(request, *args, **kwargs)
 
+    @extend_schema(request=TagRequest)
     @action(detail=True, methods=["POST"])
     def remove_tags(self, request, *args, **kwargs):
         # TODO Facility AuthZ missing

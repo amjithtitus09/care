@@ -267,6 +267,7 @@ class PatientViewSet(EMRModelViewSet):
         tags: list[UUID4]
         facility: UUID4 | None = None
 
+    @extend_schema(request=PatientTagRequest)
     @action(detail=True, methods=["POST"])
     def set_instance_tags(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -281,6 +282,7 @@ class PatientViewSet(EMRModelViewSet):
         )
         return self.retrieve(request, *args, **kwargs)
 
+    @extend_schema(request=PatientTagRequest)
     @action(detail=True, methods=["POST"])
     def remove_instance_tags(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -294,6 +296,7 @@ class PatientViewSet(EMRModelViewSet):
         )
         return self.retrieve(request, *args, **kwargs)
 
+    @extend_schema(request=PatientTagRequest)
     @action(detail=True, methods=["POST"])
     def set_facility_tags(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -308,6 +311,7 @@ class PatientViewSet(EMRModelViewSet):
         )
         return self.retrieve(request, *args, **kwargs)
 
+    @extend_schema(request=PatientTagRequest)
     @action(detail=True, methods=["POST"])
     def remove_facility_tags(self, request, *args, **kwargs):
         instance = self.get_object()
