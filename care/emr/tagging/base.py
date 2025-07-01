@@ -69,6 +69,7 @@ class SingleFacilityTagManager(BaseTagManager):
 
     def unset_tag(self, resource, tag_instance, user):
         tags = self.get_resource_tag(resource)
+        tag_instance = self.get_tag_from_external_id(tag_instance)
         if tag_instance.id not in tags:
             raise ValueError("Tag not set")
         tags.remove(tag_instance.id)
