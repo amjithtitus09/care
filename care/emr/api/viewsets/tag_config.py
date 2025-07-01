@@ -47,3 +47,11 @@ class TagConfigViewSet(
     # TODO AuthZ for Retrieve and Update
     filterset_class = TagConfigFilters
     filter_backends = [filters.DjangoFilterBackend]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.GET.get("facility"):
+            queryset = queryset.filter(facility__is_null=True)
+        return queryset
+
+    # TODO : AuthZ
