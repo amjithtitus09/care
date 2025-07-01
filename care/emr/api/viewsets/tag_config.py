@@ -14,6 +14,7 @@ from care.emr.resources.tag.config_spec import (
     TagConfigUpdateSpec,
     TagConfigWriteSpec,
 )
+from care.utils.filters.null_filter import NullFilter
 
 
 class TagConfigFilters(filters.FilterSet):
@@ -32,6 +33,7 @@ class TagConfigFilters(filters.FilterSet):
     category = filters.CharFilter(lookup_expr="iexact")
     parent = filters.UUIDFilter(lookup_expr="exact", field_name="parent__external_id")
     resource = filters.CharFilter(lookup_expr="iexact")
+    parent_is_null = NullFilter(field_name="parent")
 
 
 class TagConfigViewSet(
