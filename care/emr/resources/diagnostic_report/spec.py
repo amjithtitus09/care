@@ -21,7 +21,7 @@ class DiagnosticReportStatusChoices(str, Enum):
     registered = "registered"
     partial = "partial"
     preliminary = "preliminary"
-    modified = "modified"
+    # modified = "modified"
     final = "final"
 
 

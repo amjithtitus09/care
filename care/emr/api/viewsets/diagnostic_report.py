@@ -23,6 +23,7 @@ from care.emr.resources.diagnostic_report.spec import (
     DiagnosticReportCreateSpec,
     DiagnosticReportListSpec,
     DiagnosticReportRetrieveSpec,
+    DiagnosticReportStatusChoices,
     DiagnosticReportUpdateSpec,
 )
 from care.emr.resources.observation.spec import ObservationUpdateSpec
@@ -149,6 +150,10 @@ class DiagnosticReportViewSet(
         """
         request_params = BatchUpdateObservationRequest(**request.data)
         diagnostic_report = self.get_object()
+        if diagnostic_report.status in DiagnosticReportStatusChoices.final.value:
+            raise ValidationError(
+                "Cannot update observations for a final diagnostic report"
+            )
         self.authorize_update({}, diagnostic_report)
         for request_param in request_params.observations:
             if request_param.observation_definition:
@@ -167,9 +172,10 @@ class DiagnosticReportViewSet(
                 model_instance.observation_definition = observation_definition
                 model_instance.created_by = self.request.user
             elif request_param.observation_id:
-                # TODO : Check if there is a diagnostic report, else reject update
                 observation = get_object_or_404(
-                    Observation, external_id=request_param.observation_id
+                    Observation,
+                    external_id=request_param.observation_id,
+                    diagnostic_report=diagnostic_report,
                 )
                 serializer_obj = ObservationUpdateSpec.model_validate(
                     request_param.observation.model_dump(mode="json")
