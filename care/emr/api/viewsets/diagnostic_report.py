@@ -17,6 +17,7 @@ from care.emr.models.diagnostic_report import DiagnosticReport
 from care.emr.models.encounter import Encounter
 from care.emr.models.observation import Observation
 from care.emr.models.observation_definition import ObservationDefinition
+from care.emr.models.patient import Patient
 from care.emr.models.service_request import ServiceRequest
 from care.emr.resources.diagnostic_report.spec import (
     DiagnosticReportCreateSpec,
@@ -29,7 +30,6 @@ from care.emr.resources.observation_definition.observation import (
     convert_od_to_observation,
 )
 from care.emr.resources.questionnaire.spec import SubjectType
-from care.facility.models.facility import Facility
 from care.security.authorization.base import AuthorizationController
 
 
@@ -67,72 +67,77 @@ class DiagnosticReportViewSet(
     filterset_class = DiagnosticReportFilters
     filter_backends = [filters.DjangoFilterBackend]
 
-    def get_facility_obj(self):
+    def get_patient_obj(self):
         return get_object_or_404(
-            Facility, external_id=self.kwargs["facility_external_id"]
+            Patient, external_id=self.kwargs["patient_external_id"]
         )
 
     def perform_create(self, instance):
-        instance.facility = self.get_facility_obj()
-        instance.patient = instance.service_request.patient
+        instance.patient = self.get_patient_obj()
         instance.encounter = instance.service_request.encounter
-        if (
-            instance.encounter.facility != instance.facility
-            or instance.service_request.facility != instance.facility
-        ):
-            raise ValidationError(
-                "Diagnostic report facility must be the same as the encounter and service request facility"
-            )
+        instance.facility = instance.encounter.facility
+        if instance.service_request.patient != instance.patient:
+            raise ValidationError("Invalid Request")
         return super().perform_create(instance)
 
     def authorize_create(self, instance):
-        # TODO : AuthZ Pending
-        get_object_or_404(
-            ServiceRequest,
-            external_id=instance.service_request,
-            facility=self.get_facility_obj(),
-        )
+        if not AuthorizationController.call(
+            "can_write_diagnostic_report",
+            self.request.user,
+            get_object_or_404(ServiceRequest, external_id=instance.service_request),
+        ):
+            raise ValidationError(
+                "You do not have permission to write this diagnostic report"
+            )
+
+    def authorize_update(self, request_obj, model_instance):
+        if not AuthorizationController.call(
+            "can_write_diagnostic_report",
+            self.request.user,
+            model_instance.service_request,
+        ):
+            raise ValidationError(
+                "You do not have permission to write this diagnostic report"
+            )
 
     def authorize_retrieve(self, model_instance):
-        """
-        The user must have access to the location or encounter to access the SR
-        """
-        encounter = model_instance.encounter
         if AuthorizationController.call(
-            "can_view_service_request_for_encounter",
+            "can_read_diagnostic_report",
             self.request.user,
-            encounter,
+            model_instance.service_request,
         ):
             return
-        return
-        # TODO : AuthZ Pending
+        raise ValidationError(
+            "You do not have permission to write this diagnostic report"
+        )
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(facility=self.get_facility_obj())
+        queryset = super().get_queryset().filter(patient=self.get_patient_obj())
         if self.action != "list":
             return queryset  # Authz is handled separately
         if self.request.user.is_superuser:
             return queryset
-        if "service_request" in self.request.GET:
-            service_request = get_object_or_404(
-                ServiceRequest, external_id=self.request.GET["service_request"]
-            )
-            # TODO : AuthZ Pending
-            return queryset.filter(service_request=service_request)
-        if "encounter" in self.request.GET:
+        if self.request.GET.get("encounter"):
             encounter = get_object_or_404(
-                Encounter, external_id=self.request.GET["encounter"]
+                Encounter, external_id=self.request.GET.get("encounter")
             )
-            if not AuthorizationController.call(
-                "can_view_service_request_for_encounter",
+            if AuthorizationController.call(
+                "can_read_diagnostic_report_in_encounter",
                 self.request.user,
                 encounter,
             ):
-                raise ValidationError(
-                    "You do not have permission to view service requests for this encounter"
-                )
-            return queryset.filter(encounter=encounter)
-        raise ValidationError("Location or encounter is required")
+                return queryset.filter(encounter=encounter)
+        elif self.request.GET.get("service_request"):
+            service_request = get_object_or_404(
+                ServiceRequest, external_id=self.request.GET.get("service_request")
+            )
+            if AuthorizationController.call(
+                "can_read_diagnostic_report",
+                self.request.user,
+                service_request,
+            ):
+                return queryset.filter(service_request=service_request)
+        raise ValidationError("Service Request or encounter is required")
 
     @extend_schema(
         request=BatchUpdateObservationRequest,
@@ -144,13 +149,13 @@ class DiagnosticReportViewSet(
         """
         request_params = BatchUpdateObservationRequest(**request.data)
         diagnostic_report = self.get_object()
-        facility = self.get_facility_obj()
+        self.authorize_update({}, diagnostic_report)
         for request_param in request_params.observations:
             if request_param.observation_definition:
                 observation_definition = get_object_or_404(
                     ObservationDefinition,
                     external_id=request_param.observation_definition,
-                    facility=facility,
+                    facility=diagnostic_report.facility,
                 )
                 observation_obj = convert_od_to_observation(
                     observation_definition, diagnostic_report.encounter
