@@ -51,7 +51,7 @@ class TagConfigViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
         if not self.request.GET.get("facility"):
-            queryset = queryset.filter(facility__is_null=True)
+            queryset = queryset.filter(facility__isnull=True)
         return queryset
 
     # TODO : AuthZ
