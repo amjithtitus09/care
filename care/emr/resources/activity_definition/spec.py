@@ -76,7 +76,7 @@ class ActivityDefinitionWriteSpec(BaseActivityDefinitionSpec):
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.healthcare_service:
-            obj.healthcare_service = HealthcareService.objects.get(
+            obj.healthcare_service = HealthcareService.objects.only("id").get(
                 external_id=self.healthcare_service
             )
 

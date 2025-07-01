@@ -86,7 +86,8 @@ class ActivityDefinitionViewSet(
         instance.observation_result_requirements = ids
         # Convert locations into list of ids
         ids = []
-        # TODO check for Authz
+        # AuthZ is fine because only administrators can create activity definitions
+        # Administrators should be able to create location associations.
         for location in instance.locations:
             obj = (
                 FacilityLocation.objects.only("id")
@@ -124,7 +125,7 @@ class ActivityDefinitionViewSet(
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
         if ActivityDefinition.objects.filter(
-            slug__exact=instance.slug, facility=instance.facility
+            slug__iexact=instance.slug, facility=instance.facility
         ).exists():
             raise ValidationError("Activity Definition with this slug already exists.")
         self.convert_external_id_to_internal_id(instance)
@@ -156,7 +157,7 @@ class ActivityDefinitionViewSet(
         If no facility filters are applied, all objects must be returned without a facility filter.
         If facility filter is applied, check for read permission and return all inside facility.
         """
-        base_queryset = self.database_model.objects.all()
+        base_queryset = super().get_queryset()
         facility_obj = self.get_facility_obj()
         if not AuthorizationController.call(
             "can_list_facility_activity_definition",

@@ -5,13 +5,7 @@ from care.emr.models.base import EMRBaseModel
 
 
 class ActivityDefinition(EMRBaseModel):
-    facility = models.ForeignKey(
-        "facility.Facility",
-        on_delete=models.PROTECT,
-        default=None,
-        null=True,
-        blank=True,
-    )
+    facility = models.ForeignKey("facility.Facility", on_delete=models.PROTECT)
     version = models.IntegerField(default=1)
     slug = models.CharField(max_length=255)
     title = models.CharField(max_length=1024)

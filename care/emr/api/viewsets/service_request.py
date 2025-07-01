@@ -145,34 +145,26 @@ class ServiceRequestViewSet(
 
     def authorize_update(self, request_obj, model_instance):
         if not AuthorizationController.call(
-            "can_write_service_request_in_encounter",
+            "can_write_service_request",
             self.request.user,
-            model_instance.encounter,
+            model_instance,
         ):
             raise ValidationError(
-                "You do not have permission to create a service request for this encounter"
+                "You do not have permission to update this service request"
             )
 
     def authorize_retrieve(self, model_instance):
         """
         The user must have access to the location or encounter to access the SR
         """
-        encounter = model_instance.encounter
-        if AuthorizationController.call(
-            "can_view_service_request_for_encounter",
+        if not AuthorizationController.call(
+            "can_read_service_request",
             self.request.user,
-            encounter,
+            model_instance,
         ):
-            return
-        for location in model_instance.locations:
-            location_obj = get_object_or_404(FacilityLocation, id=location)
-            if AuthorizationController.call(
-                "can_list_location_service_request",
-                self.request.user,
-                location_obj,
-            ):
-                return
-        raise ValidationError("You do not have permission to view this service request")
+            raise ValidationError(
+                "You do not have permission to read this service request"
+            )
 
     def get_queryset(self):
         queryset = (
@@ -245,6 +237,16 @@ class ServiceRequestViewSet(
             self.get_retrieve_pydantic_model().serialize(model_instance).to_json()
         )
 
+    def authorize_create_specimen(self, service_request):
+        if not AuthorizationController.call(
+            "can_write_specimen",
+            self.request.user,
+            service_request,
+        ):
+            raise ValidationError(
+                "You do not have permission to create a specimen for this encounter"
+            )
+
     @extend_schema(
         request=BaseSpecimenSpec,
     )
@@ -252,7 +254,7 @@ class ServiceRequestViewSet(
     def create_specimen(self, request, *args, **kwargs):
         service_request = self.get_object()
         sepcimen_data = BaseSpecimenSpec(**request.data)
-        self.authorize_update({}, service_request)
+        self.authorize_create_specimen(service_request)
         model_instance = sepcimen_data.de_serialize()
         model_instance.patient = service_request.patient
         model_instance.encounter = service_request.encounter
@@ -272,13 +274,13 @@ class ServiceRequestViewSet(
         service_request = self.get_object()
         request_params = ApplySpecimenDefinitionRequest(**request.data)
         # Authorize
+        self.authorize_create_specimen(service_request)
         specimen_definition = get_object_or_404(
             SpecimenDefinition,
             external_id=request_params.specimen_definition,
             facility=facility,
         )
         specimen = convert_sd_to_specimen(specimen_definition)
-        self.authorize_update({}, service_request)
         serializer_obj = SpecimenUpdateSpec.model_validate(
             request_params.specimen.model_dump(mode="json")
         )

@@ -62,6 +62,16 @@ class EncounterAccess(AuthorizationHandler):
             orgs=orgs,
         )
 
+    def check_permission_in_encounter(self, user, encounter, permission):
+        orgs = [*encounter.facility_organization_cache]
+        if encounter.current_location:
+            orgs.extend(encounter.current_location.facility_organization_cache)
+        return self.check_permission_in_facility_organization(
+            [permission],
+            user,
+            orgs=orgs,
+        )
+
     def can_update_encounter_obj(self, user, encounter):
         """
         Check if the user has permission to create encounter under this facility
@@ -69,45 +79,24 @@ class EncounterAccess(AuthorizationHandler):
         if encounter.status in COMPLETED_CHOICES:
             # Cannot write to a closed encounter
             return False
-        orgs = [*encounter.facility_organization_cache]
-        if encounter.current_location:
-            orgs.extend(encounter.current_location.facility_organization_cache)
-        return self.check_permission_in_facility_organization(
-            [EncounterPermissions.can_write_encounter.name],
-            user,
-            orgs=orgs,
+        return self.check_permission_in_encounter(
+            user, encounter, EncounterPermissions.can_write_encounter.name
+        )
+
+    def can_view_service_request_for_encounter(self, user, encounter):
+        """
+        Check if the user has permission to read service request under this encounter
+        """
+        return self.check_permission_in_encounter(
+            user, encounter, ServiceRequestPermissions.can_read_service_request.name
         )
 
     def can_write_service_request_in_encounter(self, user, encounter):
         """
         Check if the user has permission to create service request under this encounter
         """
-        if encounter.status in COMPLETED_CHOICES:
-            # Cannot write to a closed encounter
-            return False
-        orgs = [*encounter.facility_organization_cache]
-        if encounter.current_location:
-            orgs.extend(encounter.current_location.facility_organization_cache)
-        return self.check_permission_in_facility_organization(
-            [ServiceRequestPermissions.can_write_service_request.name],
-            user,
-            orgs=orgs,
-        )
-
-    def can_view_service_request_for_encounter(self, user, encounter):
-        """
-        Check if the user has permission to create service request under this encounter
-        """
-        if encounter.status in COMPLETED_CHOICES:
-            # Cannot write to a closed encounter
-            return False
-        orgs = [*encounter.facility_organization_cache]
-        if encounter.current_location:
-            orgs.extend(encounter.current_location.facility_organization_cache)
-        return self.check_permission_in_facility_organization(
-            [ServiceRequestPermissions.can_read_service_request.name],
-            user,
-            orgs=orgs,
+        return self.check_permission_in_encounter(
+            user, encounter, ServiceRequestPermissions.can_write_service_request.name
         )
 
     def get_filtered_encounters(self, qs, user, facility):

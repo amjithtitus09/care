@@ -101,6 +101,7 @@ class ServiceRequestUpdateSpec(ServiceRequestWriteSpec):
     code: (
         ValueSetBoundCoding[ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET.slug] | None
     ) = None
+    locations: list[UUID4] = []
 
 
 class ServiceRequestCreateSpec(ServiceRequestWriteSpec):
