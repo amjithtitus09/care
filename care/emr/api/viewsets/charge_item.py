@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
 
 from care.emr.api.viewsets.base import (
@@ -30,6 +30,7 @@ from care.emr.resources.charge_item.sync_charge_item_costs import sync_charge_it
 from care.emr.resources.questionnaire.spec import SubjectType
 from care.emr.resources.tag.config_spec import TagResource
 from care.facility.models.facility import Facility
+from care.security.authorization.base import AuthorizationController
 
 
 class ChargeItemDefinitionFilters(filters.FilterSet):
@@ -106,21 +107,41 @@ class ChargeItemViewSet(
     def authorize_create(self, instance):
         facility = self.get_facility_obj()
         encounter = get_object_or_404(Encounter, external_id=instance.encounter)
+        if encounter.facility != facility:
+            raise ValidationError("Encounter is not associated with the facility")
         if instance.account:
             account = get_object_or_404(
                 Account, external_id=instance.account, encounter=encounter
             )
             if account.facility != facility:
                 raise ValidationError("Account is not associated with the facility")
-        # TODO: AuthZ pending
+        if not AuthorizationController.call(
+            "can_create_charge_item_in_facility",
+            self.request.user,
+            facility,
+        ):
+            raise PermissionDenied("Access Denied to Charge Item")
         return super().authorize_create(instance)
 
+    def authorize_update(self, request_obj, model_instance):
+        if not AuthorizationController.call(
+            "can_update_charge_item_in_facility",
+            self.request.user,
+            model_instance.facility,
+        ):
+            raise PermissionDenied("Access Denied to Charge Item")
+
     def get_queryset(self):
-        return (
-            super()
-            .get_queryset()
-            .select_related("paid_invoice", "charge_item_definition")
-        )
+        facility = self.get_facility_obj()
+        queryset = super().get_queryset().filter(facility=facility)
+        if not AuthorizationController.call(
+            "can_read_charge_item_in_facility",
+            self.request.user,
+            facility,
+        ):
+            raise PermissionDenied("Access Denied to Charge Item")
+
+        return queryset.select_related("paid_invoice", "charge_item_definition")
 
 
 InternalQuestionnaireRegistry.register(ChargeItemViewSet)
