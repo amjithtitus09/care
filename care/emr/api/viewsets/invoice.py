@@ -84,6 +84,7 @@ class InvoiceViewSet(
         charge_items.update(status=ChargeItemStatusOptions.billed.value)
         sync_invoice_items(instance)
         super().perform_create(instance)
+        charge_items.update(paid_invoice=instance)
         rebalance_account_task.delay(instance.account.id)
         return instance
 
@@ -158,7 +159,9 @@ class InvoiceViewSet(
             )
             sync_invoice_items(invoice)
             invoice.save()
-            charge_items.update(status=ChargeItemStatusOptions.billed.value)
+            charge_items.update(
+                status=ChargeItemStatusOptions.billed.value, paid_invoice=invoice
+            )
         return Response(InvoiceRetrieveSpec.serialize(invoice).to_json())
 
     @extend_schema(
@@ -179,6 +182,7 @@ class InvoiceViewSet(
                 sync_invoice_items(invoice)
                 invoice.save()
                 charge_item.status = ChargeItemStatusOptions.billable.value
+                charge_item.paid_invoice = None
                 charge_item.save()
         except ValueError as e:
             raise ValidationError("Charge item not found in invoice") from e
@@ -197,7 +201,9 @@ class InvoiceViewSet(
             invoice.charge_items = charge_items.values_list("id", flat=True)
             sync_invoice_items(invoice)
             invoice.save()
-            charge_items.update(status=ChargeItemStatusOptions.billed.value)
+            charge_items.update(
+                status=ChargeItemStatusOptions.billed.value, paid_invoice=invoice
+            )
         return Response(InvoiceRetrieveSpec.serialize(invoice).to_json())
 
     @action(methods=["POST"], detail=True)
