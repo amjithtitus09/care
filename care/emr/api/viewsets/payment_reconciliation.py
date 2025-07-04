@@ -13,6 +13,7 @@ from care.emr.api.viewsets.base import (
 from care.emr.models.account import Account
 from care.emr.models.invoice import Invoice
 from care.emr.models.payment_reconciliation import PaymentReconciliation
+from care.emr.resources.account.sync_items import rebalance_account_task
 from care.emr.resources.payment_reconciliation.spec import (
     BasePaymentReconciliationSpec,
     PaymentReconciliationReadSpec,
@@ -51,6 +52,11 @@ class PaymentReconciliationViewSet(
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
         super().perform_create(instance)
+        rebalance_account_task.delay(instance.account.id)
+
+    def perform_update(self, instance):
+        super().perform_update(instance)
+        rebalance_account_task.delay(instance.account.id)
 
     def authorize_create(self, instance):
         facility = self.get_facility_obj()
