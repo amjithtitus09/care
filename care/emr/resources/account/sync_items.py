@@ -8,6 +8,7 @@ from care.emr.resources.payment_reconciliation.spec import (
     PaymentReconciliationStatusOptions,
 )
 from care.utils.time_util import care_now
+from config.celery_app import app
 
 
 def calculate_payment_reconciliation_summary(payment_reconciliations):
@@ -44,3 +45,10 @@ def sync_account_items(account: Account):
     account.total_balance = account.total_gross - account.total_paid
     account.total_price_components = charge_items_summary["total_price_components"]
     account.calculated_at = care_now()
+
+
+@app.task()
+def rebalance_account_task(account_id):
+    account = Account.objects.get(id=account_id)
+    sync_account_items(account)
+    account.save()

@@ -18,6 +18,7 @@ from care.emr.api.viewsets.base import (
 from care.emr.models.account import Account
 from care.emr.models.charge_item import ChargeItem
 from care.emr.models.invoice import Invoice
+from care.emr.resources.account.sync_items import rebalance_account_task
 from care.emr.resources.charge_item.spec import ChargeItemStatusOptions
 from care.emr.resources.invoice.spec import (
     INVOICE_CANCELLED_STATUS,
@@ -83,6 +84,8 @@ class InvoiceViewSet(
         charge_items.update(status=ChargeItemStatusOptions.billed.value)
         sync_invoice_items(instance)
         super().perform_create(instance)
+        rebalance_account_task.delay(instance.account.id)
+        return instance
 
     def authorize_create(self, instance):
         facility = self.get_facility_obj()
@@ -90,7 +93,6 @@ class InvoiceViewSet(
         if account.facility != facility:
             raise ValidationError("Account is not associated with the facility")
         # TODO: AuthZ pending
-        return super().authorize_create(instance)
 
     def perform_update(self, instance):
         old_invoice = Invoice.objects.get(id=instance.id)
@@ -127,7 +129,9 @@ class InvoiceViewSet(
                 ).update(
                     status=ChargeItemStatusOptions.paid.value, paid_invoice=instance
                 )
-        return super().perform_update(instance)
+        super().perform_update(instance)
+        rebalance_account_task.delay(instance.account.id)
+        return instance
 
     def check_invoice_in_draft(self, instance):
         if instance.status == InvoiceStatusOptions.draft.value:
