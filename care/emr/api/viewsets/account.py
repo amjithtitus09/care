@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
@@ -42,7 +42,12 @@ class AccountViewSet(
     pydantic_read_model = AccountReadSpec
     pydantic_retrieve_model = AccountRetrieveSpec
     filterset_class = AccountFilters
-    filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
+    filter_backends = [
+        filters.DjangoFilterBackend,
+        OrderingFilter,
+        SearchFilter,
+    ]
+    search_fields = ["name"]
     ordering_fields = ["created_date", "modified_date"]
 
     def get_facility_obj(self):
