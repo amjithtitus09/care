@@ -26,7 +26,6 @@ class PatientIdentifierRetrieveConfig(BaseModel):
     retrieve_with_dob: bool = False
     retrieve_with_year_of_birth: bool = False
     retrieve_with_otp: bool = False
-    retrieve_without_extra: bool = False
 
 
 class IdentifierConfig(BaseModel):

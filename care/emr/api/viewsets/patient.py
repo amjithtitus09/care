@@ -1,5 +1,3 @@
-import datetime
-
 from django.db import transaction
 from django.utils import timezone
 from django_filters import CharFilter, FilterSet
@@ -124,10 +122,10 @@ class PatientViewSet(EMRModelViewSet):
             instance.save()
 
     class SearchRequestSpec(BaseModel):
-        name: str = ""
-        phone_number: str
-        date_of_birth: datetime.date | None = None
-        year_of_birth: int | None = None
+        phone_number: str | None = None  # Old Identifier
+        config: UUID4 | None = None
+        value: str | None = None
+        facility: UUID4 | None = None
 
     @extend_schema(
         request=SearchRequestSpec,
@@ -136,17 +134,42 @@ class PatientViewSet(EMRModelViewSet):
     def search(self, request, *args, **kwargs):
         max_page_size = 200
         request_data = self.SearchRequestSpec(**request.data)
-        queryset = Patient.objects.filter(phone_number=request_data.phone_number)
-        if request_data.date_of_birth:
-            queryset = queryset.filter(date_of_birth=request_data.date_of_birth)
-        if request_data.year_of_birth:
-            queryset = queryset.filter(year_of_birth=request_data.year_of_birth)
-        if request_data.name:
-            queryset = (queryset.filter(name__icontains=request_data.name))[
-                :max_page_size
-            ]
-        data = [PatientPartialSpec.serialize(obj).to_json() for obj in queryset]
-        return Response({"results": data})
+        partial = False
+        if not request_data.phone_number and not request_data.config:
+            raise ValidationError("Either phone number or config is required")
+        if request_data.phone_number:
+            queryset = Patient.objects.filter(phone_number=request_data.phone_number)
+            partial = True
+        else:
+            config_queryset = PatientIdentifierConfig.objects.filter(
+                external_id=request_data.config
+            )
+            if request_data.facility:
+                config_queryset = config_queryset.filter(
+                    facility__external_id=request_data.facility
+                )
+            config = config_queryset.first()
+            if not config:
+                raise ValidationError("Config not found")
+
+            queryset = PatientIdentifier.objects.filter(
+                config=config,
+                value__iexact=request_data.value,
+            )
+            identifier = queryset.first()
+            if not identifier:
+                raise ValidationError("Identifier not found")
+            if config.config.get("retrieve_config", {}).get(
+                "retrieve_with_year_of_birth"
+            ):
+                partial = True
+            queryset = Patient.objects.filter(id=identifier.patient_id)
+        queryset = queryset.order_by("-created_date")[:max_page_size]
+        if partial:
+            data = [PatientPartialSpec.serialize(obj).to_json() for obj in queryset]
+            return Response({"partial": True, "results": data})
+        data = [PatientRetrieveSpec.serialize(obj).to_json() for obj in queryset]
+        return Response({"partial": False, "results": data})
 
     class SearchRetrieveRequestSpec(BaseModel):
         phone_number: str
@@ -165,6 +188,10 @@ class PatientViewSet(EMRModelViewSet):
             if str(patient.external_id)[:5] == request_data.partial_id:
                 return Response(PatientRetrieveSpec.serialize(patient).to_json())
         raise PermissionDenied("No valid patients found")
+
+    @action(detail=False, methods=["POST"])
+    def search_by_identifier(self, request, *args, **kwargs):
+        pass
 
     @action(detail=True, methods=["GET"])
     def get_users(self, request, *args, **kwargs):
