@@ -198,14 +198,12 @@ class PatientIdentifierConfigCache:
             PatientIdentifierStatus,
         )
 
-        if cls.instance_configs is None:
-            cls.instance_configs = [
-                PatientIdentifierListSpec.serialize(x).to_json()
-                for x in PatientIdentifierConfig.objects.filter(
-                    facility__isnull=True, status=PatientIdentifierStatus.active.value
-                )
-            ]
-        return cls.instance_configs
+        return [
+            PatientIdentifierListSpec.serialize(x).to_json()
+            for x in PatientIdentifierConfig.objects.filter(
+                facility__isnull=True, status=PatientIdentifierStatus.active.value
+            )
+        ]
 
     @classmethod
     def get_facility_config(cls, facility_id):
@@ -214,14 +212,12 @@ class PatientIdentifierConfigCache:
             PatientIdentifierStatus,
         )
 
-        if facility_id not in cls.facility_configs:
-            cls.facility_configs[facility_id] = [
-                PatientIdentifierListSpec.serialize(x).to_json()
-                for x in PatientIdentifierConfig.objects.filter(
-                    facility_id=facility_id, status=PatientIdentifierStatus.active.value
-                )
-            ]
-        return cls.facility_configs[facility_id]
+        return [
+            PatientIdentifierListSpec.serialize(x).to_json()
+            for x in PatientIdentifierConfig.objects.filter(
+                facility_id=facility_id, status=PatientIdentifierStatus.active.value
+            )
+        ]
 
     @classmethod
     def clear_facility_cache(cls, facility_id):

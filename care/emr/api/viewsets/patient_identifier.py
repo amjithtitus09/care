@@ -71,7 +71,7 @@ class PatientIdentifierConfigViewSet(
             )
         if model_obj and model_obj.facility:
             queryset = queryset.filter(facility=model_obj.facility)
-        elif instance.facility:
+        elif getattr(instance, "facility", None):
             queryset = queryset.filter(facility__external_id=instance.facility)
         if queryset.exists():
             raise ValidationError(
