@@ -37,7 +37,7 @@ class EncounterBasedAuthorizationBase:
                 Facility, external_id=self.request.GET["facility"]
             )
             return AuthorizationController.call(
-                "has_pharmacist_permission_in_facility", self.request.user, facility
+                "can_view_as_pharmacist", self.request.user, facility
             )
         return False
 

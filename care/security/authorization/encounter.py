@@ -46,7 +46,7 @@ class EncounterAccess(AuthorizationHandler):
             orgs=orgs,
         )
 
-    def has_pharmacist_permission_in_facility(self, user, facility):
+    def can_view_as_pharmacist(self, user, facility):
         return self.check_permission_in_facility_organization(
             [MedicationPermissions.is_pharmacist.name], user, facility=facility
         )
