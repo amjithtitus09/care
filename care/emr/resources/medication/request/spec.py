@@ -83,6 +83,7 @@ class MedicationRequestDispenseStatus(str, Enum):
     complete = "complete"
     partial = "partial"
     incomplete = "incomplete"
+    declined = "declined"
 
 
 class TimingUnit(str, Enum):

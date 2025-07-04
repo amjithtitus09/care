@@ -157,13 +157,15 @@ class PatientViewSet(EMRModelViewSet):
                 value__iexact=request_data.value,
             )
             identifier = queryset.first()
-            if not identifier:
-                raise ValidationError("Identifier not found")
+
             if config.config.get("retrieve_config", {}).get(
                 "retrieve_with_year_of_birth"
             ):
                 partial = True
-            queryset = Patient.objects.filter(id=identifier.patient_id)
+            if not identifier:
+                queryset = queryset.none()
+            else:
+                queryset = Patient.objects.filter(id=identifier.patient_id)
         queryset = queryset.order_by("-created_date")[:max_page_size]
         if partial:
             data = [PatientPartialSpec.serialize(obj).to_json() for obj in queryset]

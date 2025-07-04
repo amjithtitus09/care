@@ -45,6 +45,7 @@ class MedicationRequestFilter(filters.FilterSet):
         field_name="dispense_status", exclude=True
     )
     dispense_status_isnull = NullFilter(field_name="dispense_status")
+    facility = filters.UUIDFilter(field_name="encounter__facility__external_id")
 
 
 class MedicationRequestViewSet(
@@ -66,7 +67,7 @@ class MedicationRequestViewSet(
     ordering_fields = ["created_date", "modified_date"]
 
     def get_queryset(self):
-        self.authorize_read_encounter()
+        self.authorize_read_for_medication()
         return (
             super()
             .get_queryset()

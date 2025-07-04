@@ -166,10 +166,10 @@ class PatientIdentifier(EMRBaseModel):
 class PatientIdentifierConfigCache:
     """
     Configs can be cached because it changes very rarely,
-    local cache makes more sense than a redis based cache interms of IO.
     Redis based alternative for this class can be implemented later if needed.
     """
 
+    # TODO : Switch to Redis
     configs = {}
     instance_configs = None
     facility_configs = {}
