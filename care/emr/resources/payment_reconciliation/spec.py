@@ -8,6 +8,7 @@ from care.emr.models.invoice import Invoice
 from care.emr.models.payment_reconciliation import PaymentReconciliation
 from care.emr.resources.account.spec import AccountReadSpec
 from care.emr.resources.base import EMRResource
+from care.emr.resources.invoice.spec import InvoiceReadSpec
 
 
 class PaymentReconciliationTypeOptions(str, Enum):
@@ -98,8 +99,13 @@ class PaymentReconciliationReadSpec(BasePaymentReconciliationSpec):
     """Invoice read specification"""
 
     account: dict
+    target_invoice: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["account"] = AccountReadSpec.serialize(obj.account).to_json()
+        if obj.target_invoice:
+            mapping["target_invoice"] = InvoiceReadSpec.serialize(
+                obj.target_invoice
+            ).to_json()
