@@ -16,3 +16,4 @@ from .service_request import *  # noqa
 from .specimen_definition import *  # noqa
 from .user import *  # noqa
 from .user_schedule import *  # noqa
+from .account import *  # noqa

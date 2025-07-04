@@ -20,5 +20,5 @@ def get_default_account(patient, facility):
         facility=facility,
         status=AccountStatusOptions.active.value,
         billing_status=AccountBillingStatusOptions.open.value,
-        name=f"Default Created {care_now().strftime('%Y-%m-%d')}",
+        name=f"{patient.name} Default Account {care_now().strftime('%Y-%m-%d')}",
     )

@@ -1,5 +1,6 @@
 from enum import Enum
 
+from care.security.permissions.account import AccountPermissions
 from care.security.permissions.activity_definition import ActivityDefinitionPermissions
 from care.security.permissions.charge_item import ChargeItemPermissions
 from care.security.permissions.charge_item_definition import (
@@ -60,6 +61,7 @@ class PermissionController:
         DiagnosticReportPermissions,
         ChargeItemDefinitionPermissions,
         ChargeItemPermissions,
+        AccountPermissions,
     ]
 
     cache = {}
