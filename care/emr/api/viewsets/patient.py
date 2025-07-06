@@ -120,6 +120,13 @@ class PatientViewSet(EMRModelViewSet):
                 )
             instance.build_instance_identifiers()
             instance.save()
+            tag_manager = PatientInstanceTagManager()
+            tag_manager.set_tags(
+                TagResource.patient,
+                instance,
+                instance._tags,  # noqa: SLF001
+                self.request.user,
+            )
 
     def perform_update(self, instance):
         identifiers = instance._identifiers  # noqa: SLF001
@@ -292,13 +299,10 @@ class PatientViewSet(EMRModelViewSet):
         if not value and request_config.config["required"]:
             raise ValidationError("Value is required")
         if value:
-            try:
-                validate_identifier_config(
-                    {"config": request_config.config, "id": request_config.external_id},
-                    value,
-                )
-            except ValueError as e:
-                raise ValidationError(str(e)) from e
+            validate_identifier_config(
+                {"config": request_config.config, "id": request_config.external_id},
+                value,
+            )
 
         patient_identifier = PatientIdentifier.objects.filter(
             patient=patient, config=request_config

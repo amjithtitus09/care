@@ -104,6 +104,8 @@ class PatientCreateSpec(PatientBaseSpec):
 
     identifiers: list[PatientIdentifierConfigRequest] = []
 
+    tags: list[UUID4] = []
+
     @field_validator("geo_organization")
     @classmethod
     def validate_geo_organization(cls, geo_organization):
@@ -137,6 +139,7 @@ class PatientCreateSpec(PatientBaseSpec):
         else:
             obj.year_of_birth = self.date_of_birth.year
         obj._identifiers = self.identifiers  # noqa: SLF001
+        obj._tags = self.tags  # noqa: SLF001
 
 
 class PatientUpdateSpec(PatientBaseSpec):
