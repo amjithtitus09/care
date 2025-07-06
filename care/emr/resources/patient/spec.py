@@ -72,14 +72,14 @@ class PatientBaseSpec(EMRResource):
         return deceased_datetime
 
 
-def validate_identifier_config(config, value):
-    if (
-        config["config"]["unique"]
-        and PatientIdentifier.objects.filter(
-            config__external_id=config["id"],
-            value=value,
-        ).exists()
-    ):
+def validate_identifier_config(config, value, obj=None):
+    queryset = PatientIdentifier.objects.filter(
+        config__external_id=config["id"],
+        value=value,
+    )
+    if obj:
+        queryset = queryset.exclude(patient=obj)
+    if config["config"]["unique"] and queryset.exists():
         err = f"Identifier config {config['config']['system']} is not unique"
         raise ValueError(err)
     if config["config"]["regex"] and not re.match(config["config"]["regex"], value):
@@ -174,15 +174,21 @@ class PatientUpdateSpec(PatientBaseSpec):
             elif self.date_of_birth:
                 obj.year_of_birth = self.date_of_birth.year
 
-    @model_validator(mode="after")
-    def validate_identifiers(self):
+    @field_validator("identifiers")
+    @classmethod
+    def validate_identifiers(cls, identifiers, info):
         instance_identifier_configs = PatientIdentifierConfigCache.get_instance_config()
-        configs = {str(x.config): x for x in self.identifiers}
+        configs = {str(x.config): x for x in identifiers}
         for identifier_config in instance_identifier_configs:
             if identifier_config["id"] in configs:
                 value = configs[identifier_config["id"]].value
-                validate_identifier_config(identifier_config, value)
-        return self
+                validate_identifier_config(
+                    identifier_config, value, info.context.get("object")
+                )
+            elif identifier_config["config"]["required"]:
+                err = f"Identifier config {identifier_config['config']['system']} is required"
+                raise ValueError(err)
+        return identifiers
 
 
 class PatientListSpec(PatientBaseSpec):

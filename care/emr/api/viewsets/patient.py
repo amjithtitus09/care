@@ -126,14 +126,25 @@ class PatientViewSet(EMRModelViewSet):
         with transaction.atomic():
             super().perform_update(instance)
             for identifier in identifiers:
-                identifier_obj, _ = PatientIdentifier.objects.get_or_create(
+                identifier_obj = PatientIdentifier.objects.filter(
                     patient=instance,
                     config=get_object_or_404(
                         PatientIdentifierConfig, external_id=identifier.config
                     ),
-                )
-                identifier_obj.value = identifier.value
-                identifier_obj.save()
+                ).first()
+                if identifier_obj:
+                    if not identifier.value:
+                        identifier_obj.delete()
+                else:
+                    identifier_obj = PatientIdentifier(
+                        patient=instance,
+                        config=get_object_or_404(
+                            PatientIdentifierConfig, external_id=identifier.config
+                        ),
+                    )
+                if identifier.value:
+                    identifier_obj.value = identifier.value
+                    identifier_obj.save()
             instance.build_instance_identifiers()
             instance.save()
 
