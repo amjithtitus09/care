@@ -82,7 +82,11 @@ def validate_identifier_config(config, value, obj=None):
     if config["config"]["unique"] and queryset.exists():
         err = f"Identifier config {config['config']['system']} is not unique"
         raise ValueError(err)
-    if config["config"]["regex"] and not re.match(config["config"]["regex"], value):
+    if (
+        value
+        and config["config"]["regex"]
+        and not re.match(config["config"]["regex"], value)
+    ):
         err = f"Identifier config {config['config']['system']} is not valid"
         raise ValueError(err)
 
