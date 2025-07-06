@@ -121,6 +121,22 @@ class PatientViewSet(EMRModelViewSet):
             instance.build_instance_identifiers()
             instance.save()
 
+    def perform_update(self, instance):
+        identifiers = instance._identifiers  # noqa: SLF001
+        with transaction.atomic():
+            super().perform_update(instance)
+            for identifier in identifiers:
+                identifier_obj, _ = PatientIdentifier.objects.get_or_create(
+                    patient=instance,
+                    config=get_object_or_404(
+                        PatientIdentifierConfig, external_id=identifier.config
+                    ),
+                )
+                identifier_obj.value = identifier.value
+                identifier_obj.save()
+            instance.build_instance_identifiers()
+            instance.save()
+
     class SearchRequestSpec(BaseModel):
         phone_number: str | None = None  # Old Identifier
         config: UUID4 | None = None

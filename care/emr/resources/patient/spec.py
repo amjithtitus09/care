@@ -148,6 +148,8 @@ class PatientUpdateSpec(PatientBaseSpec):
     age: int | None = None
     geo_organization: UUID4 | None = None
 
+    identifiers: list[PatientIdentifierConfigRequest] = []
+
     @field_validator("geo_organization")
     @classmethod
     def validate_geo_organization(cls, geo_organization):
@@ -161,6 +163,7 @@ class PatientUpdateSpec(PatientBaseSpec):
 
     def perform_extra_deserialization(self, is_update, obj):
         if is_update:
+            obj._identifiers = self.identifiers  # noqa: SLF001
             if self.geo_organization:
                 obj.geo_organization = Organization.objects.get(
                     external_id=self.geo_organization
@@ -170,6 +173,16 @@ class PatientUpdateSpec(PatientBaseSpec):
                 obj.year_of_birth = timezone.now().year - self.age
             elif self.date_of_birth:
                 obj.year_of_birth = self.date_of_birth.year
+
+    @model_validator(mode="after")
+    def validate_identifiers(self):
+        instance_identifier_configs = PatientIdentifierConfigCache.get_instance_config()
+        configs = {str(x.config): x for x in self.identifiers}
+        for identifier_config in instance_identifier_configs:
+            if identifier_config["id"] in configs:
+                value = configs[identifier_config["id"]].value
+                validate_identifier_config(identifier_config, value)
+        return self
 
 
 class PatientListSpec(PatientBaseSpec):
