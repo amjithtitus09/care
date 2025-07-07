@@ -13,6 +13,7 @@ from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
     EMRListMixin,
     EMRRetrieveMixin,
+    EMRTagMixin,
     EMRUpdateMixin,
 )
 from care.emr.api.viewsets.scheduling import lock_create_appointment
@@ -24,7 +25,9 @@ from care.emr.resources.scheduling.slot.spec import (
     TokenBookingReadSpec,
     TokenBookingWriteSpec,
 )
+from care.emr.resources.tag.config_spec import TagResource
 from care.emr.resources.user.spec import UserSpec
+from care.emr.tagging.filters import SingleFacilityTagFilter
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
 
@@ -62,7 +65,11 @@ class TokenBookingFilters(FilterSet):
 
 
 class TokenBookingViewSet(
-    EMRRetrieveMixin, EMRUpdateMixin, EMRListMixin, EMRBaseViewSet
+    EMRRetrieveMixin,
+    EMRUpdateMixin,
+    EMRListMixin,
+    EMRBaseViewSet,
+    EMRTagMixin,
 ):
     database_model = TokenBooking
     pydantic_model = TokenBookingWriteSpec
@@ -70,7 +77,8 @@ class TokenBookingViewSet(
     pydantic_update_model = TokenBookingWriteSpec
 
     filterset_class = TokenBookingFilters
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SingleFacilityTagFilter]
+    resource_type = TagResource.token_booking
 
     def get_facility_obj(self):
         return get_object_or_404(

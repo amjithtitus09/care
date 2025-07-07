@@ -29,6 +29,7 @@ from care.emr.resources.charge_item.spec import (
 from care.emr.resources.charge_item.sync_charge_item_costs import sync_charge_item_costs
 from care.emr.resources.questionnaire.spec import SubjectType
 from care.emr.resources.tag.config_spec import TagResource
+from care.emr.tagging.filters import SingleFacilityTagFilter
 from care.facility.models.facility import Facility
 from care.security.authorization.base import AuthorizationController
 
@@ -68,7 +69,11 @@ class ChargeItemViewSet(
     pydantic_update_model = ChargeItemSpec
     pydantic_read_model = ChargeItemReadSpec
     filterset_class = ChargeItemDefinitionFilters
-    filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
+    filter_backends = [
+        filters.DjangoFilterBackend,
+        OrderingFilter,
+        SingleFacilityTagFilter,
+    ]
     ordering_fields = ["created_date", "modified_date"]
     questionnaire_type = "charge_item"
     questionnaire_title = "Charge Item"
