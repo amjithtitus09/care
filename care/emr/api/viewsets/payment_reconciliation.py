@@ -75,6 +75,14 @@ class PaymentReconciliationViewSet(
         rebalance_account_task.delay(instance.account.id)
 
     def perform_update(self, instance):
+        old_instance = self.get_object()
+        if old_instance.status != instance.status and instance.status in [
+            PaymentReconciliationStatusOptions.cancelled.value,
+            PaymentReconciliationStatusOptions.entered_in_error.value,
+        ]:
+            raise ValidationError(
+                "Cannot update payment reconciliation, use the cancel endpoint instead"
+            )
         super().perform_update(instance)
         rebalance_account_task.delay(instance.account.id)
 

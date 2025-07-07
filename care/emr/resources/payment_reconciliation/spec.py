@@ -70,10 +70,8 @@ class BasePaymentReconciliationSpec(EMRResource):
     method: PaymentReconciliationPaymentMethodOptions
     reference_number: str | None = None
     authorization: str | None = None
-    tendered_amount: float
-    returned_amount: float
+
     note: str | None = None
-    amount: float | None = None
 
     @model_validator(mode="after")
     def check_amount_or_factor(self):
@@ -88,6 +86,9 @@ class PaymentReconciliationWriteSpec(BasePaymentReconciliationSpec):
 
     target_invoice: UUID4 | None = None
     account: UUID4
+    amount: float | None = None
+    tendered_amount: float
+    returned_amount: float
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.target_invoice:
@@ -100,6 +101,9 @@ class PaymentReconciliationReadSpec(BasePaymentReconciliationSpec):
 
     account: dict
     target_invoice: dict | None = None
+    amount: float | None = None
+    tendered_amount: float
+    returned_amount: float
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):

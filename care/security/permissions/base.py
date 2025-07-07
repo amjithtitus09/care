@@ -14,6 +14,7 @@ from care.security.permissions.facility_organization import (
     FacilityOrganizationPermissions,
 )
 from care.security.permissions.healthcare_service import HealthcareServicePermissions
+from care.security.permissions.inventory_item import InventoryItemPermissions
 from care.security.permissions.invoice import InvoicePermissions
 from care.security.permissions.location import FacilityLocationPermissions
 from care.security.permissions.medication import MedicationPermissions
@@ -25,10 +26,14 @@ from care.security.permissions.patient import PatientPermissions
 from care.security.permissions.payment_reconciliation import (
     PaymentReconciliationPermissions,
 )
+from care.security.permissions.product import ProductPermissions
+from care.security.permissions.product_knowledge import ProductKnowledgePermissions
 from care.security.permissions.questionnaire import QuestionnairePermissions
 from care.security.permissions.service_request import ServiceRequestPermissions
 from care.security.permissions.specimen import SpecimenPermissions
 from care.security.permissions.specimen_definition import SpecimenDefinitionPermissions
+from care.security.permissions.supply_delivery import SupplyDeliveryPermissions
+from care.security.permissions.supply_request import SupplyRequestPermissions
 from care.security.permissions.user import UserPermissions
 from care.security.permissions.user_schedule import UserSchedulePermissions
 
@@ -70,6 +75,11 @@ class PermissionController:
         PaymentReconciliationPermissions,
         InvoicePermissions,
         MedicationPermissions,
+        ProductKnowledgePermissions,
+        ProductPermissions,
+        SupplyDeliveryPermissions,
+        SupplyRequestPermissions,
+        InventoryItemPermissions,
     ]
 
     cache = {}
