@@ -1,5 +1,7 @@
-from care.security.authorization import AuthorizationController
-from care.security.authorization.base import AuthorizationHandler
+from care.security.authorization.base import (
+    AuthorizationController,
+    AuthorizationHandler,
+)
 from care.security.permissions.account import AccountPermissions
 
 
