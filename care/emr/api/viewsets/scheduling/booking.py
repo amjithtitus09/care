@@ -78,10 +78,14 @@ class TokenBookingViewSet(
     pydantic_update_model = TokenBookingWriteSpec
 
     filterset_class = TokenBookingFilters
-    filter_backends = [DjangoFilterBackend, SingleFacilityTagFilter,rest_framework_filters.OrderingFilter]
-    
+    filter_backends = [
+        DjangoFilterBackend,
+        SingleFacilityTagFilter,
+        rest_framework_filters.OrderingFilter,
+    ]
+
     ordering_fields = ["created_date", "token_slot__start_datetime"]
-    
+
     resource_type = TagResource.token_booking
 
     def get_facility_obj(self):

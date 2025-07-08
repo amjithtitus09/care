@@ -23,6 +23,9 @@ from care.security.permissions.observation_definition import (
 )
 from care.security.permissions.organization import OrganizationPermissions
 from care.security.permissions.patient import PatientPermissions
+from care.security.permissions.patient_identifier_config import (
+    PatientIdentifierConfigPermissions,
+)
 from care.security.permissions.payment_reconciliation import (
     PaymentReconciliationPermissions,
 )
@@ -34,6 +37,7 @@ from care.security.permissions.specimen import SpecimenPermissions
 from care.security.permissions.specimen_definition import SpecimenDefinitionPermissions
 from care.security.permissions.supply_delivery import SupplyDeliveryPermissions
 from care.security.permissions.supply_request import SupplyRequestPermissions
+from care.security.permissions.tag_config import TagConfigPermissions
 from care.security.permissions.user import UserPermissions
 from care.security.permissions.user_schedule import UserSchedulePermissions
 
@@ -80,6 +84,8 @@ class PermissionController:
         SupplyDeliveryPermissions,
         SupplyRequestPermissions,
         InventoryItemPermissions,
+        TagConfigPermissions,
+        PatientIdentifierConfigPermissions,
     ]
 
     cache = {}

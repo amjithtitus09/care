@@ -12,15 +12,15 @@ from care.security.roles.role import (
 )
 
 
-class SupplyRequestPermissions(enum.Enum):
-    can_write_supply_request = Permission(
-        "Can Create Supply Request on Facility",
+class TagConfigPermissions(enum.Enum):
+    can_write_tag_config = Permission(
+        "Can Create Tag Config on Facility",
         "",
         PermissionContext.FACILITY,
-        [FACILITY_ADMIN_ROLE, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, NURSE_ROLE],
+        [FACILITY_ADMIN_ROLE, ADMIN_ROLE],
     )
-    can_read_supply_request = Permission(
-        "Can Read Supply Request",
+    can_read_tag_config = Permission(
+        "Can Read Tag Config",
         "",
         PermissionContext.FACILITY,
         [
