@@ -93,7 +93,7 @@ class MedicationDispenseViewSet(
                 "You do not have permission to read medication dispenses"
             )
 
-    def get_queryset(self):
+    def get_querysets(self):
         queryset = super().get_queryset()
 
         if self.action == "list":
