@@ -1,7 +1,9 @@
 from django.db import transaction
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
@@ -13,6 +15,7 @@ from care.emr.api.viewsets.base import (
     EMRUpsertMixin,
 )
 from care.emr.models.encounter import Encounter
+from care.emr.models.location import FacilityLocation
 from care.emr.models.medication_dispense import MedicationDispense
 from care.emr.resources.charge_item.apply_charge_item_definition import (
     apply_charge_item_definition,
@@ -27,6 +30,7 @@ from care.emr.resources.medication.dispense.spec import (
     MedicationDispenseWriteSpec,
 )
 from care.emr.resources.medication.request.spec import MedicationRequestDispenseStatus
+from care.security.authorization.base import AuthorizationController
 from care.utils.filters.multiselect import MultiSelectFilter
 
 
@@ -80,6 +84,32 @@ class MedicationDispenseViewSet(
         with transaction.atomic():
             sync_inventory_item(instance.item)
             return super().perform_update(instance)
+
+    def authorize_location_read(self, location):
+        if not AuthorizationController.call(
+            "can_list_facility_medication_dispense", self.request.user, location
+        ):
+            raise PermissionDenied(
+                "You do not have permission to read medication dispenses"
+            )
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if self.action == "list":
+            if "location" in self.request.GET:
+                location = get_object_or_404(
+                    FacilityLocation, external_id=self.request.GET.get("location")
+                )
+
+            if "encounter" in self.request.GET:
+                encounter = get_object_or_404(
+                    Encounter, external_id=self.request.GET.get("encounter")
+                )
+
+            queryset = queryset.filter(location=location)
+
+        return queryset
 
     @action(methods=["GET"], detail=False)
     def summary(self, request, *args, **kwargs):

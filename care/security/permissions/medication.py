@@ -17,3 +17,15 @@ class MedicationPermissions(enum.Enum):
         PermissionContext.FACILITY,
         [FACILITY_ADMIN_ROLE, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, NURSE_ROLE],
     )
+    read_medication_dispense = Permission(
+        "Medication Dispense Read",
+        "Users can read medication dispenses",
+        PermissionContext.FACILITY,
+        [FACILITY_ADMIN_ROLE, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, NURSE_ROLE],
+    )
+    write_medication_dispense = Permission(
+        "Write Medication Dispense",
+        "Users can write medication dispenses",
+        PermissionContext.FACILITY,
+        [FACILITY_ADMIN_ROLE, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, NURSE_ROLE],
+    )
