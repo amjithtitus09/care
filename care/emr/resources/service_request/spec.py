@@ -63,7 +63,7 @@ class BaseServiceRequestSpec(EMRResource):
     """Base model for service requests"""
 
     __model__ = ServiceRequest
-    __exclude__ = ["encounter", "healthcare_serivce", "locations"]
+    __exclude__ = ["encounter", "healthcare_service", "locations"]
 
     id: str | None = None
     title: str
