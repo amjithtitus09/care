@@ -2,29 +2,28 @@ from care.security.authorization.base import (
     AuthorizationController,
     AuthorizationHandler,
 )
-from care.security.permissions.healthcare_service import HealthcareServicePermissions
+from care.security.permissions.medication import MedicationPermissions
 
 
 class MedicationAccess(AuthorizationHandler):
-    def can_list_facility_healthcare_service(self, user, facility):
+    def can_list_location_medication_dispense(self, user, location):
         """
         Check if the user has permission to view healthcare services in the facility
         """
         return self.check_permission_in_facility_organization(
-            [HealthcareServicePermissions.can_read_healthcare_service.name],
+            [MedicationPermissions.read_medication_dispense.name],
             user,
-            facility=facility,
+            orgs=location.facility_organization_cache,
         )
 
-    def can_write_facility_healthcare_service(self, user, facility):
+    def can_write_location_medication_dispense(self, user, location):
         """
         Check if the user has permission to view healthcare services in the facility
         """
         return self.check_permission_in_facility_organization(
-            [HealthcareServicePermissions.can_write_healthcare_service.name],
+            [MedicationPermissions.write_medication_dispense.name],
             user,
-            facility=facility,
-            root=True,
+            orgs=location.facility_organization_cache,
         )
 
 

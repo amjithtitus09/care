@@ -98,6 +98,14 @@ class EncounterAccess(AuthorizationHandler):
             user, encounter, ServiceRequestPermissions.can_read_service_request.name
         )
 
+    def can_view_medication_dispense_for_encounter(self, user, encounter):
+        """
+        Check if the user has permission to read service request under this encounter
+        """
+        return self.check_permission_in_encounter(
+            user, encounter, MedicationPermissions.read_medication_dispense.name
+        )
+
     def can_read_diagnostic_report_in_encounter(self, user, encounter):
         """
         Check if the user has permission to read diagnostic report under this encounter

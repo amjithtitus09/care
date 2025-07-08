@@ -86,6 +86,7 @@ class PermissionController:
         InventoryItemPermissions,
         TagConfigPermissions,
         PatientIdentifierConfigPermissions,
+        MedicationPermissions,
     ]
 
     cache = {}

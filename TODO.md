@@ -1,3 +1,3 @@
-- Medication Dispense AuthZ
 - Supply Dispense and Request separate AuthZ for from and to location
 - Inventory Item AuthZ
+- Requests should have a filter to show children's requests in location/inventory/other location based API's
