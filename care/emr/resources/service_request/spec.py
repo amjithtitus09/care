@@ -88,7 +88,7 @@ class ServiceRequestWriteSpec(BaseServiceRequestSpec):
             obj.healthcare_service = HealthcareService.objects.get(
                 external_id=self.healthcare_service
             )
-        obj._locations = self.locations
+        obj._locations = self.locations  # noqa SLF001
 
 
 class ServiceRequestUpdateSpec(ServiceRequestWriteSpec):
