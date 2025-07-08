@@ -63,7 +63,7 @@ class BaseServiceRequestSpec(EMRResource):
     """Base model for service requests"""
 
     __model__ = ServiceRequest
-    __exclude__ = ["encounter"]
+    __exclude__ = ["encounter", "healthcare_serivce", "locations"]
 
     id: str | None = None
     title: str
@@ -88,6 +88,7 @@ class ServiceRequestWriteSpec(BaseServiceRequestSpec):
             obj.healthcare_service = HealthcareService.objects.get(
                 external_id=self.healthcare_service
             )
+        obj._locations = self.locations
 
 
 class ServiceRequestUpdateSpec(ServiceRequestWriteSpec):
@@ -101,7 +102,6 @@ class ServiceRequestUpdateSpec(ServiceRequestWriteSpec):
     code: (
         ValueSetBoundCoding[ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET.slug] | None
     ) = None
-    locations: list[UUID4] = []
 
 
 class ServiceRequestCreateSpec(ServiceRequestWriteSpec):
