@@ -99,7 +99,7 @@ class ServiceRequestViewSet(
         for location in instance._locations:
             obj = (
                 FacilityLocation.objects.only("id")
-                .filter(external_id=location, facility=instance.facility)
+                .filter(external_id=location, facility=self.get_facility_obj())
                 .first()
             )
             if not obj:
