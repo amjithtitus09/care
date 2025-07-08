@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import OrderingFilter
 
@@ -15,8 +16,10 @@ from care.emr.models.location import FacilityLocation
 from care.emr.models.supply_request import SupplyRequest
 from care.emr.resources.inventory.supply_request.spec import (
     SupplyRequestReadSpec,
+    SupplyRequestUpdateSpec,
     SupplyRequestWriteSpec,
 )
+from care.facility.models.facility import Facility
 from care.security.authorization.base import AuthorizationController
 from care.utils.filters.null_filter import NullFilter
 
@@ -39,6 +42,7 @@ class SupplyRequestViewSet(
 ):
     database_model = SupplyRequest
     pydantic_model = SupplyRequestWriteSpec
+    pydantic_update_model = SupplyRequestUpdateSpec
     pydantic_read_model = SupplyRequestReadSpec
     filterset_class = SupplyRequestFilters
     filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
@@ -57,41 +61,70 @@ class SupplyRequestViewSet(
             raise PermissionDenied("Cannot write supply requests")
 
     def authorize_create(self, instance):
-        if instance.deliver_from:
-            from_location = get_object_or_404(
-                FacilityLocation, external_id=instance.deliver_from
-            )
-            self.authorize_location_write(from_location)
+        to_location = get_object_or_404(
+            FacilityLocation, external_id=instance.deliver_to
+        )
+        self.authorize_location_write(to_location)
 
     def authorize_update(self, request_obj, model_instance):
-        if model_instance.deliver_from:
+        if self.action == "update_as_fulfiller":
             self.authorize_location_write(model_instance.deliver_from)
+        else:
+            self.authorize_location_write(model_instance.deliver_to)
 
     def authorize_retrieve(self, model_instance):
+        allowed = AuthorizationController.call(
+            "can_list_facility_supply_request",
+            self.request.user,
+            model_instance.deliver_to,
+        )
         if model_instance.deliver_from:
-            self.authorize_location_read(model_instance.deliver_from)
-        if model_instance.deliver_to:
-            self.authorize_location_read(model_instance.deliver_to)
-        return super().authorize_retrieve(model_instance)
+            allowed = allowed or AuthorizationController.call(
+                "can_list_facility_supply_request",
+                self.request.user,
+                model_instance.deliver_from,
+            )
+        if not allowed:
+            raise PermissionDenied("Cannot read supply requests")
+
+    def get_update_pydantic_model(self):
+        if self.action == "update_as_receiver":
+            return SupplyRequestUpdateSpec  # Same for now
+        return super().get_update_pydantic_model()
+
+    @action(detail=True, methods=["PUT"])
+    def update_as_receiver(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "list":
-            if (
-                "deliver_from" not in self.request.GET
-                and "deliver_to" not in self.request.GET
-            ):
-                raise PermissionDenied("Either deliver_from or deliver_to is required")
+            allowed = False
             if "deliver_from" in self.request.GET:
                 from_location = get_object_or_404(
                     FacilityLocation, external_id=self.request.GET["deliver_from"]
                 )
                 self.authorize_location_read(from_location)
                 queryset = queryset.filter(deliver_from=from_location)
+                allowed = True
             if "deliver_to" in self.request.GET:
                 to_location = get_object_or_404(
                     FacilityLocation, external_id=self.request.GET["deliver_to"]
                 )
                 self.authorize_location_read(to_location)
                 queryset = queryset.filter(deliver_to=to_location)
+                allowed = True
+            # Check permission in root to view all incomplete requests
+            if "facility" in self.request.GET:
+                facility = get_object_or_404(
+                    Facility, external_id=self.request.GET["facility"]
+                )
+                if not AuthorizationController.call(
+                    "can_list_all_facility_supply_request", self.request.user, facility
+                ):
+                    raise PermissionDenied("Cannot list supply requests")
+                queryset = queryset.filter(deliver_to__facility=facility)
+                allowed = True
+            if not allowed:
+                raise PermissionDenied("Either deliver_from or deliver_to is required")
         return queryset

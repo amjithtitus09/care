@@ -13,12 +13,6 @@ from care.security.roles.role import (
 
 
 class InventoryItemPermissions(enum.Enum):
-    can_write_inventory_item = Permission(
-        "Can Create Inventory Item on Facility",
-        "",
-        PermissionContext.FACILITY,
-        [FACILITY_ADMIN_ROLE, ADMIN_ROLE],
-    )
     can_read_inventory_item = Permission(
         "Can Read Inventory Item",
         "",

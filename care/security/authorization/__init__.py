@@ -9,6 +9,7 @@ from .facility import *  # noqa
 from .facility_location import *  # noqa
 from .facilityorganization import *  # noqa
 from .healthcare_service import *  # noqa
+from .inventory_item import *  # noqa
 from .invoice import *  # noqa
 from .medication import *  # noqa
 from .observation_definition import *  # noqa

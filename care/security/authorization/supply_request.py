@@ -14,6 +14,17 @@ class SupplyRequestAccess(AuthorizationHandler):
             orgs=location.facility_organization_cache,
         )
 
+    def can_list_all_facility_supply_request(self, user, facility):
+        """
+        Check if the user has permission to view all supply requests in the facility
+        """
+        return self.check_permission_in_facility_organization(
+            [SupplyRequestPermissions.can_read_supply_request.name],
+            user,
+            facility=facility,
+            root=True,
+        )
+
     def can_write_facility_supply_request(self, user, location):
         """
         Check if the user has permission to view supply requests in the location
