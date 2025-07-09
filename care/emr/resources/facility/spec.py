@@ -1,5 +1,5 @@
 from django.conf import settings
-from pydantic import UUID4, field_validator, model_validator
+from pydantic import UUID4, BaseModel, field_validator, model_validator
 
 from care.emr.models import Organization
 from care.emr.models.patient import PatientIdentifierConfigCache
@@ -42,10 +42,8 @@ DISCOUNT_CODE_COUNT_LIMIT = 100
 DISCOUNT_MONETARY_COMPONENT_COUNT_LIMIT = 100
 
 
-class FacilityCreateSpec(FacilityBaseSpec):
-    geo_organization: UUID4
-    features: list[int]
-    invoice_number_expression: str | None = None
+class FacilityInvoiceExpressionSpec(BaseModel):
+    invoice_number_expression: str
 
     @field_validator("invoice_number_expression")
     def validate_invoice_number_expression(cls, v):
@@ -56,6 +54,11 @@ class FacilityCreateSpec(FacilityBaseSpec):
                 err = "Invalid Expression"
                 raise ValueError(err) from e
         return v
+
+
+class FacilityCreateSpec(FacilityBaseSpec):
+    geo_organization: UUID4
+    features: list[int]
 
     def perform_extra_deserialization(self, is_update, obj):
         obj.geo_organization = Organization.objects.filter(

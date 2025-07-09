@@ -1,7 +1,11 @@
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
+from drf_spectacular.utils import extend_schema
+from pydantic import UUID4, BaseModel
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -14,12 +18,16 @@ from care.emr.api.viewsets.base import (
 )
 from care.emr.models.account import Account
 from care.emr.models.charge_item import ChargeItem
+from care.emr.models.charge_item_definition import ChargeItemDefinition
 from care.emr.models.encounter import Encounter
 from care.emr.models.service_request import ServiceRequest
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
 )
 from care.emr.resources.account.default_account import get_default_account
+from care.emr.resources.charge_item.apply_charge_item_definition import (
+    apply_charge_item_definition,
+)
 from care.emr.resources.charge_item.spec import (
     ChargeItemReadSpec,
     ChargeItemResourceOptions,
@@ -44,8 +52,13 @@ class ChargeItemDefinitionFilters(filters.FilterSet):
     service_resource_id = filters.CharFilter(lookup_expr="iexact")
 
 
+class ApplyChargeItemDefinitionRequest(BaseModel):
+    charge_item_definition: UUID4
+    quantity: int
+    encounter: UUID4
+
+
 def validate_service_resource(facility, service_resource, service_resource_id):
-    # TODO : Add Authz
     try:
         if service_resource == ChargeItemResourceOptions.service_request.value:
             return (
@@ -154,6 +167,32 @@ class ChargeItemViewSet(
             raise PermissionDenied("Access Denied to Charge Item")
 
         return queryset.select_related("paid_invoice", "charge_item_definition")
+
+    @extend_schema(
+        request=ApplyChargeItemDefinitionRequest,
+    )
+    @action(methods=["POST"], detail=False)
+    def apply_charge_item_def(self, request, *args, **kwargs):
+        facility = self.get_facility_obj()
+        request_params = ApplyChargeItemDefinitionRequest(**request.data)
+        charge_item_definition = get_object_or_404(
+            ChargeItemDefinition, external_id=request_params.charge_item_definition
+        )
+        if (
+            charge_item_definition.facility
+            and charge_item_definition.facility != facility
+        ):
+            raise ValidationError(
+                "Charge item definition is not associated with the facility"
+            )
+        encounter = get_object_or_404(
+            Encounter, external_id=request_params.encounter, facilit=facility
+        )
+        quantity = request_params.quantity
+        charge_item = apply_charge_item_definition(
+            charge_item_definition, encounter, quantity=quantity
+        )
+        return Response(ChargeItemReadSpec.serialize(charge_item).to_json())
 
 
 InternalQuestionnaireRegistry.register(ChargeItemViewSet)
