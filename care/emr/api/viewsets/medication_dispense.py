@@ -139,7 +139,7 @@ class MedicationDispenseViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        if self.action == "list":
+        if self.action in ["list", "summary"]:
             if "location" in self.request.GET:
                 location = get_object_or_404(
                     FacilityLocation, external_id=self.request.GET.get("location")
