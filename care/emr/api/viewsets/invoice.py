@@ -86,6 +86,7 @@ class InvoiceViewSet(
     def perform_create(self, instance):
         instance.status = InvoiceStatusOptions.draft.value
         instance.facility = self.get_facility_obj()
+
         charge_items = ChargeItem.objects.filter(
             account=instance.account,
             status=ChargeItemStatusOptions.billable.value,

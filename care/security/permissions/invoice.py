@@ -7,6 +7,7 @@ from care.security.roles.role import (
     DOCTOR_ROLE,
     FACILITY_ADMIN_ROLE,
     NURSE_ROLE,
+    PHARMACIST_ROLE,
     STAFF_ROLE,
     VOLUNTEER_ROLE,
 )
@@ -17,7 +18,14 @@ class InvoicePermissions(enum.Enum):
         "Can Write Invoice",
         "",
         PermissionContext.FACILITY,
-        [FACILITY_ADMIN_ROLE, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, NURSE_ROLE],
+        [
+            FACILITY_ADMIN_ROLE,
+            ADMIN_ROLE,
+            STAFF_ROLE,
+            DOCTOR_ROLE,
+            NURSE_ROLE,
+            PHARMACIST_ROLE,
+        ],
     )
     can_read_invoice = Permission(
         "Can Read Invoice",
@@ -31,6 +39,7 @@ class InvoicePermissions(enum.Enum):
             DOCTOR_ROLE,
             NURSE_ROLE,
             VOLUNTEER_ROLE,
+            PHARMACIST_ROLE,
         ],
     )
     can_destroy_invoice = Permission(

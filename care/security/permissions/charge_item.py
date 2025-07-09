@@ -7,6 +7,7 @@ from care.security.roles.role import (
     DOCTOR_ROLE,
     FACILITY_ADMIN_ROLE,
     NURSE_ROLE,
+    PHARMACIST_ROLE,
     STAFF_ROLE,
     VOLUNTEER_ROLE,
 )
@@ -17,7 +18,14 @@ class ChargeItemPermissions(enum.Enum):
         "Can Create Charge Item",
         "",
         PermissionContext.FACILITY,
-        [FACILITY_ADMIN_ROLE, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, NURSE_ROLE],
+        [
+            FACILITY_ADMIN_ROLE,
+            ADMIN_ROLE,
+            STAFF_ROLE,
+            DOCTOR_ROLE,
+            NURSE_ROLE,
+            PHARMACIST_ROLE,
+        ],
     )
     can_update_charge_item = Permission(
         "Can Update Charge Item",
@@ -37,5 +45,6 @@ class ChargeItemPermissions(enum.Enum):
             DOCTOR_ROLE,
             NURSE_ROLE,
             VOLUNTEER_ROLE,
+            PHARMACIST_ROLE,
         ],
     )

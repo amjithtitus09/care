@@ -6,6 +6,7 @@ from care.security.roles.role import (
     DOCTOR_ROLE,
     FACILITY_ADMIN_ROLE,
     NURSE_ROLE,
+    PHARMACIST_ROLE,
     STAFF_ROLE,
 )
 
@@ -15,17 +16,31 @@ class MedicationPermissions(enum.Enum):
         "Pharmacist in Care",
         "Pharmacists in Care have access to all medication requests and can create dispenses for patients",
         PermissionContext.FACILITY,
-        [FACILITY_ADMIN_ROLE, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, NURSE_ROLE],
+        [FACILITY_ADMIN_ROLE, ADMIN_ROLE, PHARMACIST_ROLE],
     )
     read_medication_dispense = Permission(
         "Medication Dispense Read",
         "Users can read medication dispenses",
         PermissionContext.FACILITY,
-        [FACILITY_ADMIN_ROLE, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, NURSE_ROLE],
+        [
+            FACILITY_ADMIN_ROLE,
+            ADMIN_ROLE,
+            STAFF_ROLE,
+            DOCTOR_ROLE,
+            NURSE_ROLE,
+            PHARMACIST_ROLE,
+        ],
     )
     write_medication_dispense = Permission(
         "Write Medication Dispense",
         "Users can write medication dispenses",
         PermissionContext.FACILITY,
-        [FACILITY_ADMIN_ROLE, ADMIN_ROLE, STAFF_ROLE, DOCTOR_ROLE, NURSE_ROLE],
+        [
+            FACILITY_ADMIN_ROLE,
+            ADMIN_ROLE,
+            STAFF_ROLE,
+            DOCTOR_ROLE,
+            NURSE_ROLE,
+            PHARMACIST_ROLE,
+        ],
     )

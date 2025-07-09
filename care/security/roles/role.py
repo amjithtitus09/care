@@ -27,6 +27,10 @@ STAFF_ROLE = Role(
     name="Staff",
     description="Staff at some facility",
 )
+PHARMACIST_ROLE = Role(
+    name="Pharmacist",
+    description="Pharmacist at some facility",
+)
 ADMINISTRATOR = Role(
     name="Administrator",
     description="Administrator at a given boundary",
