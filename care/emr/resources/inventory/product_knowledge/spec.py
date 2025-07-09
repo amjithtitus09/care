@@ -78,11 +78,11 @@ class DrugCharacteristic(BaseModel):
 
 
 class ProductDefinitionSpec(BaseModel):
-    dosage_form: Coding
-    intended_routes: list[Coding]
-    ingredients: list[ProductIngredient]
-    nutrients: list[ProductNutrient]
-    drug_characteristic: list[DrugCharacteristic]
+    dosage_form: Coding | None = None
+    intended_routes: list[Coding] = []
+    ingredients: list[ProductIngredient] = []
+    nutrients: list[ProductNutrient] = []
+    drug_characteristic: list[DrugCharacteristic] = []
 
 
 class BaseProductKnowledgeSpec(EMRResource):

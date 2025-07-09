@@ -85,9 +85,7 @@ class PatientIdentifierConfigViewSet(
     def validate_data(self, instance, model_obj=None):
         # Validate that the system is not present at the instance or the facility level
         # System can be duplicated within multiple facilties
-        queryset = PatientIdentifierConfig.objects.filter(
-            config__system=instance.config.system
-        )
+        queryset = super().get_queryset().filter(config__system=instance.config.system)
         if model_obj:
             queryset = queryset.exclude(id=model_obj.id)
         if queryset.filter(facility__isnull=True).exists():

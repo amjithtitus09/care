@@ -77,7 +77,8 @@ class ResourceRequestViewSet(EMRModelViewSet):
 
     def get_queryset(self):
         queryset = (
-            ResourceRequest.objects.all()
+            super()
+            .get_queryset()
             .select_related(
                 "origin_facility",
                 "approving_facility",
@@ -114,7 +115,9 @@ class ResourceRequestCommentViewSet(
     def get_queryset(self):
         resource_request_obj = self.get_resource_request_obj()
         return (
-            ResourceRequestComment.objects.filter(request=resource_request_obj)
+            super()
+            .get_queryset()
+            .filter(request=resource_request_obj)
             .select_related("created_by")
             .order_by("-created_date")
         )

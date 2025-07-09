@@ -59,7 +59,7 @@ class ValueSetViewSet(EMRModelViewSet):
         return request.user.is_superuser
 
     def get_queryset(self):
-        return ValueSet.objects.all().select_related("created_by", "updated_by")
+        return super().get_queryset().select_related("created_by", "updated_by")
 
     def get_serializer_class(self):
         return ValueSetSpec

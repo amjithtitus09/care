@@ -228,8 +228,8 @@ class MedicationRequestUpdateSpec(MedicationRequestResource):
 
 
 class MedicationRequestReadSpec(BaseMedicationRequestSpec):
-    created_by: UserSpec = dict
-    updated_by: UserSpec = dict
+    created_by: UserSpec = {}
+    updated_by: UserSpec = {}
     created_date: datetime
     modified_date: datetime
     requested_product: dict | None = None
