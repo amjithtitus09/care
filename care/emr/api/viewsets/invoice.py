@@ -89,23 +89,25 @@ class InvoiceViewSet(
     def perform_create(self, instance):
         instance.status = InvoiceStatusOptions.draft.value
         instance.facility = self.get_facility_obj()
-
-        charge_items = ChargeItem.objects.filter(
-            account=instance.account,
-            status=ChargeItemStatusOptions.billable.value,
-            external_id__in=instance.charge_items,
-        )
-        instance.charge_items = list(charge_items.values_list("id", flat=True))
-        charge_items.update(status=ChargeItemStatusOptions.billed.value)
-        sync_invoice_items(instance)
-        # TODO : Lock only one at a time
-        if not instance.number:
-            instance.number = evaluate_invoice_identifier_default_expression(
-                instance.facility
+        with transaction.atomic():
+            charge_items = ChargeItem.objects.filter(
+                account=instance.account,
+                status=ChargeItemStatusOptions.billable.value,
+                external_id__in=instance.charge_items,
             )
-        super().perform_create(instance)
-        charge_items.update(paid_invoice=instance)
-        rebalance_account_task.delay(instance.account.id)
+            instance.charge_items = list(charge_items.values_list("id", flat=True))
+            # TODO : Lock only one at a time
+            if not instance.number:
+                instance.number = evaluate_invoice_identifier_default_expression(
+                    instance.facility
+                )
+            super().perform_create(instance)
+            charge_items.update(
+                status=ChargeItemStatusOptions.billed.value, paid_invoice=instance
+            )
+            sync_invoice_items(instance)
+            instance.save()
+            rebalance_account_task.delay(instance.account.id)
 
         return instance
 
