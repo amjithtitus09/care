@@ -113,10 +113,13 @@ class SupplyDeliveryViewSet(
             raise PermissionDenied("Cannot write supply deliveries")
 
     def authorize_update(self, request_obj, model_instance):
+        if not model_instance.origin:
+            self.authorize_location_write(model_instance.destination)
+            return
         if self.action == "update_as_receiver":
-            self.authorize_location_write(model_instance.deliver_from)
+            self.authorize_location_write(model_instance.destination)
         else:
-            self.authorize_location_write(model_instance.deliver_to)
+            self.authorize_location_write(model_instance.origin)
 
     def authorize_create(self, instance):
         if instance.origin:
