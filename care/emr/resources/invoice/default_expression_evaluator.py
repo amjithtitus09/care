@@ -11,6 +11,8 @@ def evaluate_invoice_identifier_default_expression(facility):
         "current_year_yyyy": care_now().year,
         "current_year_yy": care_now().year % 100,
     }
+    if not facility.invoice_number_expression:
+        return ""
     return evaluate_expression(facility.invoice_number_expression, context)
 
 
