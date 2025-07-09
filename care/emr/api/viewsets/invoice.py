@@ -21,6 +21,9 @@ from care.emr.models.charge_item import ChargeItem
 from care.emr.models.invoice import Invoice
 from care.emr.resources.account.sync_items import rebalance_account_task
 from care.emr.resources.charge_item.spec import ChargeItemStatusOptions
+from care.emr.resources.invoice.default_expression_evaluator import (
+    evaluate_invoice_identifier_default_expression,
+)
 from care.emr.resources.invoice.spec import (
     INVOICE_CANCELLED_STATUS,
     BaseInvoiceSpec,
@@ -95,9 +98,15 @@ class InvoiceViewSet(
         instance.charge_items = list(charge_items.values_list("id", flat=True))
         charge_items.update(status=ChargeItemStatusOptions.billed.value)
         sync_invoice_items(instance)
+        # TODO : Lock only one at a time
+        if not instance.number:
+            instance.number = evaluate_invoice_identifier_default_expression(
+                instance.facility
+            )
         super().perform_create(instance)
         charge_items.update(paid_invoice=instance)
         rebalance_account_task.delay(instance.account.id)
+
         return instance
 
     def authorize_create(self, instance):

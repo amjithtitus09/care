@@ -22,6 +22,9 @@ from care.emr.resources.patient.spec import (
     PatientUpdateSpec,
     validate_identifier_config,
 )
+from care.emr.resources.patient_identifier.default_expression_evaluator import (
+    evaluate_patient_instance_default_values,
+)
 from care.emr.resources.scheduling.slot.spec import TokenBookingReadSpec
 from care.emr.resources.tag.config_spec import TagResource
 from care.emr.resources.user.spec import UserSpec
@@ -108,6 +111,7 @@ class PatientViewSet(EMRModelViewSet):
 
     def perform_create(self, instance):
         identifiers = instance._identifiers  # noqa: SLF001
+        # TODO : Lock to one patient create at a time
         with transaction.atomic():
             super().perform_create(instance)
             for identifier in identifiers:
@@ -118,6 +122,8 @@ class PatientViewSet(EMRModelViewSet):
                     ),
                     value=identifier.value,
                 )
+            evaluate_patient_instance_default_values(instance)
+
             instance.build_instance_identifiers()
             instance.save()
             tag_manager = PatientInstanceTagManager()

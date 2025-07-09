@@ -54,6 +54,7 @@ class ServiceRequestFilters(filters.FilterSet):
     intent = filters.CharFilter(lookup_expr="iexact")
     do_not_perform = filters.BooleanFilter()
     encounter = filters.UUIDFilter(field_name="encounter__external_id")
+    patient = filters.UUIDFilter(field_name="patient__external_id")
 
 
 class ApplyActivityDefinitionRequest(BaseModel):

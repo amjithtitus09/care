@@ -1,11 +1,14 @@
 from django.conf import settings
-from pydantic import UUID4, model_validator
+from pydantic import UUID4, field_validator, model_validator
 
 from care.emr.models import Organization
 from care.emr.models.patient import PatientIdentifierConfigCache
 from care.emr.resources.base import EMRResource
 from care.emr.resources.common.coding import Coding
 from care.emr.resources.common.monetary_component import MonetaryComponentDefinition
+from care.emr.resources.invoice.default_expression_evaluator import (
+    evaluate_invoice_dummy_expression,
+)
 from care.emr.resources.organization.spec import OrganizationReadSpec
 from care.emr.resources.permissions import FacilityPermissionsMixin
 from care.emr.resources.user.spec import UserSpec
@@ -42,6 +45,17 @@ DISCOUNT_MONETARY_COMPONENT_COUNT_LIMIT = 100
 class FacilityCreateSpec(FacilityBaseSpec):
     geo_organization: UUID4
     features: list[int]
+    invoice_number_expression: str | None = None
+
+    @field_validator("invoice_number_expression")
+    def validate_invoice_number_expression(cls, v):
+        if v:
+            try:
+                evaluate_invoice_dummy_expression(v)
+            except Exception as e:
+                err = "Invalid Expression"
+                raise ValueError(err) from e
+        return v
 
     def perform_extra_deserialization(self, is_update, obj):
         obj.geo_organization = Organization.objects.filter(
@@ -56,6 +70,7 @@ class FacilityReadSpec(FacilityBaseSpec):
     read_cover_image_url: str
     geo_organization: dict = {}
     created_by: dict = {}
+    invoice_number_expression: str | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
