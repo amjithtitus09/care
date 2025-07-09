@@ -119,8 +119,15 @@ class SupplyDeliveryViewSet(
             self.authorize_location_write(model_instance.deliver_to)
 
     def authorize_create(self, instance):
-        origin = get_object_or_404(FacilityLocation, external_id=instance.origin)
-        self.authorize_location_write(origin)
+        if instance.origin:
+            origin = get_object_or_404(FacilityLocation, external_id=instance.origin)
+            self.authorize_location_write(origin)
+        else:
+            destination = get_object_or_404(
+                FacilityLocation, external_id=instance.destination
+            )
+            self.authorize_location_write(destination)
+            # TODO : Check if the user has permission to recieve outside stock
 
     def authorize_retrieve(self, model_instance):
         allowed = AuthorizationController.call(
