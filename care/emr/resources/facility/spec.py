@@ -46,6 +46,7 @@ class FacilityInvoiceExpressionSpec(BaseModel):
     invoice_number_expression: str
 
     @field_validator("invoice_number_expression")
+    @classmethod
     def validate_invoice_number_expression(cls, v):
         if v:
             try:

@@ -43,6 +43,7 @@ class IdentifierConfig(BaseModel):
     default_value: str | None = None
 
     @field_validator("default_value")
+    @classmethod
     def validate_default_value(cls, v):
         if v:
             try:

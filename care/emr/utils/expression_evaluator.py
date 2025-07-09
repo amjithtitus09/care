@@ -9,4 +9,4 @@ def evaluate_expression(expression: str, context: dict):
     try:
         return Expr(expression, model=expression_model).eval(context)
     except EvalException as e:
-        raise ValueError(e)
+        raise ValueError(e) from e
