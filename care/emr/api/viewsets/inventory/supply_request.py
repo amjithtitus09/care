@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from rest_framework.decorators import action
@@ -21,6 +22,7 @@ from care.emr.resources.inventory.supply_request.spec import (
 )
 from care.facility.models.facility import Facility
 from care.security.authorization.base import AuthorizationController
+from care.utils.filters.dummy_filter import DummyBooleanFilter, DummyUUIDFilter
 from care.utils.filters.null_filter import NullFilter
 
 
@@ -30,6 +32,9 @@ class SupplyRequestFilters(filters.FilterSet):
     item = filters.UUIDFilter(field_name="item__external_id")
     deliver_from_isnull = NullFilter(field_name="deliver_from")
     supplier = filters.UUIDFilter(field_name="supplier__external_id")
+    include_children = DummyBooleanFilter()
+    deliver_from = DummyUUIDFilter()
+    deliver_to = DummyUUIDFilter()
 
 
 class SupplyRequestViewSet(
@@ -100,19 +105,34 @@ class SupplyRequestViewSet(
         queryset = super().get_queryset()
         if self.action == "list":
             allowed = False
+            include_children = (
+                self.request.GET.get("include_children", "false").lower() == "true"
+            )
             if "deliver_from" in self.request.GET:
                 from_location = get_object_or_404(
                     FacilityLocation, external_id=self.request.GET["deliver_from"]
                 )
                 self.authorize_location_read(from_location)
-                queryset = queryset.filter(deliver_from=from_location)
+                if include_children:
+                    queryset = queryset.filter(
+                        Q(deliver_from=from_location)
+                        | Q(deliver_from__parent_cache__overlap=[from_location.id])
+                    )
+                else:
+                    queryset = queryset.filter(deliver_from=from_location)
                 allowed = True
             if "deliver_to" in self.request.GET:
                 to_location = get_object_or_404(
                     FacilityLocation, external_id=self.request.GET["deliver_to"]
                 )
                 self.authorize_location_read(to_location)
-                queryset = queryset.filter(deliver_to=to_location)
+                if include_children:
+                    queryset = queryset.filter(
+                        Q(deliver_to=to_location)
+                        | Q(deliver_to__parent_cache__overlap=[to_location.id])
+                    )
+                else:
+                    queryset = queryset.filter(deliver_to=to_location)
                 allowed = True
             # Check permission in root to view all incomplete requests
             if "facility" in self.request.GET:

@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from rest_framework.decorators import action
@@ -29,13 +30,14 @@ from care.emr.resources.inventory.supply_delivery.spec import (
     SupplyDeliveryWriteSpec,
 )
 from care.security.authorization.base import AuthorizationController
+from care.utils.filters.dummy_filter import DummyBooleanFilter, DummyUUIDFilter
 from care.utils.filters.null_filter import NullFilter
 
 
 class SupplyDeliveryFilters(filters.FilterSet):
     status = filters.CharFilter(lookup_expr="iexact")
-    origin = filters.UUIDFilter(field_name="origin__external_id")
-    destination = filters.UUIDFilter(field_name="destination__external_id")
+    origin = DummyUUIDFilter()
+    destination = DummyUUIDFilter()
     supplied_item = filters.UUIDFilter(field_name="supplied_item__external_id")
     supplied_item_product_knowledge = filters.UUIDFilter(
         field_name="supplied_item__product_knowledge__external_id"
@@ -46,6 +48,7 @@ class SupplyDeliveryFilters(filters.FilterSet):
     supply_request = filters.UUIDFilter(field_name="supply_request__external_id")
     origin_isnull = NullFilter(field_name="origin")
     supplier = filters.UUIDFilter(field_name="supplier__external_id")
+    include_children = DummyBooleanFilter()
 
 
 class SupplyDeliveryViewSet(
@@ -138,19 +141,34 @@ class SupplyDeliveryViewSet(
         queryset = super().get_queryset()
         if self.action == "list":
             allowed = False
+            include_children = (
+                self.request.GET.get("include_children", "false").lower() == "true"
+            )
             if "origin" in self.request.GET:
                 from_location = get_object_or_404(
-                    FacilityLocation, external_id=self.request.GET["deliver_from"]
+                    FacilityLocation, external_id=self.request.GET["origin"]
                 )
                 self.authorize_location_read(from_location)
-                queryset = queryset.filter(origin=from_location)
+                if include_children:
+                    queryset = queryset.filter(
+                        Q(origin=from_location)
+                        | Q(origin__parent_cache__overlap=[from_location.id])
+                    )
+                else:
+                    queryset = queryset.filter(origin=from_location)
                 allowed = True
             if "destination" in self.request.GET:
                 to_location = get_object_or_404(
-                    FacilityLocation, external_id=self.request.GET["deliver_to"]
+                    FacilityLocation, external_id=self.request.GET["destination"]
                 )
                 self.authorize_location_read(to_location)
-                queryset = queryset.filter(destination=to_location)
+                if include_children:
+                    queryset = queryset.filter(
+                        Q(destination=to_location)
+                        | Q(destination__parent_cache__overlap=[to_location.id])
+                    )
+                else:
+                    queryset = queryset.filter(destination=to_location)
                 allowed = True
             if not allowed:
                 raise PermissionDenied("Either origin or destination is required")
