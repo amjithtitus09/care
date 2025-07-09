@@ -38,7 +38,14 @@ class ServiceRequestStatusChoices(str, Enum):
     ended = "ended"
     completed = "completed"
     revoked = "revoked"
-    unknown = "unknown"
+
+
+SERVICE_REQUEST_COMPLETED_CHOICES = [
+    ServiceRequestStatusChoices.completed,
+    ServiceRequestStatusChoices.revoked,
+    ServiceRequestStatusChoices.ended,
+    ServiceRequestStatusChoices.entered_in_error,
+]
 
 
 class ServiceRequestIntentChoices(str, Enum):

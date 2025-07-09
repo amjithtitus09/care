@@ -28,6 +28,7 @@ from care.emr.resources.charge_item.spec import (
 )
 from care.emr.resources.charge_item.sync_charge_item_costs import sync_charge_item_costs
 from care.emr.resources.questionnaire.spec import SubjectType
+from care.emr.resources.service_request.spec import SERVICE_REQUEST_COMPLETED_CHOICES
 from care.emr.resources.tag.config_spec import TagResource
 from care.emr.tagging.filters import SingleFacilityTagFilter
 from care.facility.models.facility import Facility
@@ -43,13 +44,17 @@ class ChargeItemDefinitionFilters(filters.FilterSet):
     service_resource_id = filters.CharFilter(lookup_expr="iexact")
 
 
-def validate_service_resource(service_resource, service_resource_id):
+def validate_service_resource(facility, service_resource, service_resource_id):
     # TODO : Add Authz
     try:
         if service_resource == ChargeItemResourceOptions.service_request.value:
-            return ServiceRequest.objects.filter(
-                external_id=service_resource_id
-            ).exists()
+            return (
+                ServiceRequest.objects.filter(
+                    facility=facility, external_id=service_resource_id
+                )
+                .exclude(status__in=SERVICE_REQUEST_COMPLETED_CHOICES)
+                .exists()
+            )
     except Exception:
         return False
     return False
@@ -91,7 +96,9 @@ class ChargeItemViewSet(
 
     def validate_data(self, instance, model_obj=None):
         if instance.service_resource and not validate_service_resource(
-            instance.service_resource, instance.service_resource_id
+            self.get_facility_obj(),
+            instance.service_resource,
+            instance.service_resource_id,
         ):
             raise ValidationError("Invalid service resource")
         return super().validate_data(instance, model_obj)
