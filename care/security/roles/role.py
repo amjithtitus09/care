@@ -56,6 +56,7 @@ class RoleController:
         FACILITY_ADMIN_ROLE,
         ADMIN_ROLE,
         VOLUNTEER_ROLE,
+        PHARMACIST_ROLE,
     ]
 
     @classmethod
