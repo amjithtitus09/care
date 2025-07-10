@@ -93,6 +93,9 @@ class TokenBookingViewSet(
             Facility, external_id=self.kwargs["facility_external_id"]
         )
 
+    def get_facility_from_instance(self, instance):
+        return instance.token_slot.resource.facility
+
     def authorize_update(self, request_obj, model_instance):
         if not AuthorizationController.call(
             "can_write_user_booking",
