@@ -56,7 +56,6 @@ sys.modules["care.emr.utils.valueset_coding_type"].validate_valueset = (
 )
 
 
-# Monkey patching the coordinate method of Faker's GeoProvider as it conflicts with our Decimal precision settings
 def safe_coordinate(self, center=None, radius=0.001):
     with localcontext() as ctx:
         ctx.prec = 10
@@ -70,6 +69,7 @@ def safe_coordinate(self, center=None, radius=0.001):
         return Decimal(str(geo)).quantize(Decimal(".000001"))
 
 
+# Monkey patching the coordinate method of Faker's GeoProvider as it conflicts with our Decimal precision settings
 GeoProvider.coordinate = safe_coordinate
 
 
