@@ -26,7 +26,12 @@ from care.security.authorization import AuthorizationController
 
 
 class NoteThreadFilters(filters.FilterSet):
-    encounter = filters.UUIDFilter(field_name="encounter__external_id")
+    encounter = filters.CharFilter(method="filter_encounter")
+
+    def filter_encounter(self, queryset, name, value):
+        if value == "undefined":
+            return queryset.filter(encounter__isnull=True)
+        return queryset.filter(encounter__external_id=value)
 
 
 class NoteThreadViewSet(
