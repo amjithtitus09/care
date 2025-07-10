@@ -1,6 +1,7 @@
 from typing import Literal
 
 from django.db import transaction
+from django.db.models.expressions import Subquery
 from django_filters import CharFilter, DateFromToRangeFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from pydantic import UUID4, BaseModel
@@ -31,6 +32,7 @@ from care.emr.resources.user.spec import UserSpec
 from care.emr.tagging.filters import SingleFacilityTagFilter
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
+from care.users.models import User
 
 
 class CancelBookingSpec(BaseModel):
@@ -49,20 +51,35 @@ class TokenBookingFilters(FilterSet):
     status = CharFilter(field_name="status")
     date = DateFromToRangeFilter(field_name="token_slot__start_datetime__date")
     slot = UUIDFilter(field_name="token_slot__external_id")
-    user = UUIDFilter(method="filter_by_user")
+    user = CharFilter(method="filter_by_users")
     patient = UUIDFilter(field_name="patient__external_id")
 
-    def filter_by_user(self, queryset, name, value):
+    def filter_by_users(self, queryset, name, value):
         facility_external_id = self.request.parser_context.get("kwargs", {}).get(
             "facility_external_id"
         )
-        resource = SchedulableUserResource.objects.filter(
-            user__external_id=value,
-            facility__external_id=facility_external_id,
-        ).first()
-        if not resource:
+        user_external_ids = value.split(",") if value else []
+
+        token_slots = TokenSlot.objects.filter(
+            resource_id__in=Subquery(
+                SchedulableUserResource.objects.filter(
+                    user_id__in=Subquery(
+                        User.objects.filter(external_id__in=user_external_ids).values(
+                            "id"
+                        )
+                    ),
+                    facility_id__in=Subquery(
+                        Facility.objects.filter(
+                            external_id=facility_external_id
+                        ).values("id")
+                    ),
+                ).values("id")
+            )
+        ).values_list("id", flat=True)
+        if not token_slots:
             return queryset.none()
-        return queryset.filter(token_slot__resource=resource)
+
+        return queryset.filter(token_slot__in=token_slots)
 
 
 class TokenBookingViewSet(
