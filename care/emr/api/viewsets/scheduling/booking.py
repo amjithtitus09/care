@@ -39,7 +39,7 @@ class CancelBookingSpec(BaseModel):
         BookingStatusChoices.entered_in_error,
         BookingStatusChoices.rescheduled,
     ]
-    reason_for_visit: str | None
+    reason_for_visit: str | None = None
 
 
 class RescheduleBookingSpec(BaseModel):
