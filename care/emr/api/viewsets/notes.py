@@ -23,15 +23,12 @@ from care.emr.resources.notes.thread_spec import (
     NoteThreadUpdateSpec,
 )
 from care.security.authorization import AuthorizationController
+from care.utils.filters.null_filter import NullFilter
 
 
 class NoteThreadFilters(filters.FilterSet):
-    encounter = filters.CharFilter(method="filter_encounter")
-
-    def filter_encounter(self, queryset, name, value):
-        if value == "undefined":
-            return queryset.filter(encounter__isnull=True)
-        return queryset.filter(encounter__external_id=value)
+    encounter = filters.UUIDFilter(field_name="encounter__external_id")
+    encounter_isnull = NullFilter(field_name="encounter")
 
 
 class NoteThreadViewSet(
