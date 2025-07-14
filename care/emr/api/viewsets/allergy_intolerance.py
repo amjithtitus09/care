@@ -36,7 +36,13 @@ from care.utils.filters.multiselect import MultiSelectFilter
 class AllergyIntoleranceFilters(FilterSet):
     encounter = filters.UUIDFilter(field_name="encounter__external_id")
     clinical_status = MultiSelectFilter(field_name="clinical_status")
+    exclude_clinical_status = MultiSelectFilter(
+        field_name="clinical_status", exclude=True
+    )
     verification_status = MultiSelectFilter(field_name="verification_status")
+    exclude_verification_status = MultiSelectFilter(
+        field_name="verification_status", exclude=True
+    )
     name = CharFilter(field_name="code__display", lookup_expr="icontains")
 
 
