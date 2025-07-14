@@ -55,8 +55,11 @@ class TokenBookingFilters(FilterSet):
     patient = UUIDFilter(field_name="patient__external_id")
 
     def filter_by_users(self, queryset, name, value):
-        facility_external_id = self.request.parser_context.get("kwargs", {}).get(
-            "facility_external_id"
+        facility = get_object_or_404(
+            Facility.objects.only("id"),
+            external_id=self.request.parser_context.get("kwargs", {}).get(
+                "facility_external_id"
+            ),
         )
         user_external_ids = value.split(",") if value else []
 
@@ -68,11 +71,7 @@ class TokenBookingFilters(FilterSet):
                             "id"
                         )
                     ),
-                    facility_id__in=Subquery(
-                        Facility.objects.filter(
-                            external_id=facility_external_id
-                        ).values("id")
-                    ),
+                    facility_id=facility.id,
                 ).values("id")
             )
         ).values_list("id", flat=True)
