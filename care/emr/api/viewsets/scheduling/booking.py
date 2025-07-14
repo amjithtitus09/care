@@ -56,13 +56,15 @@ class TokenBookingFilters(FilterSet):
     patient = UUIDFilter(field_name="patient__external_id")
 
     def filter_by_users(self, queryset, name, value):
+        user_external_ids = value.split(",") if value else []
+        if not user_external_ids:
+            return queryset
         facility = get_object_or_404(
             Facility.objects.only("id"),
             external_id=self.request.parser_context.get("kwargs", {}).get(
                 "facility_external_id"
             ),
         )
-        user_external_ids = value.split(",") if value else []
 
         token_slots = TokenSlot.objects.filter(
             resource_id__in=Subquery(
