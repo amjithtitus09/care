@@ -155,13 +155,12 @@ class EncounterRetrieveSpec(EncounterListSpec, EncounterPermissionsMixin):
         ]
 
         care_team = []
-        for member in obj.care_team:
+        user_mapping = {x["user_id"]: x for x in obj.care_team}
+        for member in User.objects.filter(id__in=user_mapping.keys()):
             care_team.append(
                 {
-                    "member": UserSpec.serialize(
-                        User.objects.get(id=member["user_id"])
-                    ).to_json(),
-                    "role": member["role"],
+                    "member": UserSpec.serialize(member).to_json(),
+                    "role": user_mapping[member.id]["role"],
                 }
             )
 
