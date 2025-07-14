@@ -30,12 +30,13 @@ from care.emr.resources.allergy_intolerance.spec import (
 )
 from care.emr.resources.questionnaire.spec import SubjectType
 from care.security.authorization import AuthorizationController
+from care.utils.filters.multiselect import MultiSelectFilter
 
 
 class AllergyIntoleranceFilters(FilterSet):
     encounter = filters.UUIDFilter(field_name="encounter__external_id")
-    clinical_status = CharFilter(field_name="clinical_status")
-    verification_status = CharFilter(field_name="verification_status")
+    clinical_status = MultiSelectFilter(field_name="clinical_status")
+    verification_status = MultiSelectFilter(field_name="verification_status")
     name = CharFilter(field_name="code__display", lookup_expr="icontains")
 
 
