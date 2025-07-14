@@ -137,8 +137,9 @@ class TokenBookingViewSet(
             .select_related(
                 "token_slot",
                 "patient",
+                "patient__geo_organization",
+                "token_slot__availability",
                 "token_slot__resource",
-                "token_slot__resource__facility",
             )
             .order_by("-modified_date")
         )
