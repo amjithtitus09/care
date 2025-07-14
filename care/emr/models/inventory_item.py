@@ -14,3 +14,11 @@ class InventoryItem(EMRBaseModel):
     )
     status = models.CharField(max_length=255)
     net_content = models.FloatField(default=0)
+
+    def save(self, *args, **kwargs) -> None:
+        if not self.id:
+            if InventoryItem.objects.filter(
+                location=self.location, product=self.product
+            ).exists():
+                raise ValueError("Inventory item already exists")
+        return super().save(*args, **kwargs)
