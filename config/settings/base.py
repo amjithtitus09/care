@@ -2,7 +2,6 @@
 Base settings to build other settings files upon.
 """
 
-import decimal
 import logging
 import warnings
 from datetime import datetime, timedelta
@@ -29,9 +28,6 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 APPS_DIR = BASE_DIR / "care"
 env = environ.Env()
 
-decimal.DefaultContext.rounding = decimal.ROUND_HALF_EVEN
-decimal.DefaultContext.prec = 2
-decimal.setcontext(decimal.DefaultContext)
 
 if READ_DOT_ENV_FILE := env.bool("DJANGO_READ_DOT_ENV_FILE", default=False):
     # OS environment variables take precedence over variables from .env
@@ -143,6 +139,7 @@ LOCAL_APPS = [
     "care.users",
     "care.audit_log",
     "care.emr",
+    "odoo",
 ]
 
 PLUGIN_APPS = manager.get_apps()
@@ -753,3 +750,61 @@ TOTP_DISABLED_EMAIL_TEMPLATE_PATH = env(
 
 # Cleanup incomplete file uploads, set to 0 to disable
 FILE_UPLOAD_EXPIRY_HOURS = env.int("FILE_UPLOAD_EXPIRY_HOURS", default=24)
+ODOO_CONFIG = {
+    # Connection settings
+    "base_url": "https://odoo.ohc.network",  # Odoo instance URL
+    "database": "ohcnetwork",  # Odoo database name
+    "username": "vignesh@ohc.network",  # Odoo username
+    "password": "Lilo@123",  # Odoo password
+    # Connection options
+    "timeout": 30,  # Request timeout in seconds
+    "max_retries": 3,  # Maximum number of retries for failed requests
+    "cache_timeout": 3600,  # Authentication cache timeout in seconds
+    # Integration settings
+    "enabled": True,  # Enable/disable Odoo integration
+    "auto_sync": True,  # Enable automatic synchronization
+    "async_sync": True,  # Use Celery for async synchronization
+    # Invoice settings
+    "invoice_settings": {
+        "default_journal": "Customer Invoices",  # Default journal for invoices
+        "default_payment_terms": "Immediate Payment",  # Default payment terms
+        "tax_mapping": {
+            # Map Django tax codes to Odoo tax IDs
+            "GST": 1,  # Example: GST tax ID in Odoo
+            "CGST": 2,  # Example: CGST tax ID in Odoo
+            "SGST": 3,  # Example: SGST tax ID in Odoo
+        },
+        "product_mapping": {
+            # Map Django service types to Odoo product categories
+            "consultation": "Consultation Services",
+            "procedure": "Medical Procedures",
+            "medication": "Medications",
+            "laboratory": "Laboratory Tests",
+        },
+    },
+    # Partner settings
+    "partner_settings": {
+        "customer_category": "Healthcare",  # Default customer category
+        "supplier_category": "Medical Suppliers",  # Default supplier category
+        "auto_create_partners": True,  # Automatically create partners
+    },
+    # Product settings
+    "product_settings": {
+        "default_category": "Healthcare Services",  # Default product category
+        "auto_create_products": True,  # Automatically create products
+        "default_uom": "Unit",  # Default unit of measure
+    },
+    # Logging settings
+    "logging": {
+        "level": "INFO",  # Log level (DEBUG, INFO, WARNING, ERROR)
+        "log_requests": True,  # Log all API requests
+        "log_responses": False,  # Log API responses (may contain sensitive data)
+    },
+    # Error handling
+    "error_handling": {
+        "retry_on_failure": True,  # Retry failed operations
+        "max_retry_attempts": 3,  # Maximum retry attempts
+        "retry_delay": 5,  # Delay between retries in seconds
+        "notify_on_error": True,  # Send notifications on errors
+    },
+}
