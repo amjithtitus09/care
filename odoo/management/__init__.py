@@ -1,0 +1,1 @@
+# Odoo integration management commands
