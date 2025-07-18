@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6a223c09f09f67b5a0ae429bc4fd4a2452ad3eea77bfdcfe91aa143a139b8e39"
+            "sha256": "d320cde70831b12a3b45e7318ddee2ac24cc651ec43a977c6709efd516f16753"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1079,6 +1079,14 @@
             ],
             "markers": "python_version >= '3.9'",
             "version": "==6.6.3"
+        },
+        "odoorpc": {
+            "hashes": [
+                "sha256:a0900bdd5c989c414b1ef40dafccd9363f179312d9166d9486cf70c7c2f0dd44",
+                "sha256:d0bc524c5b960781165575bad9c13d032d6f968c3c09276271045ddbbb483aa5"
+            ],
+            "index": "pypi",
+            "version": "==0.10.1"
         },
         "packaging": {
             "hashes": [

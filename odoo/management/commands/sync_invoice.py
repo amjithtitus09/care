@@ -2,7 +2,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from odoo.integration.invoice import OdooInvoiceIntegration
+from odoo.resource.invoice import OdooInvoiceResource
 
 
 class Command(BaseCommand):
@@ -34,5 +34,5 @@ class Command(BaseCommand):
         invoice_id = "b1d9bf54-d61f-4f83-9767-2617a15cd19b"
         logging.info("Starting to Sync Invoice %s", invoice_id)
 
-        odoo_integration = OdooInvoiceIntegration()
+        odoo_integration = OdooInvoiceResource()
         odoo_integration.sync_invoice_to_odoo(invoice_id)

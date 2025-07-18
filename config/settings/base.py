@@ -758,10 +758,16 @@ FILE_UPLOAD_EXPIRY_HOURS = env.int("FILE_UPLOAD_EXPIRY_HOURS", default=24)
 
 ODOO_CONFIG = {
     # Connection settings
-    "base_url": "http://host.docker.internal:8069",  # Odoo instance URL
+    # "host": "odoo.ohc.network",  # Odoo instance URL
+    # "port": 443,
+    # "database": "ohcnetwork",  # Odoo database name
+    # "username": "hosting@ohc.network",  # Odoo username
+    # "password": "1b52b110cc92ee342b5bb1ae88ae267c790c0b82",  # Odoo token
+    "host": "host.docker.internal",  # Odoo instance URL
+    "port": 8069,
     "database": "ohc",  # Odoo database name
     "username": "vignesh@ohc.network",  # Odoo username
-    "password": "Lilo@123",  # Odoo password
+    "password": "9fe380242cf3a95d23b4169ef79167fd4c6640c6",  # Odoo token
     # Connection options
     "timeout": 30,  # Request timeout in seconds
     "max_retries": 3,  # Maximum number of retries for failed requests

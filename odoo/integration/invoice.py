@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from django.db import transaction
 
@@ -42,22 +41,9 @@ class OdooInvoiceIntegration(OdooIntegration):
                 partner = self.partner_resource.get_or_create_patient_partner(
                     invoice.patient
                 )
-                raise Exception(f"Partner: {partner}")
 
                 # Create invoice in Odoo
-                odoo_invoice_id = self.resource.create_invoice(
-                    partner_id=partner_id,
-                    invoice_date=invoice.issue_date or datetime.now(),
-                    invoice_lines=[],
-                    ref=invoice.number,
-                    narration=invoice.note,
-                    move_type="out_invoice",  # Customer invoice
-                    payment_reference=invoice.number,
-                )
-
-                # Update Django invoice with Odoo reference
-                invoice.meta["odoo_invoice_id"] = odoo_invoice_id
-                invoice.save(update_fields=["meta"])
+                odoo_invoice_id = self.resource.create_invoice(invoice, partner)
 
                 logger.info(
                     f"Successfully synced invoice {invoice_id} to Odoo with ID: {odoo_invoice_id}"
