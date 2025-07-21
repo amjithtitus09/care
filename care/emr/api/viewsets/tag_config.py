@@ -49,7 +49,8 @@ class TagConfigViewSet(
     pydantic_read_model = TagConfigReadSpec
     pydantic_retrieve_model = TagConfigRetrieveSpec
     filterset_class = TagConfigFilters
-    filter_backends = [filters.DjangoFilterBackend]
+    filter_backends = [filters.DjangoFilterBackend, filters.OrderingFilter]
+    ordering_fields = ["priority", "created_date", "modified_date"]
 
     def authorize_retrieve(self, model_instance):
         if model_instance.facility and not AuthorizationController.call(
