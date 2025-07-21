@@ -177,7 +177,7 @@ class ChargeItemViewSet(
         request=ApplyMultipleChargeItemDefinitionRequest,
     )
     @action(methods=["POST"], detail=False)
-    def apply_charge_item_def(self, request, *args, **kwargs):
+    def apply_charge_item_defs(self, request, *args, **kwargs):
         facility = self.get_facility_obj()
         if not AuthorizationController.call(
             "can_create_charge_item_in_facility",
