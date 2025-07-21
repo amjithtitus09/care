@@ -190,7 +190,7 @@ class ChargeItemViewSet(
             for charge_item_request in request_params.requests:
                 charge_item_definition = get_object_or_404(
                     ChargeItemDefinition,
-                    external_id=request_params.charge_item_definition,
+                    external_id=charge_item_request.charge_item_definition,
                 )
                 if (
                     charge_item_definition.facility
