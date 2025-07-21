@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from drf_spectacular.utils import extend_schema
@@ -56,6 +57,10 @@ class ApplyChargeItemDefinitionRequest(BaseModel):
     charge_item_definition: UUID4
     quantity: int
     encounter: UUID4
+
+
+class ApplyMultipleChargeItemDefinitionRequest(BaseModel):
+    requests: list[ApplyChargeItemDefinitionRequest]
 
 
 def validate_service_resource(facility, service_resource, service_resource_id):
@@ -169,30 +174,43 @@ class ChargeItemViewSet(
         return queryset.select_related("paid_invoice", "charge_item_definition")
 
     @extend_schema(
-        request=ApplyChargeItemDefinitionRequest,
+        request=ApplyMultipleChargeItemDefinitionRequest,
     )
     @action(methods=["POST"], detail=False)
     def apply_charge_item_def(self, request, *args, **kwargs):
         facility = self.get_facility_obj()
-        request_params = ApplyChargeItemDefinitionRequest(**request.data)
-        charge_item_definition = get_object_or_404(
-            ChargeItemDefinition, external_id=request_params.charge_item_definition
-        )
-        if (
-            charge_item_definition.facility
-            and charge_item_definition.facility != facility
+        if not AuthorizationController.call(
+            "can_create_charge_item_in_facility",
+            self.request.user,
+            facility,
         ):
-            raise ValidationError(
-                "Charge item definition is not associated with the facility"
-            )
-        encounter = get_object_or_404(
-            Encounter, external_id=request_params.encounter, facilit=facility
-        )
-        quantity = request_params.quantity
-        charge_item = apply_charge_item_definition(
-            charge_item_definition, encounter, quantity=quantity
-        )
-        return Response(ChargeItemReadSpec.serialize(charge_item).to_json())
+            raise PermissionDenied("Access Denied to Charge Item")
+        request_params = ApplyMultipleChargeItemDefinitionRequest(**request.data)
+        with transaction.atomic():
+            for charge_item_request in request_params.requests:
+                charge_item_definition = get_object_or_404(
+                    ChargeItemDefinition,
+                    external_id=request_params.charge_item_definition,
+                )
+                if (
+                    charge_item_definition.facility
+                    and charge_item_definition.facility != facility
+                ):
+                    raise ValidationError(
+                        "Charge item definition is not associated with the facility"
+                    )
+
+                encounter = get_object_or_404(
+                    Encounter,
+                    external_id=charge_item_request.encounter,
+                    facility=facility,
+                )
+                quantity = charge_item_request.quantity
+                charge_item = apply_charge_item_definition(
+                    charge_item_definition, encounter, quantity=quantity
+                )
+                charge_item.save()
+        return Response({})
 
 
 InternalQuestionnaireRegistry.register(ChargeItemViewSet)
