@@ -33,6 +33,7 @@ from care.emr.tagging.filters import SingleFacilityTagFilter
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
 from care.users.models import User
+from care.utils.filters.multiselect import MultiSelectFilter
 
 
 class CancelBookingSpec(BaseModel):
@@ -50,7 +51,7 @@ class RescheduleBookingSpec(BaseModel):
 
 
 class TokenBookingFilters(FilterSet):
-    status = CharFilter(field_name="status")
+    status = MultiSelectFilter(field_name="status")
     date = DateFromToRangeFilter(field_name="token_slot__start_datetime__date")
     slot = UUIDFilter(field_name="token_slot__external_id")
     user = CharFilter(method="filter_by_users")
