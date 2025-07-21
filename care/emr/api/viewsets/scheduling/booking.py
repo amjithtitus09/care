@@ -33,6 +33,7 @@ from care.emr.tagging.filters import SingleFacilityTagFilter
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
 from care.users.models import User
+from care.utils.filters.multiselect import MultiSelectFilter
 
 
 class CancelBookingSpec(BaseModel):
@@ -46,10 +47,11 @@ class CancelBookingSpec(BaseModel):
 
 class RescheduleBookingSpec(BaseModel):
     new_slot: UUID4
+    reason: str | None = None
 
 
 class TokenBookingFilters(FilterSet):
-    status = CharFilter(field_name="status")
+    status = MultiSelectFilter(field_name="status")
     date = DateFromToRangeFilter(field_name="token_slot__start_datetime__date")
     slot = UUIDFilter(field_name="token_slot__external_id")
     user = CharFilter(method="filter_by_users")
@@ -190,16 +192,20 @@ class TokenBookingViewSet(
             raise ValidationError("Cannot reschedule to the same slot")
 
         with transaction.atomic():
+            existing_reason_for_visit = existing_booking.reason_for_visit
             self.cancel_appointment_handler(
                 existing_booking,
-                {"reason": BookingStatusChoices.rescheduled},
+                {
+                    "reason": BookingStatusChoices.rescheduled,
+                    "reason_for_visit": request_data.reason,
+                },
                 request.user,
             )
             appointment = lock_create_appointment(
                 new_slot,
                 existing_booking.patient,
                 request.user,
-                existing_booking.reason_for_visit,
+                existing_reason_for_visit,
             )
             return Response(
                 TokenBookingReadSpec.serialize(appointment).model_dump(exclude=["meta"])
