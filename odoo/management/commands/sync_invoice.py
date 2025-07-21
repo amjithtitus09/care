@@ -31,7 +31,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        invoice_id = "b1d9bf54-d61f-4f83-9767-2617a15cd19b"
+        invoice_id = "d496343a-253e-4775-9ad0-b7484d006b44"
         logging.info("Starting to Sync Invoice %s", invoice_id)
 
         odoo_integration = OdooInvoiceResource()
