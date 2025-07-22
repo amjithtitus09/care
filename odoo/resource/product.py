@@ -31,6 +31,8 @@ class OdooProductResource(OdooBaseResource):
         return existing_product_id
 
     def get_or_create_patient_partner(self, charge_item_definition) -> int:
+        from odoo.resource.product_variant import OdooProductVariantResource
+
         product_name = f"CARE : {charge_item_definition.title}"
         product_id = str(charge_item_definition.external_id)
         existing_product_id = self.find_by_care_id(product_id)
@@ -41,4 +43,7 @@ class OdooProductResource(OdooBaseResource):
                     "care_id": product_id,
                 }
             )
-        return existing_product_id
+        product_variant_id = OdooProductVariantResource().get_product_variant(
+            existing_product_id
+        )
+        return product_variant_id

@@ -4,6 +4,7 @@ from decimal import Decimal
 from care.emr.models.charge_item import ChargeItem
 from care.emr.models.invoice import Invoice
 from care.emr.resources.common.monetary_component import MonetaryComponentType
+from odoo.connector.connector import OdooConnector
 from odoo.resource.base import OdooBaseResource
 
 logger = logging.getLogger(__name__)
@@ -111,6 +112,11 @@ class OdooInvoiceResource(OdooBaseResource):
         """
         return self.resource.check_by_care_id(invoice_id)
 
+    def post_invoice(self, invoice_id: str):
+        OdooConnector.get_connection().execute(
+            "account.move", "action_post", [invoice_id]
+        )
+
     def sync_invoice_to_odoo(self, invoice_id: str) -> int | None:
         """
         Synchronize a Django invoice to Odoo.
@@ -178,7 +184,7 @@ class OdooInvoiceResource(OdooBaseResource):
         logging.info(line_items)
         # Create invoice in Odoo
         odoo_invoice_id = self.create_invoice(invoice, partner, line_items)
-
+        self.post_invoice(odoo_invoice_id)
         logger.info(
             f"Successfully synced invoice {invoice_id} to Odoo with ID: {odoo_invoice_id}"
         )

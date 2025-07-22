@@ -753,67 +753,12 @@ FILE_UPLOAD_EXPIRY_HOURS = env.int("FILE_UPLOAD_EXPIRY_HOURS", default=24)
 
 
 ODOO_CONFIG = {
-    # Connection settings
-    # "host": "odoo.ohc.network",  # Odoo instance URL
-    # "port": 443,
-    # "database": "ohcnetwork",  # Odoo database name
-    # "username": "hosting@ohc.network",  # Odoo username
-    # "password": "1b52b110cc92ee342b5bb1ae88ae267c790c0b82",  # Odoo token
-    "host": "host.docker.internal",  # Odoo instance URL
-    "port": 8069,
-    "database": "ohc",  # Odoo database name
-    "username": "vignesh@ohc.network",  # Odoo username
-    "password": "9fe380242cf3a95d23b4169ef79167fd4c6640c6",  # Odoo token
-    # Connection options
-    "timeout": 30,  # Request timeout in seconds
-    "max_retries": 3,  # Maximum number of retries for failed requests
-    "cache_timeout": 3600,  # Authentication cache timeout in seconds
-    # Integration settings
-    "enabled": True,  # Enable/disable Odoo integration
-    "auto_sync": True,  # Enable automatic synchronization
-    "async_sync": True,  # Use Celery for async synchronization
-    # Invoice settings
-    "invoice_settings": {
-        "default_journal": "Customer Invoices",  # Default journal for invoices
-        "default_payment_terms": "Immediate Payment",  # Default payment terms
-        "tax_mapping": {
-            # Map Django tax codes to Odoo tax IDs
-            "GST": 1,  # Example: GST tax ID in Odoo
-            "CGST": 2,  # Example: CGST tax ID in Odoo
-            "SGST": 3,  # Example: SGST tax ID in Odoo
-        },
-        "product_mapping": {
-            # Map Django service types to Odoo product categories
-            "consultation": "Consultation Services",
-            "procedure": "Medical Procedures",
-            "medication": "Medications",
-            "laboratory": "Laboratory Tests",
-        },
-    },
-    # Partner settings
-    "partner_settings": {
-        "customer_category": "Healthcare",  # Default customer category
-        "supplier_category": "Medical Suppliers",  # Default supplier category
-        "auto_create_partners": True,  # Automatically create partners
-    },
-    "default_currency": "INR",
-    # Product settings
-    "product_settings": {
-        "default_category": "Healthcare Services",  # Default product category
-        "auto_create_products": True,  # Automatically create products
-        "default_uom": "Unit",  # Default unit of measure
-    },
-    # Logging settings
-    "logging": {
-        "level": "INFO",  # Log level (DEBUG, INFO, WARNING, ERROR)
-        "log_requests": True,  # Log all API requests
-        "log_responses": False,  # Log API responses (may contain sensitive data)
-    },
-    # Error handling
-    "error_handling": {
-        "retry_on_failure": True,  # Retry failed operations
-        "max_retry_attempts": 3,  # Maximum retry attempts
-        "retry_delay": 5,  # Delay between retries in seconds
-        "notify_on_error": True,  # Send notifications on errors
-    },
+    "host": env("ODOO_HOST", default="host.docker.internal"),  # Odoo instance URL
+    "port": env("ODOO_PORT", default=8069),
+    "protocol": env("ODOO_PROTOCOL", default="jsonrpc"),
+    "database": env("ODOO_DATABASE", default="ohc"),  # Odoo database name
+    "username": env("ODOO_USERNAME", default="vignesh@ohc.network"),  # Odoo username
+    "password": env(
+        "ODOO_PASSWORD", default="9fe380242cf3a95d23b4169ef79167fd4c6640c6"
+    ),
 }

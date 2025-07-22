@@ -12,7 +12,7 @@ class OdooConnector:
             cls.connection = odoorpc.ODOO(
                 settings.ODOO_CONFIG["host"],
                 port=settings.ODOO_CONFIG["port"],
-                protocol="jsonrpc",
+                protocol=settings.ODOO_CONFIG["protocol"],
             )
             cls.connection.login(
                 settings.ODOO_CONFIG["database"],
