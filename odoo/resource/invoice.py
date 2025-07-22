@@ -1,4 +1,5 @@
 import logging
+import random
 from decimal import Decimal
 
 from care.emr.models.charge_item import ChargeItem
@@ -29,7 +30,7 @@ class OdooInvoiceResource(OdooBaseResource):
         from odoo.resource.state import OdooStateResource
 
         invoice_data = {
-            "name": invoice.number,
+            "name": invoice.number + str(random.randint(1, 1000000)),
             "partner_id": partner_id,
             "invoice_date": invoice.created_date.strftime("%Y-%m-%d"),
             "move_type": "out_invoice",

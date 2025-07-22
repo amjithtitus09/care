@@ -1,8 +1,6 @@
-import logging
-
 from django.core.management.base import BaseCommand
 
-from odoo.resource.invoice import OdooInvoiceResource
+from care.emr.models.invoice import Invoice
 
 
 class Command(BaseCommand):
@@ -32,7 +30,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         invoice_id = "b5c3eb84-8418-41af-a2bd-a960880e96d8"
-        logging.info("Starting to Sync Invoice %s", invoice_id)
-
-        odoo_integration = OdooInvoiceResource()
-        odoo_integration.sync_invoice_to_odoo(invoice_id)
+        invoice = Invoice.objects.get(external_id=invoice_id)
+        invoice.save()
