@@ -122,6 +122,6 @@ class TokenBookingRetrieveSpec(TokenBookingReadSpec):
 
         super().perform_extra_serialization(mapping, obj)
         if obj.associated_encounter_id:
-            mapping["associated_encounter"] = (
-                EncounterListSpec().serialize(obj.associated_encounter).to_json()
-            )
+            mapping["associated_encounter"] = EncounterListSpec.serialize(
+                obj.associated_encounter
+            ).to_json()
