@@ -13,10 +13,15 @@ from care.emr.api.viewsets.base import (
 )
 from care.emr.models.organization import FacilityOrganizationUser
 from care.emr.models.scheduling.booking import TokenSlot
-from care.emr.models.scheduling.schedule import Availability, Schedule
+from care.emr.models.scheduling.schedule import (
+    Availability,
+    SchedulableResource,
+    Schedule,
+)
 from care.emr.resources.scheduling.schedule.spec import (
     AvailabilityCreateSpec,
     AvailabilityForScheduleSpec,
+    SchedulableResourceTypeOptions,
     ScheduleCreateSpec,
     ScheduleReadSpec,
     ScheduleUpdateSpec,
@@ -31,6 +36,79 @@ class ScheduleFilters(FilterSet):
     user = UUIDFilter(field_name="resource__user__external_id")
     valid_from = DateTimeFilter(field_name="valid_to", lookup_expr="gte")
     valid_to = DateTimeFilter(field_name="valid_from", lookup_expr="lte")
+
+
+def validate_resource(
+    resource_type: SchedulableResourceTypeOptions, resource_id, facility: Facility
+):
+    """
+    Validate a schedulable resource based on the resource type
+    """
+
+    if resource_type == SchedulableResourceTypeOptions.practitioner.value:
+        schedule_user = get_object_or_404(
+            User.objects.only("id"), external_id=resource_id
+        )
+        if not FacilityOrganizationUser.objects.filter(
+            user=schedule_user, organization__facility=facility
+        ).exists():
+            raise ValidationError("Schedule User is not part of the facility")
+    else:
+        raise ValidationError("Invalid Resource Type")
+
+
+def get_or_create_resource(
+    resource_type: SchedulableResourceTypeOptions, resource_id, facility: Facility
+):
+    if resource_type == SchedulableResourceTypeOptions.practitioner.value:
+        schedule_user = get_object_or_404(
+            User.objects.only("id"), external_id=resource_id
+        )
+        resource, _ = SchedulableResource.objects.get_or_create(
+            facility=facility,
+            user=schedule_user,
+        )
+        return resource
+    raise ValidationError("Invalid Resource Type")
+
+
+def authorize_resource_schedule_create(
+    resource_type: SchedulableResourceTypeOptions, resource_id, facility: Facility, user
+):
+    if resource_type == SchedulableResourceTypeOptions.practitioner.value:
+        schedule_user = get_object_or_404(
+            User.objects.only("id"), external_id=resource_id
+        )
+        if not AuthorizationController.call(
+            "can_write_user_schedule", user, facility, schedule_user
+        ):
+            raise PermissionDenied("You do not have permission to create schedule")
+    else:
+        raise ValidationError("Invalid Resource Type")
+
+
+def authorize_resource_schedule_update(schedule: Schedule, user):
+    if schedule.resource_type == SchedulableResourceTypeOptions.practitioner.value:
+        if not AuthorizationController.call(
+            "can_write_user_schedule",
+            user,
+            schedule.resource.facility,
+            schedule.resource.user,
+        ):
+            raise PermissionDenied("You do not have permission to view user schedule")
+    else:
+        raise ValidationError("Invalid Resource Type")
+
+
+def authorize_resource_schedule_list(
+    resource_type: SchedulableResourceTypeOptions, resource_id, facility: Facility, user
+):
+    if resource_type == SchedulableResourceTypeOptions.practitioner.value:
+        # TODO : Authorize based on the orgs that the user is part of
+        if not AuthorizationController.call("can_list_schedule", user, facility):
+            raise PermissionDenied("You do not have permission to view user schedule")
+    else:
+        raise ValidationError("Invalid Resource Type")
 
 
 class ScheduleViewSet(EMRModelViewSet):
@@ -49,6 +127,12 @@ class ScheduleViewSet(EMRModelViewSet):
 
     def perform_create(self, instance):
         with transaction.atomic():
+            resource = get_or_create_resource(
+                instance._resource_type,  # noqa SLF001
+                instance._resource_id,  # noqa SLF001
+                self.get_facility_obj(),
+            )
+            instance.resource = resource
             super().perform_create(instance)
             for availability in instance.availabilities:
                 availability_obj = availability.de_serialize()
@@ -82,34 +166,24 @@ class ScheduleViewSet(EMRModelViewSet):
             super().perform_destroy(instance)
 
     def validate_data(self, instance, model_obj=None):
-        # Validate user is part of the facility
-        facility = self.get_facility_obj()
-        schedule_user = (
-            model_obj.resource.user
-            if model_obj
-            else get_object_or_404(User, external_id=instance.user)
-        )
-        if not FacilityOrganizationUser.objects.filter(
-            user=schedule_user, organization__facility=facility
-        ).exists():
-            raise ValidationError("Schedule User is not part of the facility")
+        if not model_obj:
+            validate_resource(
+                instance.resource_type, instance.resource_id, self.get_facility_obj()
+            )
 
     def authorize_create(self, instance):
-        facility = self.get_facility_obj()
-        schedule_user = get_object_or_404(User, external_id=instance.user)
-        if not AuthorizationController.call(
-            "can_write_user_schedule", self.request.user, facility, schedule_user
-        ):
-            raise PermissionDenied("You do not have permission to create schedule")
+        authorize_resource_schedule_create(
+            instance.resource_type,
+            instance.resource_id,
+            self.get_facility_obj(),
+            self.request.user,
+        )
 
     def authorize_update(self, request_obj, model_instance):
-        if not AuthorizationController.call(
-            "can_write_user_schedule",
+        authorize_resource_schedule_update(
+            model_instance,
             self.request.user,
-            model_instance.resource.facility,
-            model_instance.resource.user,
-        ):
-            raise PermissionDenied("You do not have permission to view user schedule")
+        )
 
     def authorize_destroy(self, instance):
         self.authorize_update({}, instance)
@@ -119,11 +193,15 @@ class ScheduleViewSet(EMRModelViewSet):
         return request_data
 
     def get_queryset(self):
+        if "resource_type" not in self.request.query_params:
+            raise ValidationError("resource_type is required")
         facility = self.get_facility_obj()
-        if not AuthorizationController.call(
-            "can_list_user_schedule", self.request.user, facility
-        ):
-            raise PermissionDenied("You do not have permission to view user schedule")
+        authorize_resource_schedule_list(
+            self.request.query_params["resource_type"],
+            self.request.query_params.get("resource_id"),
+            facility,
+            self.request.user,
+        )
         return (
             super()
             .get_queryset()

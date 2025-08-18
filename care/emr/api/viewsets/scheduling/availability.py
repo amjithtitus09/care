@@ -15,7 +15,7 @@ from care.emr.api.viewsets.base import EMRBaseViewSet, EMRRetrieveMixin
 from care.emr.models import AvailabilityException, Schedule, TokenBooking
 from care.emr.models.patient import Patient
 from care.emr.models.scheduling.booking import TokenSlot
-from care.emr.models.scheduling.schedule import Availability, SchedulableUserResource
+from care.emr.models.scheduling.schedule import Availability, SchedulableResource
 from care.emr.resources.scheduling.schedule.spec import SlotTypeOptions
 from care.emr.resources.scheduling.slot.spec import (
     COMPLETED_STATUS_CHOICES,
@@ -149,7 +149,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
     def get_slots_for_day_handler(cls, facility_external_id, request_data):
         request_data = SlotsForDayRequestSpec(**request_data)
         user = get_object_or_404(User, external_id=request_data.user)
-        schedulable_resource_obj = SchedulableUserResource.objects.filter(
+        schedulable_resource_obj = SchedulableResource.objects.filter(
             facility__external_id=facility_external_id,
             user=user,
         ).first()
@@ -288,7 +288,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         facility = get_object_or_404(
             Facility, external_id=self.kwargs["facility_external_id"]
         )
-        resource = SchedulableUserResource.objects.filter(
+        resource = SchedulableResource.objects.filter(
             user=user, facility=facility
         ).first()
         if not resource:

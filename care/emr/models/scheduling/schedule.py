@@ -3,17 +3,25 @@ from django.db import models
 from care.emr.models import EMRBaseModel
 
 
-class SchedulableUserResource(EMRBaseModel):
+class SchedulableResource(EMRBaseModel):
     """A resource that can be scheduled for appointments."""
 
     facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)
-    user = models.ForeignKey("users.User", on_delete=models.CASCADE)
-
+    resource_type = models.CharField(max_length=255, default="practitioner")
+    user = models.ForeignKey(
+        "users.User", on_delete=models.CASCADE, null=True, blank=True
+    )
+    location = models.ForeignKey(
+        "emr.FacilityLocation", on_delete=models.CASCADE, null=True, blank=True
+    )
+    healthcare_service = models.ForeignKey(
+        "emr.HealthcareService", on_delete=models.CASCADE, null=True, blank=True
+    )
     # TODO : Index with resource and facility
 
 
 class Schedule(EMRBaseModel):
-    resource = models.ForeignKey(SchedulableUserResource, on_delete=models.CASCADE)
+    resource = models.ForeignKey(SchedulableResource, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
@@ -31,7 +39,7 @@ class Availability(EMRBaseModel):
 
 
 class AvailabilityException(EMRBaseModel):
-    resource = models.ForeignKey(SchedulableUserResource, on_delete=models.CASCADE)
+    resource = models.ForeignKey(SchedulableResource, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     reason = models.TextField(null=True, blank=True)
     valid_from = models.DateField(null=False, blank=False)

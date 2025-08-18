@@ -6,7 +6,7 @@ from pydantic import UUID4, field_validator, model_validator
 from rest_framework.exceptions import ValidationError
 
 from care.emr.models import AvailabilityException, TokenSlot
-from care.emr.models.scheduling.schedule import SchedulableUserResource
+from care.emr.models.scheduling.schedule import SchedulableResource
 from care.emr.resources.base import EMRResource
 from care.facility.models import Facility
 from care.users.models import User
@@ -51,7 +51,7 @@ class AvailabilityExceptionWriteSpec(AvailabilityExceptionBaseSpec):
         if not is_update:
             try:
                 user = User.objects.get(external_id=self.user)
-                resource = SchedulableUserResource.objects.get(
+                resource = SchedulableResource.objects.get(
                     user=user,
                     facility=Facility.objects.get(external_id=self.facility),
                 )

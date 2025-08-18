@@ -20,7 +20,7 @@ from care.emr.api.viewsets.base import (
 )
 from care.emr.api.viewsets.scheduling import lock_create_appointment
 from care.emr.models import TokenSlot
-from care.emr.models.scheduling import SchedulableUserResource, TokenBooking
+from care.emr.models.scheduling import SchedulableResource, TokenBooking
 from care.emr.resources.scheduling.slot.spec import (
     CANCELLED_STATUS_CHOICES,
     BookingStatusChoices,
@@ -75,7 +75,7 @@ class TokenBookingFilters(FilterSet):
 
         token_slots = TokenSlot.objects.filter(
             resource_id__in=Subquery(
-                SchedulableUserResource.objects.filter(
+                SchedulableResource.objects.filter(
                     user_id__in=Subquery(
                         User.objects.filter(external_id__in=user_external_ids).values(
                             "id"
@@ -228,7 +228,7 @@ class TokenBookingViewSet(
     @action(detail=False, methods=["GET"])
     def available_users(self, request, *args, **kwargs):
         facility = self.get_facility_obj()
-        user_resources = SchedulableUserResource.objects.filter(
+        user_resources = SchedulableResource.objects.filter(
             facility=facility,
             user__deleted=False,
         )

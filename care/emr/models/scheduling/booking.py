@@ -2,13 +2,13 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from care.emr.models import EMRBaseModel
-from care.emr.models.scheduling.schedule import Availability, SchedulableUserResource
+from care.emr.models.scheduling.schedule import Availability, SchedulableResource
 from care.users.models import User
 
 
 class TokenSlot(EMRBaseModel):
     resource = models.ForeignKey(
-        SchedulableUserResource, on_delete=models.CASCADE, null=False, blank=False
+        SchedulableResource, on_delete=models.CASCADE, null=False, blank=False
     )
     availability = models.ForeignKey(
         Availability, on_delete=models.CASCADE, null=True, blank=True
