@@ -24,6 +24,7 @@ from care.security.models import RoleModel
 from care.users.api.serializers.user import UserImageUploadSerializer, UserSerializer
 from care.users.models import User
 from care.utils.file_uploads.cover_image import delete_cover_image
+from odoo.resource.agent import OdooAgentResource
 
 
 class UserFilter(filters.FilterSet):
@@ -73,6 +74,18 @@ class UserViewSet(EMRModelViewSet):
                     name=UserTypeRoleMapping[instance.user_type].value.name,
                 ),
             )
+
+            # Create odoo agent for all users
+            try:
+                agent_resource = OdooAgentResource()
+                agent_id = agent_resource.get_or_create_doctor_agent(instance)
+                instance.odoo_agent_id = agent_id
+                instance.save(update_fields=["odoo_agent_id"])
+            except Exception as e:
+                raise IntegrityError(
+                    "User creation failed due to Odoo agent creation error."
+                ) from e
+
             if not instance.has_usable_password():
                 try:
                     send_password_creation_email(instance)
