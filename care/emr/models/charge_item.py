@@ -43,3 +43,10 @@ class ChargeItem(EMRBaseModel):
         default=None,
     )
     tags = ArrayField(models.IntegerField(), default=list)
+    commission_agent = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="commission_charge_items",
+    )

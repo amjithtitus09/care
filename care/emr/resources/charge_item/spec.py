@@ -13,6 +13,7 @@ from care.emr.resources.common.monetary_component import (
     MonetaryComponentType,
 )
 from care.emr.tagging.base import SingleFacilityTagManager
+from care.emr.resources.user.spec import UserSpec
 
 
 class ChargeItemStatusOptions(str, Enum):
@@ -106,6 +107,7 @@ class ChargeItemReadSpec(ChargeItemSpec):
     charge_item_definition: dict
     paid_invoice: dict | None = None
     tags: list[dict] = []
+    commission_agent: UserSpec | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -120,4 +122,6 @@ class ChargeItemReadSpec(ChargeItemSpec):
             mapping["paid_invoice"] = InvoiceReadSpec.serialize(
                 obj.paid_invoice
             ).to_json()
+        if obj.commission_agent:
+            mapping["commission_agent"] = UserSpec.serialize(obj.commission_agent).to_json()
         mapping["tags"] = SingleFacilityTagManager().render_tags(obj)

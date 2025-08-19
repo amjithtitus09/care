@@ -130,6 +130,7 @@ class OdooInvoiceResource(OdooBaseResource):
         """
         from odoo.resource.partner import OdooPartnerResource
         from odoo.resource.product import OdooProductResource
+        from odoo.resource.agent import OdooAgentResource
 
         # Get the Django invoice
         invoice = Invoice.objects.select_related("facility", "patient", "account").get(
@@ -172,6 +173,24 @@ class OdooInvoiceResource(OdooBaseResource):
                 "quantity": str(charge_item.quantity),
                 "price_unit": unit_price,
             }
+
+            # Handle commission agent
+            if charge_item.commission_agent:
+                if not charge_item.commission_agent.odoo_agent_id:
+                    # Create agent in Odoo if doesn't exist
+                    agent_id = OdooAgentResource().get_or_create_doctor_agent(charge_item.commission_agent)
+                    charge_item.commission_agent.odoo_agent_id = agent_id
+                    charge_item.commission_agent.save()
+                else:
+                    agent_id = charge_item.commission_agent.odoo_agent_id
+
+                line_item["agent_ids"] = [
+                    (0, 0, {
+                        "agent_id": agent_id,
+                        # 'amount':  ... (not required; Odoo will compute commission based on the plan rules)
+                    })
+                ]
+
             line_items.append([0, f"{line_id}", line_item])
             if discounts:
                 for discount in discounts:
