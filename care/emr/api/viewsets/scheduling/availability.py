@@ -16,7 +16,7 @@ from care.emr.api.viewsets.scheduling.schedule import get_or_create_resource
 from care.emr.models import AvailabilityException, Schedule, TokenBooking
 from care.emr.models.patient import Patient
 from care.emr.models.scheduling.booking import TokenSlot
-from care.emr.models.scheduling.schedule import Availability, SchedulableResource
+from care.emr.models.scheduling.schedule import Availability
 from care.emr.resources.scheduling.schedule.spec import (
     SchedulableResourceTypeOptions,
     SlotTypeOptions,
@@ -30,7 +30,6 @@ from care.emr.resources.tag.config_spec import TagResource
 from care.emr.tagging.base import SingleFacilityTagManager
 from care.facility.models.facility import Facility
 from care.security.authorization import AuthorizationController
-from care.users.models import User
 from care.utils.lock import Lock
 from care.utils.time_util import care_now
 
@@ -288,15 +287,14 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         """
         request_data = AvailabilityStatsRequestSpec(**request.data)
         # Fetch the entire schedule and calculate total slots available for each day
-        user = User.objects.filter(external_id=request_data.user).first()
-        if not user:
-            raise ValidationError("User does not exist")
         facility = get_object_or_404(
             Facility, external_id=self.kwargs["facility_external_id"]
         )
-        resource = SchedulableResource.objects.filter(
-            user=user, facility=facility
-        ).first()
+        resource = get_or_create_resource(
+            request_data.resource_type,
+            request_data.resource_id,
+            facility,
+        )
         if not resource:
             raise ValidationError("Resource is not schedulable")
 
@@ -330,7 +328,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
             response_days[str(day)] = {"total_slots": 0, "booked_slots": 0}
             day += timedelta(days=1)
 
-        for day in days:
+        for day, day_data in days.items():
             # Calculate all matching schedules
             current_schedules = []
             for schedule in schedules:
@@ -350,7 +348,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
             slots_count = calculate_slots(
                 day, availabilities, current_schedules, exceptions
             )
-            days[day]["total_slots"] = slots_count
+            day_data["total_slots"] = slots_count
             response_days[str(day)]["total_slots"] = slots_count
         # Query slots data for these dates, group by date and sum up count
 
