@@ -17,7 +17,6 @@ class SchedulableResource(EMRBaseModel):
     healthcare_service = models.ForeignKey(
         "emr.HealthcareService", on_delete=models.CASCADE, null=True, blank=True
     )
-    # TODO : Index with resource and facility
 
 
 class Schedule(EMRBaseModel):
