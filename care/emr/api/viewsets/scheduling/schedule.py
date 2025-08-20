@@ -95,7 +95,10 @@ def authorize_resource_schedule_create(
 
 
 def authorize_resource_schedule_update(schedule: Schedule, user):
-    if schedule.resource_type == SchedulableResourceTypeOptions.practitioner.value:
+    if (
+        schedule.resource.resource_type
+        == SchedulableResourceTypeOptions.practitioner.value
+    ):
         if not AuthorizationController.call(
             "can_write_user_schedule",
             user,
