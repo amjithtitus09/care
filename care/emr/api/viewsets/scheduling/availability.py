@@ -12,11 +12,15 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRBaseViewSet, EMRRetrieveMixin
+from care.emr.api.viewsets.scheduling.schedule import get_or_create_resource
 from care.emr.models import AvailabilityException, Schedule, TokenBooking
 from care.emr.models.patient import Patient
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import Availability, SchedulableResource
-from care.emr.resources.scheduling.schedule.spec import SlotTypeOptions
+from care.emr.resources.scheduling.schedule.spec import (
+    SchedulableResourceTypeOptions,
+    SlotTypeOptions,
+)
 from care.emr.resources.scheduling.slot.spec import (
     COMPLETED_STATUS_CHOICES,
     TokenBookingReadSpec,
@@ -32,7 +36,8 @@ from care.utils.time_util import care_now
 
 
 class SlotsForDayRequestSpec(BaseModel):
-    user: UUID4
+    resource_type: SchedulableResourceTypeOptions
+    resource_id: UUID4
     day: datetime.date
 
 
@@ -46,7 +51,8 @@ class AppointmentBookingSpec(BaseModel):
 class AvailabilityStatsRequestSpec(BaseModel):
     from_date: datetime.date
     to_date: datetime.date
-    user: UUID4
+    resource_type: SchedulableResourceTypeOptions
+    resource_id: UUID4
 
     @model_validator(mode="after")
     def validate_period(self):
@@ -148,19 +154,20 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
     @classmethod
     def get_slots_for_day_handler(cls, facility_external_id, request_data):
         request_data = SlotsForDayRequestSpec(**request_data)
-        user = get_object_or_404(User, external_id=request_data.user)
-        schedulable_resource_obj = SchedulableResource.objects.filter(
-            facility__external_id=facility_external_id,
-            user=user,
-        ).first()
-        if not schedulable_resource_obj:
+        facility = get_object_or_404(Facility, external_id=facility_external_id)
+        resource = get_or_create_resource(
+            request_data.resource_type,
+            request_data.resource_id,
+            facility,
+        )
+        if not resource:
             raise ValidationError("Resource is not schedulable")
         # Find all relevant schedules
         availabilities = Availability.objects.filter(
             slot_type=SlotTypeOptions.appointment.value,
             schedule__valid_from__lte=request_data.day,
             schedule__valid_to__gte=request_data.day,
-            schedule__resource=schedulable_resource_obj,
+            schedule__resource=resource,
         )
         # Fetch all availabilities for that day of week
         calculated_dow_availabilities = []
@@ -175,7 +182,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
                         }
                     )
         exceptions = AvailabilityException.objects.filter(
-            resource=schedulable_resource_obj,
+            resource=resource,
             valid_from__lte=request_data.day,
             valid_to__gte=request_data.day,
         )
@@ -187,7 +194,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         created_slots = TokenSlot.objects.filter(
             start_datetime__date=request_data.day,
             end_datetime__date=request_data.day,
-            resource=schedulable_resource_obj,
+            resource=resource,
         )
         for slot in created_slots:
             slot_key = f"{timezone.make_naive(slot.start_datetime).time()}-{timezone.make_naive(slot.end_datetime).time()}"
@@ -198,8 +205,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
                 slots.pop(slot_key)
 
         # Create everything else
-        for _slot in slots:
-            slot = slots[_slot]
+        for _, slot in slots.items():
             end_datetime = datetime.datetime.combine(
                 request_data.day, slot["end_time"], tzinfo=None
             )
@@ -207,7 +213,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
             if end_datetime < timezone.make_naive(timezone.now()):
                 continue
             TokenSlot.objects.create(
-                resource=schedulable_resource_obj,
+                resource=resource,
                 start_datetime=datetime.datetime.combine(
                     request_data.day, slot["start_time"], tzinfo=None
                 ),
@@ -222,7 +228,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
                     for slot in TokenSlot.objects.filter(
                         start_datetime__date=request_data.day,
                         end_datetime__date=request_data.day,
-                        resource=schedulable_resource_obj,
+                        resource=resource,
                     ).select_related("availability")
                 ]
             }
