@@ -51,7 +51,7 @@ class TokenQueueViewSet(EMRModelViewSet):
                 facility,
             )
             instance.resource = resource
-            if instance._set_is_primary:
+            if instance._set_is_primary:  # noqa SLF001
                 TokenQueue.objects.filter(resource=resource, date=instance.date).update(
                     is_primary=False
                 )
