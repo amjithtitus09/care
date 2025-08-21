@@ -21,7 +21,7 @@ class OdooPartnerResource(OdooBaseResource):
         city: str | None = None,
         state_id: int | None = None,
         country_id: int | None = None,
-        zip: str | None = None,
+        zip_code: str | None = None,
         vat: str | None = None,
         ref: str | None = None,
         comment: str | None = None,
@@ -61,7 +61,7 @@ class OdooPartnerResource(OdooBaseResource):
         partner_data["mobile"] = mobile if mobile else ""
         partner_data["street"] = street if street else ""
         partner_data["street2"] = street2 if street2 else ""
-        partner_data["zip"] = zip if zip else ""
+        partner_data["zip"] = zip_code if zip_code else ""
         partner_data["category_id"] = None
         partner_data["city"] = city if city else ""
         partner_data["state_id"] = state_id if state_id else ""
