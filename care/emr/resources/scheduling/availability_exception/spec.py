@@ -1,5 +1,4 @@
 import datetime
-from enum import Enum
 
 from pydantic import UUID4, field_validator, model_validator
 
@@ -7,10 +6,6 @@ from care.emr.models import AvailabilityException
 from care.emr.resources.base import EMRResource
 from care.emr.resources.scheduling.schedule.spec import SchedulableResourceTypeOptions
 from care.utils.time_util import care_now
-
-
-class ResourceTypeOptions(str, Enum):
-    user = "user"
 
 
 class AvailabilityExceptionBaseSpec(EMRResource):

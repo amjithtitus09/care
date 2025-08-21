@@ -84,6 +84,8 @@ from care.emr.api.viewsets.scheduling.availability_exceptions import (
     AvailabilityExceptionsViewSet,
 )
 from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
+from care.emr.api.viewsets.scheduling.token_category import TokenCategoryViewSet
+from care.emr.api.viewsets.scheduling.token_queue import TokenQueueViewSet
 from care.emr.api.viewsets.service_request import ServiceRequestViewSet
 from care.emr.api.viewsets.specimen import SpecimenViewSet
 from care.emr.api.viewsets.specimen_definition import SpecimenDefinitionViewSet
@@ -209,6 +211,16 @@ facility_organization_nested_router.register(
 )
 
 facility_nested_router.register(r"schedule", ScheduleViewSet, basename="schedule")
+
+facility_nested_router.register(
+    r"token/queue", TokenQueueViewSet, basename="token-queue"
+)
+
+facility_nested_router.register(
+    r"token/category", TokenCategoryViewSet, basename="token-category"
+)
+
+
 schedule_nested_router = NestedSimpleRouter(
     facility_nested_router, r"schedule", lookup="schedule"
 )

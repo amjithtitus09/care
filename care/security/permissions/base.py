@@ -38,6 +38,7 @@ from care.security.permissions.specimen_definition import SpecimenDefinitionPerm
 from care.security.permissions.supply_delivery import SupplyDeliveryPermissions
 from care.security.permissions.supply_request import SupplyRequestPermissions
 from care.security.permissions.tag_config import TagConfigPermissions
+from care.security.permissions.token import TokenPermissions
 from care.security.permissions.user import UserPermissions
 from care.security.permissions.user_schedule import UserSchedulePermissions
 
@@ -87,6 +88,7 @@ class PermissionController:
         TagConfigPermissions,
         PatientIdentifierConfigPermissions,
         MedicationPermissions,
+        TokenPermissions,
     ]
 
     cache = {}
