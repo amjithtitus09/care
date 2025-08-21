@@ -30,7 +30,7 @@ class OdooInvoiceResource(OdooBaseResource):
         from odoo.resource.state import OdooStateResource
 
         invoice_data = {
-            "name": invoice.number + str(random.randint(1, 1000000)),
+            "name": invoice.number + str(random.randint(1, 1000000)),  # noqa S311
             "partner_id": partner_id,
             "invoice_date": invoice.created_date.strftime("%Y-%m-%d"),
             "move_type": "out_invoice",
@@ -51,7 +51,7 @@ class OdooInvoiceResource(OdooBaseResource):
         if not invoice:
             invoice = self.get_odoo_model().create(invoice_data)
 
-        logger.info(f"Created invoice with ID: {invoice}")
+        logger.info("Created invoice with ID")
         return invoice
 
     def get_charge_item_base_price(self, charge_item: ChargeItem):
@@ -186,7 +186,5 @@ class OdooInvoiceResource(OdooBaseResource):
         # Create invoice in Odoo
         odoo_invoice_id = self.create_invoice(invoice, partner, line_items)
         self.post_invoice(odoo_invoice_id)
-        logger.info(
-            f"Successfully synced invoice {invoice_id} to Odoo with ID: {odoo_invoice_id}"
-        )
+        logger.info("Successfully synced invoice to Odoo with ID")
         return odoo_invoice_id

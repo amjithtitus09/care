@@ -43,7 +43,4 @@ class OdooProductResource(OdooBaseResource):
                     "care_id": product_id,
                 }
             )
-        product_variant_id = OdooProductVariantResource().get_product_variant(
-            existing_product_id
-        )
-        return product_variant_id
+        return OdooProductVariantResource().get_product_variant(existing_product_id)
