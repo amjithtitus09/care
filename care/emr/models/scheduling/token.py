@@ -24,6 +24,7 @@ class TokenSubQueue(EMRBaseModel):
     multiple rooms that gets assigned tokens each of these rooms will have a sub queue
     """
 
+    facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)
     resource = models.ForeignKey("emr.SchedulableResource", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
 
