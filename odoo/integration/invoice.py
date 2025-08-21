@@ -45,14 +45,12 @@ class OdooInvoiceIntegration(OdooIntegration):
                 # Create invoice in Odoo
                 odoo_invoice_id = self.resource.create_invoice(invoice, partner)
 
-                logger.info(
-                    f"Successfully synced invoice {invoice_id} to Odoo with ID: {odoo_invoice_id}"
-                )
+                logger.info("Successfully synced invoice to Odoo")
                 return odoo_invoice_id
 
         except Invoice.DoesNotExist:
-            logger.error(f"Invoice {invoice_id} not found in Django")
+            logger.error("Invoice not found in Django")
             return None
-        except Exception as e:
-            logger.error(f"Failed to sync invoice {invoice_id} to Odoo: {e!s}")
+        except Exception:
+            logger.error("Failed to sync invoice")
             return None
