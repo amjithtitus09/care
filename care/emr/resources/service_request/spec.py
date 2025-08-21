@@ -117,14 +117,14 @@ class ServiceRequestCreateSpec(ServiceRequestWriteSpec):
     """Create specification for service requests"""
 
     encounter: UUID4
-    requestor: UUID4 | None = None
+    requester: UUID4 | None = None
 
     def perform_extra_deserialization(self, is_update, obj):
         super().perform_extra_deserialization(is_update, obj)
         obj.encounter = get_object_or_404(Encounter, external_id=self.encounter)
         obj.patient = obj.encounter.patient
-        if self.requestor:
-            obj.requestor = get_object_or_404(User, external_id=self.requestor)
+        if self.requester:
+            obj.requester = get_object_or_404(User, external_id=self.requester)
 
 
 class ServiceRequestReadSpec(BaseServiceRequestSpec):
@@ -134,15 +134,15 @@ class ServiceRequestReadSpec(BaseServiceRequestSpec):
     modified_date: datetime.datetime
     encounter: dict
     tags: list[dict] = []
-    requestor: dict | None = None
+    requester: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["encounter"] = EncounterListSpec.serialize(obj.encounter).to_json()
         mapping["tags"] = SingleFacilityTagManager().render_tags(obj)
-        if obj.requestor_id:
-            mapping["requestor"] = model_from_cache(UserSpec, id=obj.requestor_id)
+        if obj.requester_id:
+            mapping["requester"] = model_from_cache(UserSpec, id=obj.requester_id)
 
 
 class ServiceRequestRetrieveSpec(ServiceRequestReadSpec):
