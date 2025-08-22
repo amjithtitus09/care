@@ -54,6 +54,7 @@ class CancelBookingSpec(BaseModel):
 class TokenGenerationSpec(BaseModel):
     category: UUID4
     note: str | None = None
+    queue: UUID4 | None = None
 
 
 class RescheduleBookingSpec(BaseModel):
@@ -267,12 +268,19 @@ class TokenBookingViewSet(
             "facility": booking.token_slot.resource.facility,
             "resource": booking.token_slot.resource,
             "date": booking.token_slot.start_datetime.date(),
-            "system_generated": True,
         }
-        queue = TokenQueue.objects.filter(**filters).first()
-        if not queue:
-            filters["name"] = "System Generated"
-            queue = TokenQueue.objects.create(**filters)
+        if request_data.queue:
+            queue = TokenQueue.objects.filter(
+                external_id=request_data.queue, **filters
+            ).first()
+            if not queue:
+                raise ValidationError("Queue not found")
+        else:
+            filters["system_generated"] = True
+            queue = TokenQueue.objects.filter(**filters).first()
+            if not queue:
+                filters["name"] = "System Generated"
+                queue = TokenQueue.objects.create(**filters)
         category = TokenCategory.objects.filter(
             facility=booking.token_slot.resource.facility,
             resource_type=booking.token_slot.resource.resource_type,
