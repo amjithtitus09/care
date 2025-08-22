@@ -39,6 +39,7 @@ class TokenCategory(EMRBaseModel):
     name = models.CharField(max_length=255)
     shorthand = models.CharField(max_length=255)
     metadata = models.JSONField(default=dict)
+    default = models.BooleanField(default=False)
 
 
 class Token(EMRBaseModel):

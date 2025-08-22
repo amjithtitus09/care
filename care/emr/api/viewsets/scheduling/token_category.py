@@ -1,4 +1,5 @@
 from django_filters import rest_framework as filters
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 
@@ -23,6 +24,7 @@ class TokenCategoryFilters(filters.FilterSet):
     resource_type = filters.CharFilter(lookup_expr="iexact")
     name = filters.CharFilter(lookup_expr="icontains")
     shorthand = filters.CharFilter(lookup_expr="icontains")
+    default = filters.BooleanFilter()
 
 
 class TokenCategoryViewSet(
@@ -57,7 +59,7 @@ class TokenCategoryViewSet(
         self.check_write_access_facility(facility)
 
     def authorize_update(self, request_obj, model_instance):
-        self.check_write_access_facility(request_obj.facility)
+        self.check_write_access_facility(model_instance.facility)
 
     def get_queryset(self):
         base_queryset = super().get_queryset()
@@ -69,3 +71,14 @@ class TokenCategoryViewSet(
         ):
             raise PermissionDenied("Access Denied to Token Category")
         return base_queryset.filter(facility=facility_obj)
+
+    @action(detail=True, methods=["POST"])
+    def set_default(self, request, *args, **kwargs):
+        obj = self.get_object()
+        self.authorize_update(None, obj)
+        TokenCategory.objects.filter(
+            facility=obj.facility, resource_type=obj.resource_type
+        ).update(default=False)
+        obj.default = True
+        obj.save()
+        return self.get_retrieve_pydantic_model().serialize(obj).to_json()

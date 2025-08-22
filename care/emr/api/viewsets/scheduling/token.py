@@ -67,6 +67,11 @@ class TokenViewSet(EMRModelViewSet):
             instance.is_next = False
             super().perform_create(instance)
 
+    def perform_update(self, instance):
+        if instance.sub_queue and instance.sub_queue.facility != instance.facility:
+            raise ValidationError("Sub Queue and Queue are not in the same facility")
+        super().perform_update(instance)
+
     def authorize_create(self, instance):
         facility, queue = self.get_queue_obj()
         authorize_resource_schedule_create(
@@ -116,6 +121,8 @@ class TokenViewSet(EMRModelViewSet):
         queryset = Token.objects.filter(queue=queue)
         if obj.sub_queue:
             queryset = queryset.filter(sub_queue=obj.sub_queue)
+        else:
+            queryset = queryset.filter(sub_queue__isnull=True)
         queryset = queryset.update(is_next=False)
         obj.is_next = True
         obj.save()

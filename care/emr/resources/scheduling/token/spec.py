@@ -39,9 +39,13 @@ class TokenGenerateSpec(TokenBaseSpec):
 
 
 class TokenUpdateSpec(TokenBaseSpec):
-    status: TokenStatusOptions
+    status: TokenStatusOptions | None = None
     note: str | None = None
     sub_queue: UUID4 | None = None
+
+    def perform_extra_deserialization(self, is_update, obj):
+        if self.sub_queue:
+            obj.sub_queue = get_object_or_404(TokenSubQueue, external_id=self.sub_queue)
 
 
 class TokenReadSpec(TokenBaseSpec):
@@ -50,6 +54,7 @@ class TokenReadSpec(TokenBaseSpec):
     note: str | None = None
     patient: dict = {}
     number: int
+    status: TokenStatusOptions
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
