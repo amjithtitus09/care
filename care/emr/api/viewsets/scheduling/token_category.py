@@ -2,6 +2,7 @@ from django_filters import rest_framework as filters
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -81,4 +82,4 @@ class TokenCategoryViewSet(
         ).update(default=False)
         obj.default = True
         obj.save()
-        return self.get_retrieve_pydantic_model().serialize(obj).to_json()
+        return Response(self.get_retrieve_pydantic_model().serialize(obj).to_json())

@@ -50,10 +50,10 @@ class TokenUpdateSpec(TokenBaseSpec):
 
 
 class TokenReadSpec(TokenBaseSpec):
-    category: dict = {}
-    sub_queue: dict = {}
-    note: str | None = None
-    patient: dict = {}
+    category: dict
+    sub_queue: dict
+    note: str
+    patient: dict
     number: int
     status: TokenStatusOptions
 
