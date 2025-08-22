@@ -77,6 +77,24 @@ class TokenBookingWriteSpec(TokenBookingBaseSpec):
             raise ValidationError("Cannot cancel a booking. Use the cancel endpoint")
 
 
+class TokenBookingMinimumReadSpec(TokenBookingBaseSpec):
+    token_slot: TokenSlotBaseSpec
+    booked_on: datetime.datetime
+    status: str
+    note: str
+    user: UserSpec
+    created_date: datetime.datetime
+    modified_date: datetime.datetime
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+        mapping["token_slot"] = TokenSlotBaseSpec.serialize(obj.token_slot).model_dump(
+            exclude=["meta"]
+        )
+        mapping["user"] = model_from_cache(UserSpec, id=obj.token_slot.resource.user_id)
+
+
 class TokenBookingReadSpec(TokenBookingBaseSpec):
     id: UUID4 | None = None
 

@@ -279,7 +279,7 @@ class TokenBookingViewSet(
             external_id=request_data.category,
         ).first()
         if not category:
-            raise ValidationError("No default category found")
+            raise ValidationError("Category not found")
         note = request_data.note
         with Lock(f"booking:token:{queue.id}"), transaction.atomic():
             number = Token.objects.filter(queue=queue).count() + 1
@@ -291,6 +291,8 @@ class TokenBookingViewSet(
                 status=TokenStatusOptions.CREATED.value,
                 is_next=False,
                 note=note,
+                booking=booking,
+                patient=booking.patient,
             )
             booking.token = token
             booking.save(update_fields=["token"])

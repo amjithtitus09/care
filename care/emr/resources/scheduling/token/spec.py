@@ -8,7 +8,9 @@ from care.emr.models.scheduling.token import Token, TokenCategory, TokenSubQueue
 from care.emr.resources.base import EMRResource
 from care.emr.resources.patient.spec import PatientListSpec
 from care.emr.resources.scheduling.token_category.spec import TokenCategoryReadSpec
+from care.emr.resources.scheduling.token_queue.spec import TokenQueueReadSpec
 from care.emr.resources.scheduling.token_sub_queue.spec import TokenSubQueueReadSpec
+from care.emr.resources.user.spec import UserSpec
 
 
 class TokenStatusOptions(str, Enum):
@@ -56,14 +58,33 @@ class TokenReadSpec(TokenBaseSpec):
     patient: dict
     number: int
     status: TokenStatusOptions
+    queue: TokenQueueReadSpec
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["category"] = TokenCategoryReadSpec.serialize(obj.category).to_json()
+        mapping["queue"] = TokenQueueReadSpec.serialize(obj.queue).to_json()
         if obj.sub_queue:
             mapping["sub_queue"] = TokenSubQueueReadSpec.serialize(
                 obj.sub_queue
             ).to_json()
         if obj.patient:
             mapping["patient"] = PatientListSpec.serialize(obj.patient).to_json()
+
+
+class TokenRetrieveSpec(TokenReadSpec):
+    created_by: UserSpec
+    updated_by: UserSpec | None = None
+    booking: dict
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        from care.emr.resources.scheduling.slot.spec import TokenBookingMinimumReadSpec
+
+        super().perform_extra_serialization(mapping, obj)
+        cls.serialize_audit_users(mapping, obj)
+        if obj.booking:
+            mapping["booking"] = TokenBookingMinimumReadSpec.serialize(
+                obj.booking
+            ).to_json()

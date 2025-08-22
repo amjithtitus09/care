@@ -50,7 +50,7 @@ class Token(EMRBaseModel):
 
     facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)
     patient = models.ForeignKey(
-        "users.User", on_delete=models.CASCADE, null=True, blank=True
+        "emr.Patient", on_delete=models.CASCADE, null=True, blank=True
     )
     queue = models.ForeignKey(TokenQueue, on_delete=models.CASCADE)
     category = models.ForeignKey(TokenCategory, on_delete=models.CASCADE)
@@ -61,3 +61,10 @@ class Token(EMRBaseModel):
     status = models.CharField(max_length=255)
     is_next = models.BooleanField(default=False)
     note = models.TextField(null=True, blank=True)
+    booking = models.ForeignKey(
+        "emr.TokenBooking",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="booking_token",
+    )

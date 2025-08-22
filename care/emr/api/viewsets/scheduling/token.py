@@ -15,6 +15,7 @@ from care.emr.models.scheduling.token import Token, TokenQueue
 from care.emr.resources.scheduling.token.spec import (
     TokenGenerateSpec,
     TokenReadSpec,
+    TokenRetrieveSpec,
     TokenStatusOptions,
     TokenUpdateSpec,
 )
@@ -34,6 +35,7 @@ class TokenViewSet(EMRModelViewSet):
     pydantic_model = TokenGenerateSpec
     pydantic_update_model = TokenUpdateSpec
     pydantic_read_model = TokenReadSpec
+    pydantic_retrieve_model = TokenRetrieveSpec
     filterset_class = TokenFilters
     filter_backends = [DjangoFilterBackend]
     CREATE_QUESTIONNAIRE_RESPONSE = False
