@@ -4,6 +4,7 @@ from django.db import transaction
 from django.db.models.expressions import Subquery
 from django_filters import CharFilter, DateFromToRangeFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from pydantic import UUID4, BaseModel
 from rest_framework import filters as rest_framework_filters
 from rest_framework.decorators import action
@@ -21,6 +22,7 @@ from care.emr.api.viewsets.base import (
 from care.emr.api.viewsets.scheduling import lock_create_appointment
 from care.emr.models import TokenSlot
 from care.emr.models.scheduling import SchedulableResource, TokenBooking
+from care.emr.models.scheduling.token import Token, TokenCategory, TokenQueue
 from care.emr.resources.scheduling.slot.spec import (
     CANCELLED_STATUS_CHOICES,
     BookingStatusChoices,
@@ -28,6 +30,7 @@ from care.emr.resources.scheduling.slot.spec import (
     TokenBookingRetrieveSpec,
     TokenBookingWriteSpec,
 )
+from care.emr.resources.scheduling.token.spec import TokenReadSpec, TokenStatusOptions
 from care.emr.resources.tag.config_spec import TagResource
 from care.emr.resources.user.spec import UserSpec
 from care.emr.tagging.base import SingleFacilityTagManager
@@ -36,6 +39,7 @@ from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
 from care.users.models import User
 from care.utils.filters.multiselect import MultiSelectFilter
+from care.utils.lock import Lock
 
 
 class CancelBookingSpec(BaseModel):
@@ -44,6 +48,11 @@ class CancelBookingSpec(BaseModel):
         BookingStatusChoices.entered_in_error,
         BookingStatusChoices.rescheduled,
     ]
+    note: str | None = None
+
+
+class TokenGenerationSpec(BaseModel):
+    category: UUID4
     note: str | None = None
 
 
@@ -134,7 +143,7 @@ class TokenBookingViewSet(
 
     def get_queryset(self):
         facility = self.get_facility_obj()
-        if not AuthorizationController.call(
+        if self.action in ["list", "retrieve"] and not AuthorizationController.call(
             "can_list_facility_user_booking", self.request.user, facility
         ):
             raise PermissionDenied("You do not have permission to view user schedule")
@@ -177,6 +186,9 @@ class TokenBookingViewSet(
         self.authorize_update({}, instance)
         return self.cancel_appointment_handler(instance, request.data, request.user)
 
+    @extend_schema(
+        request=RescheduleBookingSpec,
+    )
     @action(detail=True, methods=["POST"])
     def reschedule(self, request, *args, **kwargs):
         request_data = RescheduleBookingSpec(**request.data)
@@ -241,3 +253,45 @@ class TokenBookingViewSet(
                 ]
             }
         )
+
+    @extend_schema(
+        request=TokenGenerationSpec,
+    )
+    @action(detail=True, methods=["POST"])
+    def generate_token(self, request, *args, **kwargs):
+        booking = self.get_object()
+        request_data = TokenGenerationSpec(**request.data)
+        if booking.token:
+            raise ValidationError("Token already generated")
+        filters = {
+            "facility": booking.token_slot.resource.facility,
+            "resource": booking.token_slot.resource,
+            "date": booking.token_slot.start_datetime.date(),
+            "system_generated": True,
+        }
+        queue = TokenQueue.objects.filter(**filters).first()
+        if not queue:
+            filters["name"] = "System Generated"
+            queue = TokenQueue.objects.create(**filters)
+        category = TokenCategory.objects.filter(
+            facility=booking.token_slot.resource.facility,
+            resource_type=booking.token_slot.resource.resource_type,
+            external_id=request_data.category,
+        ).first()
+        if not category:
+            raise ValidationError("No default category found")
+        note = request_data.note
+        with Lock(f"booking:token:{queue.id}"), transaction.atomic():
+            number = Token.objects.filter(queue=queue).count() + 1
+            token = Token.objects.create(
+                facility=booking.token_slot.resource.facility,
+                queue=queue,
+                category=category,
+                number=number,
+                status=TokenStatusOptions.CREATED.value,
+                is_next=False,
+                note=note,
+            )
+            booking.token = token
+            booking.save(update_fields=["token"])
+        return Response(TokenReadSpec.serialize(token).to_json())

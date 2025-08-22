@@ -12,9 +12,10 @@ from care.emr.resources.scheduling.token_sub_queue.spec import TokenSubQueueRead
 
 
 class TokenStatusOptions(str, Enum):
-    CREATED = "created"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
+    CREATED = "CREATED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
 
 class TokenBaseSpec(EMRResource):

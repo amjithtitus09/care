@@ -37,3 +37,6 @@ class TokenBooking(EMRBaseModel):
     associated_encounter = models.ForeignKey(
         "emr.Encounter", on_delete=models.PROTECT, null=True, blank=True, default=None
     )
+    token = models.ForeignKey(
+        "emr.Token", on_delete=models.PROTECT, null=True, blank=True, default=None
+    )

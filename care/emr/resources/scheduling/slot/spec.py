@@ -9,6 +9,7 @@ from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.resources.base import EMRResource, model_from_cache
 from care.emr.resources.facility.spec import FacilityBareMinimumSpec
 from care.emr.resources.patient.otp_based_flow import PatientOTPReadSpec
+from care.emr.resources.scheduling.token.spec import TokenReadSpec
 from care.emr.resources.user.spec import UserSpec
 from care.emr.tagging.base import SingleFacilityTagManager
 
@@ -91,7 +92,7 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
     updated_by: UserSpec | None = None
     created_date: datetime.datetime
     modified_date: datetime.datetime
-
+    token: TokenReadSpec | None = None
     tags: list[dict] = []
 
     @classmethod
@@ -110,6 +111,8 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
         mapping["tags"] = SingleFacilityTagManager().render_tags(obj)
         if obj.booked_by_id:
             mapping["booked_by"] = model_from_cache(UserSpec, id=obj.booked_by_id)
+        if obj.token:
+            mapping["token"] = TokenReadSpec.serialize(obj.token).to_json()
         cls.serialize_audit_users(mapping, obj)
 
 
