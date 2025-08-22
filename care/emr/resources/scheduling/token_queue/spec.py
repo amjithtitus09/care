@@ -27,6 +27,10 @@ class TokenQueueCreateSpec(TokenQueueBaseSpec):
         obj._set_is_primary = self.set_is_primary  # noqa SLF001
 
 
+class TokenQueueUpdateSpec(TokenQueueBaseSpec):
+    pass
+
+
 class TokenQueueReadSpec(TokenQueueBaseSpec):
     date: datetime.date
     is_primary: bool

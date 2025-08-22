@@ -84,6 +84,7 @@ from care.emr.api.viewsets.scheduling.availability_exceptions import (
     AvailabilityExceptionsViewSet,
 )
 from care.emr.api.viewsets.scheduling.booking import TokenBookingViewSet
+from care.emr.api.viewsets.scheduling.token import TokenViewSet
 from care.emr.api.viewsets.scheduling.token_category import TokenCategoryViewSet
 from care.emr.api.viewsets.scheduling.token_queue import TokenQueueViewSet
 from care.emr.api.viewsets.scheduling.token_sub_queue import TokenSubQueueViewSet
@@ -216,6 +217,12 @@ facility_nested_router.register(r"schedule", ScheduleViewSet, basename="schedule
 facility_nested_router.register(
     r"token/queue", TokenQueueViewSet, basename="token-queue"
 )
+
+queue_nested_router = NestedSimpleRouter(
+    facility_nested_router, r"token/queue", lookup="token_queue"
+)
+
+queue_nested_router.register(r"token", TokenViewSet, basename="queue")
 
 facility_nested_router.register(
     r"token/sub_queue", TokenSubQueueViewSet, basename="token-sub-queue"
@@ -437,6 +444,7 @@ urlpatterns = [
     path("", include(user_nested_router.urls)),
     path("", include(facility_nested_router.urls)),
     path("", include(schedule_nested_router.urls)),
+    path("", include(queue_nested_router.urls)),
     path("", include(patient_nested_router.urls)),
     path("", include(thread_nested_router.urls)),
     path("", include(resource_nested_router.urls)),

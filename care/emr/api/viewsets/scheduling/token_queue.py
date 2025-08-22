@@ -1,6 +1,7 @@
 from django.db import transaction
 from django_filters import DateTimeFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 
@@ -14,9 +15,9 @@ from care.emr.api.viewsets.scheduling.schedule import (
 )
 from care.emr.models.scheduling.token import TokenQueue
 from care.emr.resources.scheduling.token_queue.spec import (
-    TokenQueueBaseSpec,
     TokenQueueCreateSpec,
     TokenQueueReadSpec,
+    TokenQueueUpdateSpec,
 )
 from care.facility.models import Facility
 
@@ -30,7 +31,7 @@ class TokenQueueFilters(FilterSet):
 class TokenQueueViewSet(EMRModelViewSet):
     database_model = TokenQueue
     pydantic_model = TokenQueueCreateSpec
-    pydantic_update_model = TokenQueueBaseSpec
+    pydantic_update_model = TokenQueueUpdateSpec
     pydantic_read_model = TokenQueueReadSpec
     filterset_class = TokenQueueFilters
     filter_backends = [DjangoFilterBackend]
@@ -55,7 +56,9 @@ class TokenQueueViewSet(EMRModelViewSet):
                 TokenQueue.objects.filter(resource=resource, date=instance.date).update(
                     is_primary=False
                 )
-            instance.is_primary = True
+                instance.is_primary = True
+            else:
+                instance.is_primary = False
             super().perform_create(instance)
 
     def validate_data(self, instance, model_obj=None):
@@ -122,3 +125,14 @@ class TokenQueueViewSet(EMRModelViewSet):
             )
             queryset = queryset.filter(resource=resource)
         return queryset
+
+    @action(detail=True, methods=["POST"])
+    def set_primary(self, request, *args, **kwargs):
+        obj = self.get_object()
+        self.authorize_update(None, obj)
+        TokenQueue.objects.filter(resource=obj.resource, date=obj.date).update(
+            is_primary=False
+        )
+        obj.is_primary = True
+        obj.save()
+        return self.get_retrieve_pydantic_model().serialize(obj).to_json()
