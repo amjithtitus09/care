@@ -4,9 +4,11 @@ from decimal import Decimal
 
 from care.emr.models.charge_item import ChargeItem
 from care.emr.models.invoice import Invoice
+from care.emr.models.service_request import ServiceRequest
 from care.emr.resources.common.monetary_component import MonetaryComponentType
 from odoo.connector.connector import OdooConnector
 from odoo.resource.base import OdooBaseResource
+from odoo.resource.agent import OdooAgentResource
 
 logger = logging.getLogger(__name__)
 
@@ -172,6 +174,24 @@ class OdooInvoiceResource(OdooBaseResource):
                 "quantity": str(charge_item.quantity),
                 "price_unit": unit_price,
             }
+
+            from care.emr.resources.charge_item.spec import ChargeItemResourceOptions
+
+            if charge_item.service_resource == ChargeItemResourceOptions.service_request.value:
+                requester = ServiceRequest.objects.get(external_id=charge_item.service_resource_id).requester
+            elif dispense := charge_item.medication_dispense_set.first():
+                requester = (dispense.authorizing_prescription.requester
+                           if dispense.authorizing_prescription else None)
+
+            if requester:
+                agent_id = OdooAgentResource().get_or_create_doctor_agent(requester)
+
+                line_item["agent_ids"] = [
+                        (0, 0, {
+                            "agent_id": agent_id,
+                        })
+                    ]
+
             line_items.append([0, f"{line_id}", line_item])
             if discounts:
                 for discount in discounts:
