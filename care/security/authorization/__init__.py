@@ -20,6 +20,7 @@ from .payment_reconciliation import *  # noqa
 from .product import *  # noqa
 from .product_knowledge import *  # noqa
 from .questionnaire import *  # noqa
+from .scheduling import *  # noqa
 from .service_request import *  # noqa
 from .specimen_definition import *  # noqa
 from .supply_delivery import *  # noqa
