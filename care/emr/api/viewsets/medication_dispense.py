@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from rest_framework.decorators import action
@@ -32,6 +32,7 @@ from care.emr.resources.medication.dispense.spec import (
 )
 from care.emr.resources.medication.request.spec import MedicationRequestDispenseStatus
 from care.security.authorization.base import AuthorizationController
+from care.utils.filters.dummy_filter import DummyBooleanFilter
 from care.utils.filters.multiselect import MultiSelectFilter
 
 
@@ -45,6 +46,8 @@ class MedicationDispenseFilters(filters.FilterSet):
         field_name="authorizing_prescription__external_id"
     )
     exclude_status = MultiSelectFilter(field_name="status", exclude=True)
+    location = filters.UUIDFilter(field_name="location__external_id")
+    include_children = DummyBooleanFilter()
 
 
 class MedicationDispenseViewSet(
@@ -143,11 +146,20 @@ class MedicationDispenseViewSet(
 
         if self.action in ["list", "summary"]:
             if "location" in self.request.GET:
+                include_children = (
+                    self.request.GET.get("include_children", "false").lower() == "true"
+                )
                 location = get_object_or_404(
                     FacilityLocation, external_id=self.request.GET.get("location")
                 )
                 self.authorize_location_read(location)
-                queryset = queryset.filter(location=location)
+                if include_children:
+                    queryset = queryset.filter(
+                        Q(deliver_from=location)
+                        | Q(deliver_from__parent_cache__overlap=[location.id])
+                    )
+                else:
+                    queryset = queryset.filter(location=location)
             elif "encounter" in self.request.GET:
                 encounter = get_object_or_404(
                     Encounter, external_id=self.request.GET.get("encounter")

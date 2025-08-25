@@ -1,3 +1,5 @@
+from care.emr.models.organization import FacilityOrganizationUser
+from care.emr.resources.scheduling.schedule.spec import SchedulableResourceTypeOptions
 from care.security.authorization import AuthorizationController
 from care.security.authorization.base import AuthorizationHandler
 from care.security.permissions.token import TokenPermissions
@@ -27,3 +29,116 @@ class TokenCategoryAccess(AuthorizationHandler):
 
 
 AuthorizationController.register_internal_controller(TokenCategoryAccess)
+
+
+class TokenAccess(AuthorizationHandler):
+    def can_write_token(self, resource_obj, user):
+        if (
+            resource_obj.resource_type
+            == SchedulableResourceTypeOptions.practitioner.value
+        ):
+            return self.can_write_practitioner_token(resource_obj, user)
+        if (
+            resource_obj.resource_type
+            == SchedulableResourceTypeOptions.healthcare_service.value
+        ):
+            return self.can_write_healthcare_service_token(resource_obj, user)
+        if resource_obj.resource_type == SchedulableResourceTypeOptions.location.value:
+            return self.can_write_location_token(resource_obj, user)
+        raise ValueError("Invalid resource type")
+
+    def can_update_token(self, resource_obj, user):
+        if (
+            resource_obj.resource_type
+            == SchedulableResourceTypeOptions.practitioner.value
+        ):
+            return self.can_write_practitioner_token(resource_obj.user, user)
+        if (
+            resource_obj.resource_type
+            == SchedulableResourceTypeOptions.healthcare_service.value
+        ):
+            return self.can_write_healthcare_service_token(
+                resource_obj.healthcare_service,
+                user,
+            )
+        if resource_obj.resource_type == SchedulableResourceTypeOptions.location.value:
+            return self.can_write_location_token(resource_obj.location, user)
+        raise ValueError("Invalid resource type")
+
+    def can_list_token(self, resource_obj, user):
+        if (
+            resource_obj.resource_type
+            == SchedulableResourceTypeOptions.practitioner.value
+        ):
+            return self.can_read_practitioner_token(resource_obj.user, user)
+        if (
+            resource_obj.resource_type
+            == SchedulableResourceTypeOptions.healthcare_service.value
+        ):
+            return self.can_read_healthcare_service_token(
+                resource_obj.healthcare_service, user
+            )
+        if resource_obj.resource_type == SchedulableResourceTypeOptions.location.value:
+            return self.can_read_location_token(resource_obj.location, user)
+        raise ValueError("Invalid resource type")
+
+    def can_write_practitioner_token(self, obj, user):
+        facility_orgs = FacilityOrganizationUser.objects.filter(
+            user=obj, organization__facility=obj.facility
+        ).values("organization__parent_cache", "organization_id")
+        cache = []
+        for facility_org in facility_orgs:
+            cache.extend(facility_org["organization__parent_cache"])
+            cache.append(facility_org["organization_id"])
+        cache = list(set(cache))
+        return self.check_permission_in_facility_organization(
+            [TokenPermissions.can_write_token.name], user, orgs=cache
+        )
+
+    def can_write_healthcare_service_token(self, obj, user):
+        """
+        Anyone in the managing organization of the healthcare service can write the schedule
+        """
+        orgs = [obj.managing_organization.parent_cache, obj.managing_organization.id]
+        return self.check_permission_in_facility_organization(
+            [TokenPermissions.can_write_token.name], user, orgs=orgs
+        )
+
+    def can_write_location_token(self, obj, user):
+        return self.check_permission_in_facility_organization(
+            [TokenPermissions.can_write_token.name],
+            user,
+            orgs=obj.facility_organization_cache,
+        )
+
+    def can_read_practitioner_token(self, obj, user):
+        facility_orgs = FacilityOrganizationUser.objects.filter(
+            user=obj, organization__facility=obj.facility
+        ).values("organization__parent_cache", "organization_id")
+        cache = []
+        for facility_org in facility_orgs:
+            cache.extend(facility_org["organization__parent_cache"])
+            cache.append(facility_org["organization_id"])
+        cache = list(set(cache))
+        return self.check_permission_in_facility_organization(
+            [TokenPermissions.can_list_token.name], user, orgs=cache
+        )
+
+    def can_read_healthcare_service_token(self, obj, user):
+        """
+        Anyone in the managing organization of the healthcare service can write the schedule
+        """
+        orgs = [obj.managing_organization.parent_cache, obj.managing_organization.id]
+        return self.check_permission_in_facility_organization(
+            [TokenPermissions.can_list_token.name], user, orgs=orgs
+        )
+
+    def can_read_location_token(self, obj, user):
+        return self.check_permission_in_facility_organization(
+            [TokenPermissions.can_list_token.name],
+            user,
+            orgs=obj.facility_organization_cache,
+        )
+
+
+AuthorizationController.register_internal_controller(TokenAccess)

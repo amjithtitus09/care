@@ -146,6 +146,7 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
 
     @action(detail=False, methods=["POST"])
     def get_slots_for_day(self, request, *args, **kwargs):
+        # TODO : Add Authorization, Need to confirm what works here
         return self.get_slots_for_day_handler(
             self.kwargs["facility_external_id"], request.data
         )
@@ -269,14 +270,16 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
             TokenBookingReadSpec.serialize(appointment).model_dump(exclude=["meta"])
         )
 
+    def authorize_update(self, request_obj, model_instance):
+        if not AuthorizationController.call(
+            "can_create_booking", model_instance.resource, self.request.user
+        ):
+            raise PermissionDenied("You do not have permission to create appointments")
+
     @action(detail=True, methods=["POST"])
     def create_appointment(self, request, *args, **kwargs):
         slot_obj = self.get_object()
-        facility = slot_obj.resource.facility
-        if not AuthorizationController.call(
-            "can_create_appointment", self.request.user, facility
-        ):
-            raise PermissionDenied("You do not have permission to create appointments")
+        self.authorize_update(None, slot_obj)
         return self.create_appointment_handler(slot_obj, request.data, request.user)
 
     @action(detail=False, methods=["POST"])
@@ -297,6 +300,8 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         )
         if not resource:
             raise ValidationError("Resource is not schedulable")
+
+        self.authorize_resource_read(resource)
 
         schedules = Schedule.objects.filter(
             valid_from__lte=request_data.to_date,
@@ -370,6 +375,18 @@ class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):
         # Query all the booked slots for the given days and get the total booked
 
         return Response(response_days)
+
+    def authorize_retrieve(self, model_instance):
+        self.authorize_resource_read(model_instance.resource)
+
+    def authorize_resource_read(self, resource_obj):
+        if not AuthorizationController.call(
+            "can_list_booking", resource_obj, self.request.user
+        ):
+            raise PermissionDenied("You do not have permission to list bookings")
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("resource")
 
 
 def calculate_slots(

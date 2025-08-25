@@ -18,6 +18,7 @@ class TokenStatusOptions(str, Enum):
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
+    ENTERED_IN_ERROR = "ENTERED_IN_ERROR"
 
 
 class TokenBaseSpec(EMRResource):

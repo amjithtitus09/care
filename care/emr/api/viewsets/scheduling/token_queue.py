@@ -2,17 +2,11 @@ from django.db import transaction
 from django_filters import DateTimeFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 
 from care.emr.api.viewsets.base import EMRModelViewSet
-from care.emr.api.viewsets.scheduling.schedule import (
-    authorize_resource_schedule_create,
-    authorize_resource_schedule_list,
-    authorize_resource_schedule_update,
-    get_or_create_resource,
-    validate_resource,
-)
+from care.emr.api.viewsets.scheduling.schedule import get_or_create_resource
 from care.emr.models.scheduling.token import TokenQueue
 from care.emr.resources.scheduling.token_queue.spec import (
     TokenQueueCreateSpec,
@@ -20,6 +14,7 @@ from care.emr.resources.scheduling.token_queue.spec import (
     TokenQueueUpdateSpec,
 )
 from care.facility.models import Facility
+from care.security.authorization.base import AuthorizationController
 
 
 class TokenQueueFilters(FilterSet):
@@ -61,25 +56,26 @@ class TokenQueueViewSet(EMRModelViewSet):
                 instance.is_primary = False
             super().perform_create(instance)
 
-    def validate_data(self, instance, model_obj=None):
-        if not model_obj:
-            validate_resource(
-                instance.resource_type, instance.resource_id, self.get_facility_obj()
-            )
-
     def authorize_create(self, instance):
-        authorize_resource_schedule_create(
-            instance.resource_type,
-            instance.resource_id,
-            self.get_facility_obj(),
-            self.request.user,
+        facility = self.get_facility_obj()
+        resource = get_or_create_resource(
+            instance.resource_type, instance.resource_id, facility
         )
+        if not AuthorizationController.call(
+            "can_write_token",
+            resource,
+            self.request.user,
+        ):
+            raise PermissionDenied("You do not have permission to create token queue")
 
     def authorize_update(self, request_obj, model_instance):
-        authorize_resource_schedule_update(
-            model_instance,
+        resource = model_instance.resource
+        if not AuthorizationController.call(
+            "can_write_token",
+            resource,
             self.request.user,
-        )
+        ):
+            raise PermissionDenied("You do not have permission to create token queue")
 
     def authorize_destroy(self, instance):
         self.authorize_update({}, instance)
@@ -88,15 +84,17 @@ class TokenQueueViewSet(EMRModelViewSet):
         request_data["facility"] = self.kwargs["facility_external_id"]
         return request_data
 
-    def authorize_retrieve(self, model_instance):
-        obj = self.get_object()
-        authorize_resource_schedule_list(
-            obj.resource.resource_type,
-            None,
-            obj.resource.facility,
+    def can_read_resource_token(self, resource_obj):
+        if not AuthorizationController.call(
+            "can_list_token",
+            resource_obj,
             self.request.user,
-            obj,
-        )
+        ):
+            raise PermissionDenied("You do not have permission to list token queue")
+
+    def authorize_retrieve(self, model_instance):
+        resource_obj = model_instance.resource
+        self.can_read_resource_token(resource_obj)
 
     def get_queryset(self):
         facility = self.get_facility_obj()
@@ -117,12 +115,7 @@ class TokenQueueViewSet(EMRModelViewSet):
                 self.request.query_params.get("resource_id"),
                 facility,
             )
-            authorize_resource_schedule_list(
-                self.request.query_params["resource_type"],
-                self.request.query_params.get("resource_id"),
-                facility,
-                self.request.user,
-            )
+            self.can_read_resource_token(resource)
             queryset = queryset.filter(resource=resource)
         return queryset
 

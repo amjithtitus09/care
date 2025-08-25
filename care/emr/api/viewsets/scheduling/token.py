@@ -2,15 +2,10 @@ from django.db import transaction
 from django_filters import BooleanFilter, CharFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 
 from care.emr.api.viewsets.base import EMRModelViewSet
-from care.emr.api.viewsets.scheduling.schedule import (
-    authorize_resource_schedule_create,
-    authorize_resource_schedule_list,
-    authorize_resource_schedule_update,
-)
 from care.emr.models.scheduling.token import Token, TokenQueue
 from care.emr.resources.scheduling.token.spec import (
     TokenGenerateSpec,
@@ -20,6 +15,7 @@ from care.emr.resources.scheduling.token.spec import (
     TokenUpdateSpec,
 )
 from care.facility.models import Facility
+from care.security.authorization.base import AuthorizationController
 from care.utils.lock import Lock
 
 
@@ -74,34 +70,39 @@ class TokenViewSet(EMRModelViewSet):
             raise ValidationError("Sub Queue and Queue are not in the same facility")
         super().perform_update(instance)
 
+    def perform_destroy(self, instance):
+        instance.status = TokenStatusOptions.ENTERED_IN_ERROR.value
+        instance.save()
+        return super().perform_destroy(instance)
+
     def authorize_create(self, instance):
-        facility, queue = self.get_queue_obj()
-        authorize_resource_schedule_create(
-            queue.resource.resource_type, None, facility, self.request.user, queue
-        )
+        _, queue = self.get_queue_obj()
+        resource = queue.resource
+        if not AuthorizationController.call(
+            "can_write_token",
+            resource,
+            self.request.user,
+        ):
+            raise PermissionDenied("You do not have permission to create token queue")
 
     def authorize_update(self, request_obj, model_instance):
-        _, queue = self.get_queue_obj()
-        authorize_resource_schedule_update(
-            queue,
-            self.request.user,
-        )
+        self.authorize_create(model_instance)
 
     def authorize_destroy(self, instance):
-        self.authorize_update({}, instance)
+        self.authorize_destroy(instance)
 
     def authorize_retrieve(self, model_instance):
         _, queue = self.get_queue_obj()
-        authorize_resource_schedule_list(
-            queue.resource.resource_type,
-            None,
-            queue.resource.facility,
+        resource = queue.resource
+        if not AuthorizationController.call(
+            "can_list_token",
+            resource,
             self.request.user,
-            queue,
-        )
+        ):
+            raise PermissionDenied("You do not have permission to create token queue")
 
     def get_queryset(self):
-        facility, queue = self.get_queue_obj()
+        _, queue = self.get_queue_obj()
         queryset = (
             super()
             .get_queryset()
@@ -109,9 +110,14 @@ class TokenViewSet(EMRModelViewSet):
             .order_by("-modified_date")
         )
         if self.action == "list":
-            authorize_resource_schedule_list(
-                queue.resource.resource_type, None, facility, self.request.user, queue
-            )
+            if not AuthorizationController.call(
+                "can_list_token",
+                queue.resource,
+                self.request.user,
+            ):
+                raise PermissionDenied(
+                    "You do not have permission to create token queue"
+                )
             queryset = queryset.filter(queue=queue)
         return queryset
 

@@ -31,3 +31,29 @@ class TokenPermissions(enum.Enum):
             ADMINISTRATOR,
         ],
     )
+    can_write_token = Permission(
+        "Can Create on Token",
+        "",
+        PermissionContext.FACILITY,
+        [
+            ADMIN_ROLE,
+            STAFF_ROLE,
+            FACILITY_ADMIN_ROLE,
+            DOCTOR_ROLE,
+            NURSE_ROLE,
+            ADMINISTRATOR,
+        ],
+    )
+    can_list_token = Permission(
+        "Can list token on Object",
+        "",
+        PermissionContext.FACILITY,
+        [
+            ADMIN_ROLE,
+            STAFF_ROLE,
+            FACILITY_ADMIN_ROLE,
+            DOCTOR_ROLE,
+            NURSE_ROLE,
+            ADMINISTRATOR,
+        ],
+    )

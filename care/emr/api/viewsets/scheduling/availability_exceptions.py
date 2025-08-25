@@ -1,7 +1,7 @@
 from django.db import transaction
 from django_filters import DateFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 
 from care.emr.api.viewsets.base import (
@@ -12,12 +12,7 @@ from care.emr.api.viewsets.base import (
     EMRRetrieveMixin,
     EMRUpsertMixin,
 )
-from care.emr.api.viewsets.scheduling.schedule import (
-    authorize_resource_schedule_create,
-    authorize_resource_schedule_list,
-    authorize_resource_schedule_update,
-    get_or_create_resource,
-)
+from care.emr.api.viewsets.scheduling.schedule import get_or_create_resource
 from care.emr.models import AvailabilityException
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.resources.scheduling.availability_exception.spec import (
@@ -25,6 +20,7 @@ from care.emr.resources.scheduling.availability_exception.spec import (
     AvailabilityExceptionWriteSpec,
 )
 from care.facility.models import Facility
+from care.security.authorization.base import AuthorizationController
 
 
 class AvailabilityExceptionFilters(FilterSet):
@@ -80,40 +76,48 @@ class AvailabilityExceptionsViewSet(
             super().perform_create(instance)
 
     def authorize_destroy(self, instance):
-        authorize_resource_schedule_update(
-            instance,
-            self.request.user,
-        )
+        resource_obj = instance.resource
+        if not AuthorizationController.call(
+            "can_write_schedule", resource_obj, self.request.user
+        ):
+            raise PermissionDenied("You do not have permission to update schedule")
 
     def authorize_create(self, instance):
-        authorize_resource_schedule_create(
-            instance.resource_type,
-            instance.resource_id,
-            self.get_facility_obj(),
-            self.request.user,
+        resource_obj = get_or_create_resource(
+            instance.resource_type, instance.resource_id, self.get_facility_obj()
         )
+        if not AuthorizationController.call(
+            "can_write_schedule",
+            resource_obj,
+            self.request.user,
+        ):
+            raise PermissionDenied("You do not have permission to create schedule")
 
     def authorize_retrieve(self, model_instance):
-        obj = self.get_object()
-        authorize_resource_schedule_list(
-            obj.resource.resource_type,
-            None,
-            obj.resource.facility,
+        if not AuthorizationController.call(
+            "can_list_schedule",
+            model_instance.resource,
             self.request.user,
-            obj,
-        )
+        ):
+            raise PermissionDenied("You do not have permission to update schedule")
 
     def get_queryset(self):
         facility = self.get_facility_obj()
         if self.action == "list":
-            if "resource_type" not in self.request.query_params:
-                raise ValidationError("resource_type is required")
-            authorize_resource_schedule_list(
+            if (
+                "resource_type" not in self.request.query_params
+                or "resource_id" not in self.request.query_params
+            ):
+                raise ValidationError("resource_type and resource_id are required")
+            resource_obj = get_or_create_resource(
                 self.request.query_params["resource_type"],
-                self.request.query_params.get("resource_id"),
+                self.request.query_params["resource_id"],
                 facility,
-                self.request.user,
             )
+            if not AuthorizationController.call(
+                "can_list_schedule", resource_obj, self.request.user
+            ):
+                raise PermissionDenied("You do not have permission to list schedule")
         return (
             super()
             .get_queryset()
