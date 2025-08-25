@@ -10,7 +10,6 @@ from rest_framework.exceptions import ValidationError
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import Availability, Schedule
 from care.emr.resources.base import EMRResource
-from care.emr.resources.user.spec import UserSpec
 from care.facility.models import Facility
 from care.utils.time_util import care_now
 
@@ -215,17 +214,14 @@ class ScheduleReadSpec(ScheduleBaseSpec):
     availabilities: list = []
     resource_type: SchedulableResourceTypeOptions
 
-    created_by: UserSpec = {}
-    updated_by: UserSpec = {}
+    created_by: dict = {}
+    updated_by: dict = {}
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
 
-        if obj.created_by:
-            mapping["created_by"] = UserSpec.serialize(obj.created_by)
-        if obj.updated_by:
-            mapping["updated_by"] = UserSpec.serialize(obj.updated_by)
+        cls.serialize_audit_users(mapping, obj)
 
         mapping["availabilities"] = [
             AvailabilityForScheduleSpec.serialize(o)
