@@ -18,6 +18,22 @@ class SchedulableResource(EMRBaseModel):
         "emr.HealthcareService", on_delete=models.CASCADE, null=True, blank=True
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["facility", "resource_type", "user"],
+                name="unique_facility_resource_user",
+            ),
+            models.UniqueConstraint(
+                fields=["facility", "resource_type", "location"],
+                name="unique_facility_resource_location",
+            ),
+            models.UniqueConstraint(
+                fields=["facility", "resource_type", "healthcare_service"],
+                name="unique_facility_resource_healthcare_service",
+            ),
+        ]
+
 
 class Schedule(EMRBaseModel):
     resource = models.ForeignKey(SchedulableResource, on_delete=models.CASCADE)
