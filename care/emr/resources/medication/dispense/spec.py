@@ -12,8 +12,8 @@ from care.emr.models.medication_request import MedicationRequest
 from care.emr.resources.base import EMRResource
 from care.emr.resources.charge_item.spec import ChargeItemReadSpec
 from care.emr.resources.inventory.inventory_item.spec import InventoryItemReadSpec
-from care.emr.resources.medication.request.spec import DosageInstruction
 from care.emr.resources.location.spec import FacilityLocationListSpec
+from care.emr.resources.medication.request.spec import DosageInstruction
 
 
 class MedicationDispenseStatus(str, Enum):
