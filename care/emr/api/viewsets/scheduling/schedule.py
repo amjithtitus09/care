@@ -2,8 +2,11 @@ from django.db import transaction
 from django.utils import timezone
 from django_filters import DateTimeFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from pydantic import UUID4, BaseModel
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -11,6 +14,7 @@ from care.emr.api.viewsets.base import (
     EMRDestroyMixin,
     EMRModelViewSet,
 )
+from care.emr.models.charge_item_definition import ChargeItemDefinition
 from care.emr.models.healthcare_service import HealthcareService
 from care.emr.models.location import FacilityLocation
 from care.emr.models.organization import FacilityOrganizationUser
@@ -32,6 +36,10 @@ from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
 from care.users.models import User
 from care.utils.lock import Lock
+
+
+class ChargeItemDefinitionSetSpec(BaseModel):
+    charge_item_definition: UUID4
 
 
 class ScheduleFilters(FilterSet):
@@ -195,6 +203,13 @@ class ScheduleViewSet(EMRModelViewSet):
 
     def get_queryset(self):
         facility = self.get_facility_obj()
+        queryset = (
+            super()
+            .get_queryset()
+            .select_related("resource", "created_by", "updated_by")
+            .order_by("-modified_date")
+        )
+
         if self.action == "list":
             if (
                 "resource_type" not in self.request.query_params
@@ -207,13 +222,29 @@ class ScheduleViewSet(EMRModelViewSet):
                 facility,
             )
             self.can_read_resource_schedule(resource)
-        return (
-            super()
-            .get_queryset()
-            .filter(resource=resource)
-            .select_related("resource", "created_by", "updated_by")
-            .order_by("-modified_date")
+            queryset = queryset.filter(resource=resource)
+        return queryset
+
+    @action(detail=True, methods=["POST"])
+    def set_charge_item_definition(self, request, *args, **kwargs):
+        schedule = self.get_object()
+        request_data = ChargeItemDefinitionSetSpec(**request.data)
+        if not AuthorizationController.call(
+            "can_set_charge_item_definition_in_facility",
+            self.request.user,
+            schedule.resource.facility,
+        ):
+            raise PermissionDenied(
+                "You do not have permission to set charge item definition"
+            )
+        charge_item_definition = get_object_or_404(
+            ChargeItemDefinition.objects.only("id"),
+            external_id=request_data.charge_item_definition,
+            facility=schedule.resource.facility,
         )
+        schedule.charge_item_definition = charge_item_definition
+        schedule.save()
+        return Response(ScheduleReadSpec.serialize(schedule).to_json())
 
 
 class AvailabilityViewSet(EMRCreateMixin, EMRDestroyMixin, EMRBaseViewSet):

@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import Availability, Schedule
 from care.emr.resources.base import EMRResource
+from care.emr.resources.charge_item_definition.spec import ChargeItemDefinitionReadSpec
 from care.facility.models import Facility
 from care.utils.time_util import care_now
 
@@ -213,7 +214,7 @@ class ScheduleReadSpec(ScheduleBaseSpec):
     valid_to: datetime.datetime
     availabilities: list = []
     resource_type: SchedulableResourceTypeOptions
-
+    charge_item_definition: dict | None = None
     created_by: dict = {}
     updated_by: dict = {}
 
@@ -227,6 +228,11 @@ class ScheduleReadSpec(ScheduleBaseSpec):
             AvailabilityForScheduleSpec.serialize(o)
             for o in Availability.objects.filter(schedule=obj)
         ]
+        mapping["charge_item_definition"] = (
+            ChargeItemDefinitionReadSpec.serialize(obj.charge_item_definition)
+            if obj.charge_item_definition
+            else None
+        )
 
 
 def has_overlapping_availability(availabilities: list[AvailabilityDateTimeSpec]):

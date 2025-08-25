@@ -24,6 +24,9 @@ class Schedule(EMRBaseModel):
     name = models.CharField(max_length=255)
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
+    charge_item_definition = models.ForeignKey(
+        "emr.ChargeItemDefinition", on_delete=models.PROTECT, null=True, blank=True
+    )
 
 
 class Availability(EMRBaseModel):
