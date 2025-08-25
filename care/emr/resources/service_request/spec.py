@@ -91,6 +91,7 @@ class BaseServiceRequestSpec(EMRResource):
 class ServiceRequestWriteSpec(BaseServiceRequestSpec):
     healthcare_service: UUID4 | None = None
     locations: list[UUID4] = []
+    requester: UUID4 | None = None
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.healthcare_service:
@@ -98,6 +99,8 @@ class ServiceRequestWriteSpec(BaseServiceRequestSpec):
                 external_id=self.healthcare_service
             )
         obj._locations = self.locations  # noqa SLF001
+        if self.requester:
+            obj.requester = get_object_or_404(User, external_id=self.requester)
 
 
 class ServiceRequestUpdateSpec(ServiceRequestWriteSpec):
@@ -117,14 +120,11 @@ class ServiceRequestCreateSpec(ServiceRequestWriteSpec):
     """Create specification for service requests"""
 
     encounter: UUID4
-    requester: UUID4 | None = None
 
     def perform_extra_deserialization(self, is_update, obj):
         super().perform_extra_deserialization(is_update, obj)
         obj.encounter = get_object_or_404(Encounter, external_id=self.encounter)
         obj.patient = obj.encounter.patient
-        if self.requester:
-            obj.requester = get_object_or_404(User, external_id=self.requester)
 
 
 class ServiceRequestReadSpec(BaseServiceRequestSpec):
