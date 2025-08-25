@@ -1,6 +1,7 @@
 from .account import *  # noqa
 from .activity_definition import *  # noqa
 from .base import *  # noqa
+from .booking import *  # noqa
 from .charge_item import *  # noqa
 from .charge_item_definition import *  # noqa
 from .device import *  # noqa
