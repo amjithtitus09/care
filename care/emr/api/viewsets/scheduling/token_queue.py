@@ -1,5 +1,5 @@
 from django.db import transaction
-from django_filters import DateTimeFilter, FilterSet, UUIDFilter
+from django_filters import CharFilter, DateFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -18,9 +18,8 @@ from care.security.authorization.base import AuthorizationController
 
 
 class TokenQueueFilters(FilterSet):
-    user = UUIDFilter(field_name="resource__user__external_id")
-    valid_from = DateTimeFilter(field_name="valid_to", lookup_expr="gte")
-    valid_to = DateTimeFilter(field_name="valid_from", lookup_expr="lte")
+    name = CharFilter(field_name="name", lookup_expr="icontains")
+    date = DateFilter(field_name="date")
 
 
 class TokenQueueViewSet(EMRModelViewSet):

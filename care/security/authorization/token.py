@@ -38,15 +38,17 @@ class TokenAccess(AuthorizationHandler):
             == SchedulableResourceTypeOptions.practitioner.value
         ):
             return self.can_write_practitioner_token(
-                resource_obj, user, resource_obj.facility
+                resource_obj.user, user, resource_obj.facility
             )
         if (
             resource_obj.resource_type
             == SchedulableResourceTypeOptions.healthcare_service.value
         ):
-            return self.can_write_healthcare_service_token(resource_obj, user)
+            return self.can_write_healthcare_service_token(
+                resource_obj.healthcare_service, user
+            )
         if resource_obj.resource_type == SchedulableResourceTypeOptions.location.value:
-            return self.can_write_location_token(resource_obj, user)
+            return self.can_write_location_token(resource_obj.location, user)
         raise ValueError("Invalid resource type")
 
     def can_update_token(self, resource_obj, user):
