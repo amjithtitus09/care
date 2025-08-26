@@ -377,15 +377,12 @@ def authorize_booking_list(
                 )
         if not resource_ids and not organization_ids and not user.is_superuser:
             raise PermissionDenied("You do not have permission to list bookings")
-    elif (
-        resource_type
-        in [
-            SchedulableResourceTypeOptions.healthcare_service.value,
-            SchedulableResourceTypeOptions.location.value,
-        ]
-        and not resource_ids
-    ):
-        raise PermissionDenied("You do not have permission to list bookings")
+    elif resource_type in [
+        SchedulableResourceTypeOptions.healthcare_service.value,
+        SchedulableResourceTypeOptions.location.value,
+    ]:
+        if not resource_ids:
+            raise PermissionDenied("You do not have permission to list bookings")
     else:
         raise ValidationError("Invalid resource type")
     if resource_ids:
