@@ -37,7 +37,9 @@ class TokenAccess(AuthorizationHandler):
             resource_obj.resource_type
             == SchedulableResourceTypeOptions.practitioner.value
         ):
-            return self.can_write_practitioner_token(resource_obj, user)
+            return self.can_write_practitioner_token(
+                resource_obj, user, resource_obj.facility
+            )
         if (
             resource_obj.resource_type
             == SchedulableResourceTypeOptions.healthcare_service.value
@@ -52,7 +54,9 @@ class TokenAccess(AuthorizationHandler):
             resource_obj.resource_type
             == SchedulableResourceTypeOptions.practitioner.value
         ):
-            return self.can_write_practitioner_token(resource_obj.user, user)
+            return self.can_write_practitioner_token(
+                resource_obj.user, user, resource_obj.facility
+            )
         if (
             resource_obj.resource_type
             == SchedulableResourceTypeOptions.healthcare_service.value
@@ -70,7 +74,9 @@ class TokenAccess(AuthorizationHandler):
             resource_obj.resource_type
             == SchedulableResourceTypeOptions.practitioner.value
         ):
-            return self.can_read_practitioner_token(resource_obj.user, user)
+            return self.can_read_practitioner_token(
+                resource_obj.user, user, resource_obj.facility
+            )
         if (
             resource_obj.resource_type
             == SchedulableResourceTypeOptions.healthcare_service.value
@@ -82,9 +88,9 @@ class TokenAccess(AuthorizationHandler):
             return self.can_read_location_token(resource_obj.location, user)
         raise ValueError("Invalid resource type")
 
-    def can_write_practitioner_token(self, obj, user):
+    def can_write_practitioner_token(self, obj, user, facility):
         facility_orgs = FacilityOrganizationUser.objects.filter(
-            user=obj, organization__facility=obj.facility
+            user=obj, organization__facility=facility
         ).values("organization__parent_cache", "organization_id")
         cache = []
         for facility_org in facility_orgs:
@@ -111,9 +117,9 @@ class TokenAccess(AuthorizationHandler):
             orgs=obj.facility_organization_cache,
         )
 
-    def can_read_practitioner_token(self, obj, user):
+    def can_read_practitioner_token(self, obj, user, facility):
         facility_orgs = FacilityOrganizationUser.objects.filter(
-            user=obj, organization__facility=obj.facility
+            user=obj, organization__facility=facility
         ).values("organization__parent_cache", "organization_id")
         cache = []
         for facility_org in facility_orgs:
