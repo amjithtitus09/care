@@ -22,7 +22,11 @@ from care.emr.api.viewsets.base import (
 from care.emr.api.viewsets.scheduling import lock_create_appointment
 from care.emr.api.viewsets.scheduling.schedule import get_or_create_resource
 from care.emr.models import TokenSlot
-from care.emr.models.organization import FacilityOrganization, OrganizationUser
+from care.emr.models.organization import (
+    FacilityOrganization,
+    FacilityOrganizationUser,
+    OrganizationUser,
+)
 from care.emr.models.scheduling import SchedulableResource, TokenBooking
 from care.emr.models.scheduling.token import Token, TokenCategory, TokenQueue
 from care.emr.resources.scheduling.schedule.spec import SchedulableResourceTypeOptions
@@ -268,6 +272,17 @@ class TokenBookingViewSet(
             facility=facility,
             user__deleted=False,
         )
+        if request.query_params.get("organization_ids"):
+            organization_ids = request.query_params.get("organization_ids").split(",")
+            organizations = FacilityOrganization.objects.filter(
+                external_id__in=organization_ids, facility=facility
+            )
+            facility_organization_users = FacilityOrganizationUser.objects.filter(
+                organization__in=organizations
+            )
+            user_resources = user_resources.filter(
+                user_id__in=facility_organization_users.values("user_id")
+            )
 
         return Response(
             {
