@@ -201,6 +201,9 @@ class TokenQueueViewSet(EMRModelViewSet):
             )
         return Response(TokenReadSpec.serialize(token).to_json())
 
+    @extend_schema(
+        request=SubQueueNextTokenRequest,
+    )
     @action(detail=True, methods=["POST"])
     def set_next_token_to_subqueue(self, request, *args, **kwargs):
         obj = self.get_object()
