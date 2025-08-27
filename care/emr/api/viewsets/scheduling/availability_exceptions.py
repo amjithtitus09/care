@@ -103,6 +103,13 @@ class AvailabilityExceptionsViewSet(
 
     def get_queryset(self):
         facility = self.get_facility_obj()
+        queryset = (
+            super()
+            .get_queryset()
+            .filter(resource__facility=facility)
+            .select_related("resource", "created_by", "updated_by")
+            .order_by("-modified_date")
+        )
         if self.action == "list":
             if (
                 "resource_type" not in self.request.query_params
@@ -118,10 +125,5 @@ class AvailabilityExceptionsViewSet(
                 "can_list_schedule", resource_obj, self.request.user
             ):
                 raise PermissionDenied("You do not have permission to list schedule")
-        return (
-            super()
-            .get_queryset()
-            .filter(resource__facility=facility)
-            .select_related("resource", "created_by", "updated_by")
-            .order_by("-modified_date")
-        )
+            queryset = queryset.filter(resource=resource_obj)
+        return queryset
