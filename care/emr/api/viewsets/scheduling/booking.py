@@ -315,10 +315,13 @@ class TokenBookingViewSet(
             if not queue:
                 raise ValidationError("Queue not found")
         else:
+            queue_exists = TokenQueue.objects.filter(**filters).exists()
             filters["system_generated"] = True
             queue = TokenQueue.objects.filter(**filters).first()
             if not queue:
                 filters["name"] = "System Generated"
+                if not queue_exists:
+                    filters["is_primary"] = True
                 queue = TokenQueue.objects.create(**filters)
         category = TokenCategory.objects.filter(
             facility=booking.token_slot.resource.facility,
@@ -329,7 +332,7 @@ class TokenBookingViewSet(
             raise ValidationError("Category not found")
         note = request_data.note
         with Lock(f"booking:token:{queue.id}"), transaction.atomic():
-            number = Token.objects.filter(queue=queue).count() + 1
+            number = Token.objects.filter(queue=queue, category=category).count() + 1
             token = Token.objects.create(
                 facility=booking.token_slot.resource.facility,
                 queue=queue,

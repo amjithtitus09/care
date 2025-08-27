@@ -50,17 +50,18 @@ class TokenViewSet(EMRModelViewSet):
         )
 
     def perform_create(self, instance):
-        facility, queue = self.get_queue_obj()
+        _, queue = self.get_queue_obj()
+        instance.queue = queue
+        instance.facility = queue.facility
+        if queue.facility != instance.category.facility:
+            raise ValidationError("Category and Queue are not in the same facility")
+        if instance.sub_queue and instance.sub_queue.facility != queue.facility:
+            raise ValidationError("Sub Queue and Queue are not in the same facility")
         with Lock(f"booking:token:{queue.id}"), transaction.atomic():
-            instance.facility = facility
-            instance.queue = queue
-            if queue.facility != instance.category.facility:
-                raise ValidationError("Category and Queue are not in the same facility")
-            if instance.sub_queue and instance.sub_queue.facility != facility:
-                raise ValidationError(
-                    "Sub Queue and Queue are not in the same facility"
-                )
-            instance.number = Token.objects.filter(queue=queue).count() + 1
+            instance.number = (
+                Token.objects.filter(queue=queue, category=instance.category).count()
+                + 1
+            )
             instance.status = TokenStatusOptions.CREATED.value
             instance.is_next = False
             super().perform_create(instance)

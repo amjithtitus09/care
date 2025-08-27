@@ -1,13 +1,21 @@
 from django.db import transaction
 from django_filters import CharFilter, DateFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.api.viewsets.scheduling.schedule import get_or_create_resource
-from care.emr.models.scheduling.token import TokenQueue
+from care.emr.models.patient import Patient
+from care.emr.models.scheduling.token import Token, TokenCategory, TokenQueue
+from care.emr.resources.scheduling.token.spec import (
+    TokenGenerateWithQueueSpec,
+    TokenReadSpec,
+    TokenStatusOptions,
+)
 from care.emr.resources.scheduling.token_queue.spec import (
     TokenQueueCreateSpec,
     TokenQueueReadSpec,
@@ -15,6 +23,7 @@ from care.emr.resources.scheduling.token_queue.spec import (
 )
 from care.facility.models import Facility
 from care.security.authorization.base import AuthorizationController
+from care.utils.lock import Lock
 
 
 class TokenQueueFilters(FilterSet):
@@ -53,6 +62,10 @@ class TokenQueueViewSet(EMRModelViewSet):
                 instance.is_primary = True
             else:
                 instance.is_primary = False
+            if not TokenQueue.objects.filter(
+                resource=resource, date=instance.date
+            ).exists():
+                instance.is_primary = True
             super().perform_create(instance)
 
     def authorize_create(self, instance):
@@ -128,3 +141,54 @@ class TokenQueueViewSet(EMRModelViewSet):
         obj.is_primary = True
         obj.save()
         return self.get_retrieve_pydantic_model().serialize(obj).to_json()
+
+    @extend_schema(
+        request=TokenGenerateWithQueueSpec,
+    )
+    @action(detail=False, methods=["POST"])
+    def generate_token(self, request, *args, **kwargs):
+        facility = self.get_facility_obj()
+        request_data = TokenGenerateWithQueueSpec(**request.data)
+        resource_type = request_data.resource_type
+        resource_id = request_data.resource_id
+        resource = get_or_create_resource(resource_type, resource_id, facility)
+        if not AuthorizationController.call(
+            "can_write_token",
+            resource,
+            self.request.user,
+        ):
+            raise PermissionDenied("You do not have permission to create token queue")
+        filter_data = {
+            "facility": facility,
+            "resource": resource,
+            "date": request_data.date,
+            "is_primary": True,
+        }
+        queue = TokenQueue.objects.filter(**filter_data).first()
+        if not queue:
+            filter_data["name"] = "System Generated"
+            filter_data["system_generated"] = True
+            queue = TokenQueue.objects.create(**filter_data)
+        with Lock(f"booking:token:{queue.id}"), transaction.atomic():
+            category = get_object_or_404(
+                TokenCategory.objects.only("id"),
+                facility=facility,
+                external_id=request_data.category,
+            )
+            patient = None
+            if request_data.patient:
+                patient = get_object_or_404(
+                    Patient.objects.only("id"), external_id=request_data.patient
+                )
+            number = Token.objects.filter(queue=queue, category=category).count() + 1
+            token = Token.objects.create(
+                facility=facility,
+                queue=queue,
+                patient=patient,
+                category=category,
+                number=number,
+                status=TokenStatusOptions.CREATED.value,
+                is_next=False,
+                note=request_data.note,
+            )
+        return Response(TokenReadSpec.serialize(token).to_json())

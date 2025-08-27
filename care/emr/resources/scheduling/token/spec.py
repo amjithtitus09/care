@@ -1,3 +1,4 @@
+from datetime import date
 from enum import Enum
 
 from django.shortcuts import get_object_or_404
@@ -7,6 +8,7 @@ from care.emr.models.patient import Patient
 from care.emr.models.scheduling.token import Token, TokenCategory, TokenSubQueue
 from care.emr.resources.base import EMRResource
 from care.emr.resources.patient.spec import PatientListSpec
+from care.emr.resources.scheduling.schedule.spec import SchedulableResourceTypeOptions
 from care.emr.resources.scheduling.token_category.spec import TokenCategoryReadSpec
 from care.emr.resources.scheduling.token_queue.spec import TokenQueueReadSpec
 from care.emr.resources.scheduling.token_sub_queue.spec import TokenSubQueueReadSpec
@@ -40,6 +42,12 @@ class TokenGenerateSpec(TokenBaseSpec):
         obj.category = get_object_or_404(TokenCategory, external_id=self.category)
         if self.sub_queue:
             obj.sub_queue = get_object_or_404(TokenSubQueue, external_id=self.sub_queue)
+
+
+class TokenGenerateWithQueueSpec(TokenGenerateSpec):
+    resource_type: SchedulableResourceTypeOptions
+    resource_id: UUID4
+    date: date
 
 
 class TokenUpdateSpec(TokenBaseSpec):
