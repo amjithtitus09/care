@@ -27,6 +27,8 @@ class ChargeItemStatusOptions(str, Enum):
 
 class ChargeItemResourceOptions(str, Enum):
     service_request = "service_request"
+    medication_dispense = "medication_dispense"
+    appointment = "appointment"
 
 
 class ChargeItemOverrideReason(BaseModel):

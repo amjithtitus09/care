@@ -11,6 +11,7 @@ from care.emr.api.viewsets.scheduling.schedule import (
 )
 from care.emr.models.scheduling.token import TokenSubQueue
 from care.emr.resources.scheduling.token_sub_queue.spec import (
+    TokenSubQueueBaseSpec,
     TokenSubQueueCreateSpec,
     TokenSubQueueReadSpec,
 )
@@ -25,6 +26,7 @@ class TokenSubQueueFilters(FilterSet):
 class TokenSubQueueViewSet(EMRModelViewSet):
     database_model = TokenSubQueue
     pydantic_model = TokenSubQueueCreateSpec
+    pydantic_update_model = TokenSubQueueBaseSpec
     pydantic_read_model = TokenSubQueueReadSpec
     filterset_class = TokenSubQueueFilters
     filter_backends = [DjangoFilterBackend]

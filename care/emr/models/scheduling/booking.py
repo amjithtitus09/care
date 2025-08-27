@@ -45,3 +45,6 @@ class TokenBooking(EMRBaseModel):
         default=None,
         related_name="token_booking",
     )
+    charge_item = models.ForeignKey(
+        "emr.ChargeItem", on_delete=models.CASCADE, null=True, blank=True
+    )

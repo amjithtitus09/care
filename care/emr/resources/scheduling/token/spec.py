@@ -60,6 +60,12 @@ class TokenUpdateSpec(TokenBaseSpec):
             obj.sub_queue = get_object_or_404(TokenSubQueue, external_id=self.sub_queue)
 
 
+class TokenMinimalSpec(TokenBaseSpec):
+    note: str
+    number: int
+    status: TokenStatusOptions
+
+
 class TokenReadSpec(TokenBaseSpec):
     category: dict
     sub_queue: dict

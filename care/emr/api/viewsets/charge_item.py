@@ -82,9 +82,9 @@ def validate_service_resource(facility, service_resource, service_resource_id):
                 .exclude(status__in=SERVICE_REQUEST_COMPLETED_CHOICES)
                 .exists()
             )
+        raise ValidationError("Invalid service resource")
     except Exception:
         return False
-    return False
 
 
 class ChargeItemViewSet(

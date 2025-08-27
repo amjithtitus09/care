@@ -3,6 +3,7 @@ from django.db.models import Count
 from django_filters import CharFilter, DateFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
+from pydantic import UUID4, BaseModel
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
@@ -11,7 +12,12 @@ from rest_framework.response import Response
 from care.emr.api.viewsets.base import EMRModelViewSet
 from care.emr.api.viewsets.scheduling.schedule import get_or_create_resource
 from care.emr.models.patient import Patient
-from care.emr.models.scheduling.token import Token, TokenCategory, TokenQueue
+from care.emr.models.scheduling.token import (
+    Token,
+    TokenCategory,
+    TokenQueue,
+    TokenSubQueue,
+)
 from care.emr.resources.scheduling.token.spec import (
     TokenGenerateWithQueueSpec,
     TokenReadSpec,
@@ -30,6 +36,12 @@ from care.utils.lock import Lock
 class TokenQueueFilters(FilterSet):
     name = CharFilter(field_name="name", lookup_expr="icontains")
     date = DateFilter(field_name="date")
+    status = CharFilter(field_name="status", lookup_expr="iexact")
+
+
+class SubQueueNextTokenRequest(BaseModel):
+    sub_queue: UUID4
+    category: UUID4 | None = None
 
 
 class TokenQueueViewSet(EMRModelViewSet):
@@ -185,10 +197,42 @@ class TokenQueueViewSet(EMRModelViewSet):
                 category=category,
                 number=number,
                 status=TokenStatusOptions.CREATED.value,
-                is_next=False,
                 note=request_data.note,
             )
         return Response(TokenReadSpec.serialize(token).to_json())
+
+    @action(detail=True, methods=["POST"])
+    def set_next_token_to_subqueue(self, request, *args, **kwargs):
+        obj = self.get_object()
+        self.authorize_update(None, obj)
+        request_data = SubQueueNextTokenRequest(**request.data)
+        sub_queue = get_object_or_404(
+            TokenSubQueue,
+            external_id=request_data.sub_queue,
+            resource=obj.resource,
+        )
+        category = None
+        if request_data.category:
+            category = get_object_or_404(
+                TokenCategory,
+                facility=obj.facility,
+                external_id=request_data.category,
+            )
+        with Lock(f"queue:next_token:{obj.id}"), transaction.atomic():
+            tokens_qs = Token.objects.filter(
+                queue=obj, status__in=[TokenStatusOptions.CREATED.value]
+            ).order_by("created_date")
+            if category:
+                tokens_qs = tokens_qs.filter(category=category)
+            if tokens_qs.exists():
+                next_token = tokens_qs.first()
+            else:
+                raise ValidationError("No tokens found")
+            sub_queue.current_token = next_token
+            sub_queue.save()
+            next_token.status = TokenStatusOptions.IN_PROGRESS.value
+            next_token.save()
+        return Response(TokenReadSpec.serialize(next_token).to_json())
 
     @action(detail=True, methods=["GET"])
     def summary(self, request, *args, **kwargs):

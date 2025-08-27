@@ -1,8 +1,7 @@
 from typing import Literal
 
 from django.db import transaction
-from django.db.models.expressions import Subquery
-from django_filters import CharFilter, DateFromToRangeFilter, FilterSet, UUIDFilter
+from django_filters import DateFromToRangeFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from pydantic import UUID4, BaseModel
@@ -44,7 +43,6 @@ from care.emr.tagging.base import SingleFacilityTagManager
 from care.emr.tagging.filters import SingleFacilityTagFilter
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
-from care.users.models import User
 from care.utils.filters.dummy_filter import DummyCharFilter
 from care.utils.filters.multiselect import MultiSelectFilter
 from care.utils.lock import Lock
@@ -79,36 +77,7 @@ class TokenBookingFilters(FilterSet):
     slot = UUIDFilter(field_name="token_slot__external_id")
     resource_type = DummyCharFilter()
     resource_ids = DummyCharFilter()
-    user = CharFilter(method="filter_by_users")
     patient = UUIDFilter(field_name="patient__external_id")
-
-    def filter_by_users(self, queryset, name, value):
-        user_external_ids = value.split(",") if value else []
-        if not user_external_ids:
-            return queryset
-        facility = get_object_or_404(
-            Facility.objects.only("id"),
-            external_id=self.request.parser_context.get("kwargs", {}).get(
-                "facility_external_id"
-            ),
-        )
-
-        token_slots = TokenSlot.objects.filter(
-            resource_id__in=Subquery(
-                SchedulableResource.objects.filter(
-                    user_id__in=Subquery(
-                        User.objects.filter(external_id__in=user_external_ids).values(
-                            "id"
-                        )
-                    ),
-                    facility_id=facility.id,
-                ).values("id")
-            )
-        ).values_list("id", flat=True)
-        if not token_slots:
-            return queryset.none()
-
-        return queryset.filter(token_slot__in=token_slots)
 
 
 class TokenBookingViewSet(
@@ -339,7 +308,6 @@ class TokenBookingViewSet(
                 category=category,
                 number=number,
                 status=TokenStatusOptions.CREATED.value,
-                is_next=False,
                 note=note,
                 booking=booking,
                 patient=booking.patient,

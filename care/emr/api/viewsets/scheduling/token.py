@@ -1,12 +1,14 @@
 from django.db import transaction
-from django_filters import BooleanFilter, CharFilter, FilterSet, UUIDFilter
+from django_filters import CharFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from pydantic import UUID4, BaseModel
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import get_object_or_404
 
 from care.emr.api.viewsets.base import EMRModelViewSet
-from care.emr.models.scheduling.token import Token, TokenQueue
+from care.emr.models.scheduling.token import Token, TokenQueue, TokenSubQueue
 from care.emr.resources.scheduling.token.spec import (
     TokenGenerateSpec,
     TokenReadSpec,
@@ -19,11 +21,14 @@ from care.security.authorization.base import AuthorizationController
 from care.utils.lock import Lock
 
 
+class SetCurrentTokenRequest(BaseModel):
+    sub_queue: UUID4
+
+
 class TokenFilters(FilterSet):
     category = UUIDFilter(field_name="category__external_id")
     sub_queue = UUIDFilter(field_name="sub_queue__external_id")
     status = CharFilter(field_name="status", lookup_expr="iexact")
-    is_next = BooleanFilter(field_name="is_next")
 
 
 class TokenViewSet(EMRModelViewSet):
@@ -33,7 +38,8 @@ class TokenViewSet(EMRModelViewSet):
     pydantic_read_model = TokenReadSpec
     pydantic_retrieve_model = TokenRetrieveSpec
     filterset_class = TokenFilters
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ["created_date", "number"]
     CREATE_QUESTIONNAIRE_RESPONSE = False
 
     def get_facility_obj(self):
@@ -63,8 +69,20 @@ class TokenViewSet(EMRModelViewSet):
                 + 1
             )
             instance.status = TokenStatusOptions.CREATED.value
-            instance.is_next = False
             super().perform_create(instance)
+
+    def validate_data(self, instance, model_obj=None):
+        if (
+            model_obj
+            and instance.sub_queue
+            and model_obj.sub_queue
+            and instance.sub_queue != model_obj.sub_queue.external_id
+        ):
+            existing_current = TokenSubQueue.objects.filter(current=model_obj).exists()
+            if existing_current:
+                raise ValidationError("Sub Queue already has a current token")
+
+        return super().validate_data(instance, model_obj)
 
     def perform_update(self, instance):
         if instance.sub_queue and instance.sub_queue.facility != instance.facility:
@@ -125,14 +143,17 @@ class TokenViewSet(EMRModelViewSet):
     @action(detail=True, methods=["POST"])
     def set_next(self, request, *args, **kwargs):
         obj = self.get_object()
+        request_obj = SetCurrentTokenRequest(**request.data)
         queue = obj.queue
         self.authorize_update(None, None)
-        queryset = Token.objects.filter(queue=queue)
-        if obj.sub_queue:
-            queryset = queryset.filter(sub_queue=obj.sub_queue)
-        else:
-            queryset = queryset.filter(sub_queue__isnull=True)
-        queryset = queryset.update(is_next=False)
-        obj.is_next = True
-        obj.save()
+        with transaction.atomic():
+            sub_queue = get_object_or_404(
+                TokenSubQueue,
+                external_id=request_obj.sub_queue,
+                resource=queue.resource,
+            )
+            sub_queue.current_token = obj
+            sub_queue.save()
+            obj.status = TokenStatusOptions.IN_PROGRESS.value
+            obj.save()
         return self.get_retrieve_pydantic_model().serialize(obj).to_json()

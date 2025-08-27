@@ -17,6 +17,10 @@ from care.emr.models import AvailabilityException, Schedule, TokenBooking
 from care.emr.models.patient import Patient
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import Availability
+from care.emr.resources.charge_item.apply_charge_item_definition import (
+    apply_charge_item_definition_patient,
+)
+from care.emr.resources.charge_item.spec import ChargeItemResourceOptions
 from care.emr.resources.scheduling.schedule.spec import (
     SchedulableResourceTypeOptions,
     SlotTypeOptions,
@@ -129,7 +133,7 @@ def lock_create_appointment(token_slot, patient, created_by, note):
             raise ValidationError("Patient already has a booking for this slot")
         token_slot.allocated += 1
         token_slot.save()
-        return TokenBooking.objects.create(
+        booking = TokenBooking.objects.create(
             token_slot=token_slot,
             patient=patient,
             booked_by=created_by,
@@ -138,6 +142,20 @@ def lock_create_appointment(token_slot, patient, created_by, note):
             note=note,
             status="booked",
         )
+        # Generate Charge Item
+        if token_slot.availability.schedule.charge_item_definition:
+            charge_item = apply_charge_item_definition_patient(
+                token_slot.availability.schedule.charge_item_definition,
+                patient,
+                token_slot.resource.facility,
+                quantity=1,
+            )
+            charge_item.service_resource = ChargeItemResourceOptions.appointment.value
+            charge_item.service_resource_id = str(booking.external_id)
+            charge_item.save()
+            booking.charge_item = charge_item
+            booking.save(update_fields=["charge_item"])
+        return booking
 
 
 class SlotViewSet(EMRRetrieveMixin, EMRBaseViewSet):

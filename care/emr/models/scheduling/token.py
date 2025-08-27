@@ -27,6 +27,10 @@ class TokenSubQueue(EMRBaseModel):
     facility = models.ForeignKey("facility.Facility", on_delete=models.CASCADE)
     resource = models.ForeignKey("emr.SchedulableResource", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
+    status = models.CharField(max_length=255)
+    current_token = models.ForeignKey(
+        "emr.Token", on_delete=models.CASCADE, null=True, blank=True
+    )
 
 
 class TokenCategory(EMRBaseModel):

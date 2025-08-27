@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError
 from care.emr.models import TokenBooking
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.resources.base import EMRResource, model_from_cache
+from care.emr.resources.charge_item.spec import ChargeItemReadSpec
 from care.emr.resources.facility.spec import FacilityBareMinimumSpec
 from care.emr.resources.patient.otp_based_flow import PatientOTPReadSpec
 from care.emr.resources.scheduling.token.spec import TokenReadSpec
@@ -112,6 +113,7 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
     modified_date: datetime.datetime
     token: TokenReadSpec | None = None
     tags: list[dict] = []
+    charge_item: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -131,6 +133,10 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
             mapping["booked_by"] = model_from_cache(UserSpec, id=obj.booked_by_id)
         if obj.token:
             mapping["token"] = TokenReadSpec.serialize(obj.token).to_json()
+        if obj.charge_item:
+            mapping["charge_item"] = ChargeItemReadSpec.serialize(
+                obj.charge_item
+            ).to_json()
         cls.serialize_audit_users(mapping, obj)
 
 
