@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Count
 from django_filters import CharFilter, DateFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
@@ -188,3 +189,29 @@ class TokenQueueViewSet(EMRModelViewSet):
                 note=request_data.note,
             )
         return Response(TokenReadSpec.serialize(token).to_json())
+
+    @action(detail=True, methods=["GET"])
+    def summary(self, request, *args, **kwargs):
+        obj = self.get_object()
+        self.authorize_retrieve(obj)
+
+        tokens_summary = (
+            Token.objects.filter(queue=obj)
+            .values("category__name", "status")
+            .annotate(count=Count("id"))
+            .order_by("category__name", "status")
+        )
+
+        summary = {}
+
+        for item in tokens_summary:
+            category_name = item["category__name"]
+            status = item["status"]
+            count = item["count"]
+
+            if category_name not in summary:
+                summary[category_name] = {}
+
+            summary[category_name][status] = count
+
+        return Response(summary)
