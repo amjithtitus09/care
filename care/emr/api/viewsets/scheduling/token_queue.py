@@ -55,17 +55,12 @@ class TokenQueueViewSet(EMRModelViewSet):
                 facility,
             )
             instance.resource = resource
-            if instance._set_is_primary:  # noqa SLF001
-                TokenQueue.objects.filter(resource=resource, date=instance.date).update(
-                    is_primary=False
-                )
-                instance.is_primary = True
-            else:
-                instance.is_primary = False
             if not TokenQueue.objects.filter(
                 resource=resource, date=instance.date
             ).exists():
                 instance.is_primary = True
+            else:
+                instance.is_primary = False
             super().perform_create(instance)
 
     def authorize_create(self, instance):
@@ -135,12 +130,13 @@ class TokenQueueViewSet(EMRModelViewSet):
     def set_primary(self, request, *args, **kwargs):
         obj = self.get_object()
         self.authorize_update(None, obj)
-        TokenQueue.objects.filter(resource=obj.resource, date=obj.date).update(
-            is_primary=False
-        )
-        obj.is_primary = True
-        obj.save()
-        return self.get_retrieve_pydantic_model().serialize(obj).to_json()
+        with Lock(f"queue:primary:{obj.id}"), transaction.atomic():
+            TokenQueue.objects.filter(resource=obj.resource, date=obj.date).update(
+                is_primary=False
+            )
+            obj.is_primary = True
+            obj.save()
+        return Response(self.get_retrieve_pydantic_model().serialize(obj).to_json())
 
     @extend_schema(
         request=TokenGenerateWithQueueSpec,

@@ -16,7 +16,6 @@ class TokenQueueBaseSpec(EMRResource):
 
 
 class TokenQueueCreateSpec(TokenQueueBaseSpec):
-    set_is_primary: bool
     resource_type: SchedulableResourceTypeOptions
     resource_id: UUID4
     date: datetime.date
@@ -24,7 +23,6 @@ class TokenQueueCreateSpec(TokenQueueBaseSpec):
     def perform_extra_deserialization(self, is_update, obj):
         obj._resource_type = self.resource_type  # noqa SLF001
         obj._resource_id = self.resource_id  # noqa SLF001
-        obj._set_is_primary = self.set_is_primary  # noqa SLF001
 
 
 class TokenQueueUpdateSpec(TokenQueueBaseSpec):
