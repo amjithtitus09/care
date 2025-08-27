@@ -231,6 +231,7 @@ class TokenQueueViewSet(EMRModelViewSet):
             sub_queue.current_token = next_token
             sub_queue.save()
             next_token.status = TokenStatusOptions.IN_PROGRESS.value
+            next_token.sub_queue = sub_queue
             next_token.save()
         return Response(TokenReadSpec.serialize(next_token).to_json())
 
