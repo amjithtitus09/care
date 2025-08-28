@@ -73,7 +73,9 @@ class MedicationDispenseViewSet(
             if instance.item.product.charge_item_definition:
                 charge_item = apply_charge_item_definition(
                     instance.item.product.charge_item_definition,
-                    instance.encounter,
+                    instance.patient,
+                    instance.encounter.facility,
+                    encounter=instance.encounter,
                     quantity=instance.quantity,
                 )
                 charge_item.service_resource = (

@@ -18,7 +18,7 @@ from care.emr.models.patient import Patient
 from care.emr.models.scheduling.booking import TokenSlot
 from care.emr.models.scheduling.schedule import Availability
 from care.emr.resources.charge_item.apply_charge_item_definition import (
-    apply_charge_item_definition_patient,
+    apply_charge_item_definition,
 )
 from care.emr.resources.charge_item.spec import ChargeItemResourceOptions
 from care.emr.resources.scheduling.schedule.spec import (
@@ -144,7 +144,7 @@ def lock_create_appointment(token_slot, patient, created_by, note):
         )
         # Generate Charge Item
         if token_slot.availability.schedule.charge_item_definition:
-            charge_item = apply_charge_item_definition_patient(
+            charge_item = apply_charge_item_definition(
                 token_slot.availability.schedule.charge_item_definition,
                 patient,
                 token_slot.resource.facility,
