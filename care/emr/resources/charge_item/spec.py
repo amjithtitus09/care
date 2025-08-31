@@ -31,6 +31,7 @@ class ChargeItemResourceOptions(str, Enum):
     service_request = "service_request"
     medication_dispense = "medication_dispense"
     appointment = "appointment"
+    bed_association = "bed_association"
 
 
 class ChargeItemOverrideReason(BaseModel):

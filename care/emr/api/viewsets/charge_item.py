@@ -21,6 +21,7 @@ from care.emr.models.account import Account
 from care.emr.models.charge_item import ChargeItem
 from care.emr.models.charge_item_definition import ChargeItemDefinition
 from care.emr.models.encounter import Encounter
+from care.emr.models.location import FacilityLocationEncounter
 from care.emr.models.patient import Patient
 from care.emr.models.service_request import ServiceRequest
 from care.emr.registries.system_questionnaire.system_questionnaire import (
@@ -37,6 +38,7 @@ from care.emr.resources.charge_item.spec import (
     ChargeItemWriteSpec,
 )
 from care.emr.resources.charge_item.sync_charge_item_costs import sync_charge_item_costs
+from care.emr.resources.encounter.constants import COMPLETED_CHOICES
 from care.emr.resources.questionnaire.spec import SubjectType
 from care.emr.resources.service_request.spec import SERVICE_REQUEST_COMPLETED_CHOICES
 from care.emr.resources.tag.config_spec import TagResource
@@ -92,6 +94,18 @@ def validate_service_resource(
             if encounter:
                 qs = qs.filter(encounter=encounter)
             return qs.exclude(status__in=SERVICE_REQUEST_COMPLETED_CHOICES).exists()
+        if service_resource == ChargeItemResourceOptions.bed_association.value:
+            if not encounter:
+                raise ValidationError("Encounter is required")
+            if encounter.facility != facility:
+                raise ValidationError("Encounter is not associated with the facility")
+            if encounter.status in COMPLETED_CHOICES:
+                raise ValidationError("Encounter is already completed")
+            qs = FacilityLocationEncounter.objects.filter(
+                encounter=encounter,
+                external_id=service_resource_id,
+            )
+            return qs.exists()
         raise ValidationError("Invalid service resource")
     except Exception:
         return False
