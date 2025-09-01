@@ -128,8 +128,9 @@ class MedicationDispenseViewSet(
 
     def perform_update(self, instance):
         with transaction.atomic():
+            instance = super().perform_update(instance)
             sync_inventory_item(instance.item.location, instance.item.product)
-            return super().perform_update(instance)
+            return instance
 
     def authorize_location_read(self, location):
         if not AuthorizationController.call(
