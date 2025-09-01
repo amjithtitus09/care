@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django.db import transaction
 from django.http.response import Http404
 from drf_spectacular.utils import extend_schema
@@ -244,6 +245,10 @@ class EMRUpsertMixin:
         if type(request.data) is not dict:
             raise ValidationError("Invalid request data")
         datapoints = request.data.get("datapoints", [])
+        if len(datapoints) == 0:
+            raise ValidationError("No datapoints provided")
+        if len(datapoints) > settings.MAX_DATAPOINTS_PER_UPSERT:
+            raise ValidationError("Too many datapoints provided")
         results = []
         errored = False
         unhandled = False

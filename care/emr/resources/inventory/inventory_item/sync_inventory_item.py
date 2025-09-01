@@ -20,8 +20,8 @@ from care.emr.resources.medication.dispense.spec import (
 def sync_inventory_item(location, product):
     """
     Sync the inventory item to track the current availability
-    Current availability =
-    + Delivery Requests completed at location with inventory item
+    Current availability
+    = Delivery Requests completed at location with inventory item
     - Delivery Requests in progress from this location
     - Dispense Requests created from this location
     """
@@ -51,7 +51,10 @@ def sync_inventory_item(location, product):
         )
         delivery_requests_in_progress = SupplyDelivery.objects.filter(
             supplied_inventory_item=inventory_item,
-            status=SupplyDeliveryStatusOptions.in_progress.value,
+            status_in=[
+                SupplyDeliveryStatusOptions.in_progress.value,
+                SupplyDeliveryStatusOptions.completed.value,
+            ],
         )
         delivery_requests_in_progress_quantity = (
             delivery_requests_in_progress.aggregate(
