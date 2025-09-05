@@ -243,12 +243,12 @@ class EMRUpsertMixin:
     @action(detail=False, methods=["POST"])
     def upsert(self, request, *args, **kwargs):
         if type(request.data) is not dict:
-            raise ValidationError("Invalid request data")
+            raise RestFrameworkValidationError("Invalid request data")
         datapoints = request.data.get("datapoints", [])
         if len(datapoints) == 0:
-            raise ValidationError("No datapoints provided")
+            raise RestFrameworkValidationError("No datapoints provided")
         if len(datapoints) > settings.MAX_DATAPOINTS_PER_UPSERT:
-            raise ValidationError("Too many datapoints provided")
+            raise RestFrameworkValidationError("Too many datapoints provided")
         results = []
         errored = False
         unhandled = False

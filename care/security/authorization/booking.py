@@ -57,9 +57,19 @@ class BookingAccess(AuthorizationHandler):
         """
         Anyone in the managing organization of the healthcare service can write the schedule
         """
-        orgs = [obj.managing_organization.parent_cache, obj.managing_organization.id]
+        if obj.managing_organization:
+            orgs = [
+                obj.managing_organization.parent_cache,
+                obj.managing_organization.id,
+            ]
+            return self.check_permission_in_facility_organization(
+                [SchedulePermissions.can_list_booking.name], user, orgs=orgs
+            )
         return self.check_permission_in_facility_organization(
-            [SchedulePermissions.can_list_booking.name], user, orgs=orgs
+            [SchedulePermissions.can_list_booking.name],
+            user,
+            facility=obj.facility,
+            root=True,
         )
 
     def can_list_location_booking(self, obj, user, facility):
@@ -107,9 +117,19 @@ class BookingAccess(AuthorizationHandler):
         """
         Anyone in the managing organization of the healthcare service can write the schedule
         """
-        orgs = [obj.managing_organization.parent_cache, obj.managing_organization.id]
+        if obj.managing_organization:
+            orgs = [
+                obj.managing_organization.parent_cache,
+                obj.managing_organization.id,
+            ]
+            return self.check_permission_in_facility_organization(
+                [SchedulePermissions.can_write_booking.name], user, orgs=orgs
+            )
         return self.check_permission_in_facility_organization(
-            [SchedulePermissions.can_write_booking.name], user, orgs=orgs
+            [SchedulePermissions.can_write_booking.name],
+            user,
+            facility=obj.facility,
+            root=True,
         )
 
     def can_write_location_booking(self, obj, user, facility):

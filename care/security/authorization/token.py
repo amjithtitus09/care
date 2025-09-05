@@ -107,9 +107,19 @@ class TokenAccess(AuthorizationHandler):
         """
         Anyone in the managing organization of the healthcare service can write the schedule
         """
-        orgs = [obj.managing_organization.parent_cache, obj.managing_organization.id]
+        if obj.managing_organization:
+            orgs = [
+                obj.managing_organization.parent_cache,
+                obj.managing_organization.id,
+            ]
+            return self.check_permission_in_facility_organization(
+                [TokenPermissions.can_write_token.name], user, orgs=orgs
+            )
         return self.check_permission_in_facility_organization(
-            [TokenPermissions.can_write_token.name], user, orgs=orgs
+            [TokenPermissions.can_write_token.name],
+            user,
+            facility=obj.facility,
+            root=True,
         )
 
     def can_write_location_token(self, obj, user):
@@ -136,9 +146,19 @@ class TokenAccess(AuthorizationHandler):
         """
         Anyone in the managing organization of the healthcare service can write the schedule
         """
-        orgs = [obj.managing_organization.parent_cache, obj.managing_organization.id]
+        if obj.managing_organization:
+            orgs = [
+                obj.managing_organization.parent_cache,
+                obj.managing_organization.id,
+            ]
+            return self.check_permission_in_facility_organization(
+                [TokenPermissions.can_list_token.name], user, orgs=orgs
+            )
         return self.check_permission_in_facility_organization(
-            [TokenPermissions.can_list_token.name], user, orgs=orgs
+            [TokenPermissions.can_list_token.name],
+            user,
+            facility=obj.facility,
+            root=True,
         )
 
     def can_read_location_token(self, obj, user):
