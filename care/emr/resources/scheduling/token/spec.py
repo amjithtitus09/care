@@ -16,9 +16,10 @@ from care.emr.resources.user.spec import UserSpec
 
 
 class TokenStatusOptions(str, Enum):
+    UNFULFILLED = "UNFULFILLED"
     CREATED = "CREATED"
     IN_PROGRESS = "IN_PROGRESS"
-    COMPLETED = "COMPLETED"
+    FULFILLED = "FULFILLED"
     CANCELLED = "CANCELLED"
     ENTERED_IN_ERROR = "ENTERED_IN_ERROR"
 
