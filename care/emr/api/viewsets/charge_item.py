@@ -39,6 +39,8 @@ from care.emr.resources.charge_item.spec import (
 )
 from care.emr.resources.charge_item.sync_charge_item_costs import sync_charge_item_costs
 from care.emr.resources.encounter.constants import COMPLETED_CHOICES
+from care.emr.resources.invoice.spec import InvoiceStatusOptions
+from care.emr.resources.invoice.sync_items import sync_invoice_items
 from care.emr.resources.questionnaire.spec import SubjectType
 from care.emr.resources.service_request.spec import SERVICE_REQUEST_COMPLETED_CHOICES
 from care.emr.resources.tag.config_spec import TagResource
@@ -160,9 +162,31 @@ class ChargeItemViewSet(
         sync_charge_item_costs(instance)
         super().perform_create(instance)
 
+    def validate_data(self, instance, model_obj=None):
+        if (
+            model_obj
+            and model_obj.paid_invoice
+            and model_obj.paid_invoice.status
+            in [
+                InvoiceStatusOptions.balanced.value,
+                InvoiceStatusOptions.issued.value,
+            ]
+        ):
+            raise ValidationError(
+                "Invoice is already balanced or issued, Cancel Invoice before creating charge item"
+            )
+        return super().validate_data(instance, model_obj)
+
     def perform_update(self, instance):
-        sync_charge_item_costs(instance)
-        super().perform_update(instance)
+        with transaction.atomic():
+            # TODO Lock Charge item and Invoice
+            sync_charge_item_costs(instance)
+            super().perform_update(instance)
+            if (
+                instance.paid_invoice
+                and instance.paid_invoice.status == InvoiceStatusOptions.draft.value
+            ):
+                sync_invoice_items(instance.paid_invoice)
 
     def authorize_create(self, instance):
         facility = self.get_facility_obj()
