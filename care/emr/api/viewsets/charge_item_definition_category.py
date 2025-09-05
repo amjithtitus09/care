@@ -50,21 +50,29 @@ class ChargeItemDefinitionCategoryViewSet(
         )
 
     def validate_data(self, instance, model_obj=None):
-        facility = self.get_facility_obj()
-        if ChargeItemDefinitionCategory.objects.filter(
-            slug=instance.slug, facility=facility
-        ).exists():
+        if not model_obj:
+            facility = self.get_facility_obj()
+        else:
+            facility = model_obj.facility
+        queryset = ChargeItemDefinitionCategory.objects.filter(
+            slug__iexact=instance.slug, facility=facility
+        )
+        if model_obj:
+            queryset = queryset.exclude(id=model_obj.id)
+        if queryset.exists():
             raise ValidationError("Category with this slug already exists")
-        parent = instance.parent
-        if parent:
-            parent = get_object_or_404(ChargeItemDefinitionCategory, slug=parent)
-            if parent.facility != facility:
-                raise ValidationError("Parent category does not belong to facility")
-            if parent.resource_type != instance.resource_type:
-                raise ValidationError(
-                    "Parent category does not belong to same resource type"
-                )
-        return super().validate_data(instance, model_obj)
+        if not model_obj and instance.parent:
+            parent = instance.parent
+            if parent:
+                parent = get_object_or_404(ChargeItemDefinitionCategory, slug=parent)
+                if parent.facility != facility:
+                    raise ValidationError("Parent category does not belong to facility")
+                if parent.resource_type != instance.resource_type:
+                    raise ValidationError(
+                        "Parent category does not belong to same resource type"
+                    )
+                if parent.is_child:
+                    raise ValidationError("Parent category is a child")
 
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()

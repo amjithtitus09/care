@@ -29,6 +29,7 @@ class ChargeItemDefinitionCategoryWriteSpec(ChargeItemDefinitionCategoryBaseSpec
     """ChargeItemDefinition Category write specification"""
 
     parent: str | None = None
+    is_child: bool = False
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.parent:
