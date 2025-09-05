@@ -12,6 +12,9 @@ from care.emr.api.viewsets.allergy_intolerance import AllergyIntoleranceViewSet
 from care.emr.api.viewsets.batch_request import BatchRequestView
 from care.emr.api.viewsets.charge_item import ChargeItemViewSet
 from care.emr.api.viewsets.charge_item_definition import ChargeItemDefinitionViewSet
+from care.emr.api.viewsets.charge_item_definition_category import (
+    ChargeItemDefinitionCategoryViewSet,
+)
 from care.emr.api.viewsets.condition import DiagnosisViewSet, SymptomViewSet
 from care.emr.api.viewsets.consent import ConsentViewSet
 from care.emr.api.viewsets.device import (
@@ -305,6 +308,13 @@ facility_nested_router.register(
     ChargeItemDefinitionViewSet,
     basename="charge_item_definition",
 )
+
+facility_nested_router.register(
+    r"charge_item_definition_category",
+    ChargeItemDefinitionCategoryViewSet,
+    basename="charge_item_definition_category",
+)
+
 
 facility_nested_router.register(
     r"charge_item",
