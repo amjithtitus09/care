@@ -22,7 +22,7 @@ from care.security.authorization.base import AuthorizationController
 
 
 class ChargeItemDefinitionFilters(filters.FilterSet):
-    parent = filters.UUIDFilter(field_name="parent__external_id")
+    parent = filters.UUIDFilter(field_name="parent__slug")
     title = filters.CharFilter(field_name="title", lookup_expr="icontains")
     resource_type = filters.CharFilter(field_name="resource_type", lookup_expr="iexact")
 
