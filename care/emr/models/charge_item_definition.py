@@ -59,6 +59,7 @@ class ChargeItemDefinitionCategory(EMRBaseModel):
                 return self.cached_parent_json
             self.parent.get_parent_json()
             self.cached_parent_json = {
+                "id": str(self.parent.external_id),
                 "slug": self.parent.slug,
                 "name": self.parent.title,
                 "description": self.parent.description,

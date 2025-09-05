@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import Field
+from pydantic import UUID4, Field
 
 from care.emr.models.charge_item_definition import ChargeItemDefinitionCategory
 from care.emr.resources.base import EMRResource
@@ -18,6 +18,7 @@ class ChargeItemDefinitionCategoryBaseSpec(EMRResource):
     __model__ = ChargeItemDefinitionCategory
     __exclude__ = ["parent"]
 
+    id: UUID4 | None = None
     title: str
     slug: str = Field(max_length=20)
     description: str | None = None
@@ -41,4 +42,5 @@ class ChargeItemDefinitionCategoryReadSpec(ChargeItemDefinitionCategoryBaseSpec)
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
         mapping["parent"] = obj.get_parent_json()
