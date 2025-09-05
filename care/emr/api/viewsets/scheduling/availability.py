@@ -26,6 +26,7 @@ from care.emr.resources.scheduling.schedule.spec import (
     SlotTypeOptions,
 )
 from care.emr.resources.scheduling.slot.spec import (
+    CANCELLED_STATUS_CHOICES,
     COMPLETED_STATUS_CHOICES,
     TokenBookingReadSpec,
     TokenSlotBaseSpec,
@@ -143,9 +144,34 @@ def lock_create_appointment(token_slot, patient, created_by, note):
             status="booked",
         )
         # Generate Charge Item
-        if token_slot.availability.schedule.charge_item_definition:
+        schedule = booking.token_slot.availability.schedule
+        last_booking = (
+            TokenBooking.objects.exclude(status__in=CANCELLED_STATUS_CHOICES)
+            .filter(
+                patient=patient,
+                token_slot__availability__schedule=schedule,
+                charge_item__isnull=False,
+                token_slot__start_datetime__lte=token_slot.start_datetime,
+            )
+            .order_by("-token_slot__start_datetime")
+        ).first()
+        if last_booking:
+            booking_start_time = last_booking.token_slot.start_datetime
+            current_time = timezone.now()
+            diff_days = (booking_start_time - current_time).days
+        else:
+            diff_days = -1
+        if (
+            schedule.revisit_allowed_days
+            and diff_days != -1
+            and diff_days <= schedule.revisit_allowed_days
+        ):
+            charge_item_definition = schedule.revisit_charge_item_definition
+        else:
+            charge_item_definition = schedule.charge_item_definition
+        if charge_item_definition:
             charge_item = apply_charge_item_definition(
-                token_slot.availability.schedule.charge_item_definition,
+                charge_item_definition,
                 patient,
                 token_slot.resource.facility,
                 quantity=1,

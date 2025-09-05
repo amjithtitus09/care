@@ -40,6 +40,8 @@ from care.utils.lock import Lock
 
 class ChargeItemDefinitionSetSpec(BaseModel):
     charge_item_definition: UUID4
+    re_visit_allowed_days: int
+    re_visit_charge_item_definition: UUID4 | None = None
 
 
 class ScheduleFilters(FilterSet):
@@ -243,6 +245,14 @@ class ScheduleViewSet(EMRModelViewSet):
             facility=schedule.resource.facility,
         )
         schedule.charge_item_definition = charge_item_definition
+        schedule.revisit_allowed_days = request_data.re_visit_allowed_days
+        if request_data.re_visit_charge_item_definition:
+            revisit_charge_item_definition = get_object_or_404(
+                ChargeItemDefinition.objects.only("id"),
+                external_id=request_data.re_visit_charge_item_definition,
+                facility=schedule.resource.facility,
+            )
+            schedule.revisit_charge_item_definition = revisit_charge_item_definition
         schedule.save()
         return Response(ScheduleReadSpec.serialize(schedule).to_json())
 

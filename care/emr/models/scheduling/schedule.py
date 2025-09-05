@@ -41,7 +41,19 @@ class Schedule(EMRBaseModel):
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
     charge_item_definition = models.ForeignKey(
-        "emr.ChargeItemDefinition", on_delete=models.PROTECT, null=True, blank=True
+        "emr.ChargeItemDefinition",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="schedule_charge_item_definition",
+    )
+    revisit_allowed_days = models.IntegerField(null=True, blank=True)
+    revisit_charge_item_definition = models.ForeignKey(
+        "emr.ChargeItemDefinition",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="schedule_revisit_charge_item_definition",
     )
 
 
