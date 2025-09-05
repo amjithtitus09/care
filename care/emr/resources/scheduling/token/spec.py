@@ -8,6 +8,7 @@ from care.emr.models.patient import Patient
 from care.emr.models.scheduling.token import Token, TokenCategory, TokenSubQueue
 from care.emr.resources.base import EMRResource
 from care.emr.resources.patient.spec import PatientListSpec
+from care.emr.resources.scheduling.resource.spec import serialize_resource
 from care.emr.resources.scheduling.schedule.spec import SchedulableResourceTypeOptions
 from care.emr.resources.scheduling.token_category.spec import TokenCategoryReadSpec
 from care.emr.resources.scheduling.token_queue.spec import TokenQueueReadSpec
@@ -93,6 +94,8 @@ class TokenRetrieveSpec(TokenReadSpec):
     created_by: UserSpec
     updated_by: UserSpec | None = None
     booking: dict
+    resource_type: str
+    resource: dict
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -104,3 +107,5 @@ class TokenRetrieveSpec(TokenReadSpec):
             mapping["booking"] = TokenBookingMinimumReadSpec.serialize(
                 obj.booking
             ).to_json()
+        mapping["resource_type"] = obj.queue.resource.resource_type
+        mapping["resource"] = serialize_resource(obj.queue.resource)
