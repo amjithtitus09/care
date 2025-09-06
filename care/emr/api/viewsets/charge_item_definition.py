@@ -37,6 +37,7 @@ class ChargeItemDefinitionViewSet(
     EMRUpsertMixin,
     EMRBaseViewSet,
 ):
+    lookup_field = "slug"
     database_model = ChargeItemDefinition
     pydantic_model = ChargeItemDefinitionSpec
     pydantic_read_model = ChargeItemDefinitionReadSpec
@@ -50,10 +51,7 @@ class ChargeItemDefinitionViewSet(
         )
 
     def validate_data(self, instance, model_obj=None):
-        if not model_obj:
-            facility = self.get_facility_obj()
-        else:
-            facility = model_obj.facility
+        facility = self.get_facility_obj() if not model_obj else model_obj.facility
 
         queryset = ChargeItemDefinition.objects.filter(
             slug__iexact=instance.slug, facility=facility
