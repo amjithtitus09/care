@@ -63,7 +63,7 @@ class ChargeItemDefinitionFilters(filters.FilterSet):
 
 
 class ApplyChargeItemDefinitionRequest(BaseModel):
-    charge_item_definition: UUID4
+    charge_item_definition: str
     quantity: int
     encounter: UUID4 | None = None
     patient: UUID4 | None = None
@@ -258,7 +258,7 @@ class ChargeItemViewSet(
             for charge_item_request in request_params.requests:
                 charge_item_definition = get_object_or_404(
                     ChargeItemDefinition,
-                    external_id=charge_item_request.charge_item_definition,
+                    slug=charge_item_request.charge_item_definition,
                 )
                 if (
                     charge_item_definition.facility

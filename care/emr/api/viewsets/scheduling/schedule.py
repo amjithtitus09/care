@@ -2,7 +2,7 @@ from django.db import transaction
 from django.utils import timezone
 from django_filters import DateTimeFilter, FilterSet, UUIDFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from pydantic import UUID4, BaseModel
+from pydantic import BaseModel
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
@@ -39,9 +39,9 @@ from care.utils.lock import Lock
 
 
 class ChargeItemDefinitionSetSpec(BaseModel):
-    charge_item_definition: UUID4
+    charge_item_definition: str
     re_visit_allowed_days: int
-    re_visit_charge_item_definition: UUID4 | None = None
+    re_visit_charge_item_definition: str | None = None
 
 
 class ScheduleFilters(FilterSet):
@@ -241,7 +241,7 @@ class ScheduleViewSet(EMRModelViewSet):
             )
         charge_item_definition = get_object_or_404(
             ChargeItemDefinition.objects.only("id"),
-            external_id=request_data.charge_item_definition,
+            slug=request_data.charge_item_definition,
             facility=schedule.resource.facility,
         )
         schedule.charge_item_definition = charge_item_definition
@@ -249,7 +249,7 @@ class ScheduleViewSet(EMRModelViewSet):
         if request_data.re_visit_charge_item_definition:
             revisit_charge_item_definition = get_object_or_404(
                 ChargeItemDefinition.objects.only("id"),
-                external_id=request_data.re_visit_charge_item_definition,
+                slug=request_data.re_visit_charge_item_definition,
                 facility=schedule.resource.facility,
             )
             schedule.revisit_charge_item_definition = revisit_charge_item_definition
