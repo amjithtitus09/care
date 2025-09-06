@@ -215,6 +215,8 @@ class ScheduleReadSpec(ScheduleBaseSpec):
     availabilities: list = []
     resource_type: SchedulableResourceTypeOptions
     charge_item_definition: dict | None = None
+    revisit_allowed_days: int | None = None
+    revisit_charge_item_definition: dict | None = None
     created_by: dict = {}
     updated_by: dict = {}
 
@@ -231,6 +233,11 @@ class ScheduleReadSpec(ScheduleBaseSpec):
         mapping["charge_item_definition"] = (
             ChargeItemDefinitionReadSpec.serialize(obj.charge_item_definition)
             if obj.charge_item_definition
+            else None
+        )
+        mapping["revisit_charge_item_definition"] = (
+            ChargeItemDefinitionReadSpec.serialize(obj.revisit_charge_item_definition)
+            if obj.revisit_charge_item_definition
             else None
         )
 
