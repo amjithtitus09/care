@@ -173,7 +173,7 @@ class ChargeItemViewSet(
             ]
         ):
             raise ValidationError(
-                "Invoice is already balanced or issued, Cancel Invoice before creating charge item"
+                "Invoice is already balanced or issued, Cancel Invoice before updating charge item"
             )
         return super().validate_data(instance, model_obj)
 
@@ -187,6 +187,7 @@ class ChargeItemViewSet(
                 and instance.paid_invoice.status == InvoiceStatusOptions.draft.value
             ):
                 sync_invoice_items(instance.paid_invoice)
+                instance.paid_invoice.save()
 
     def authorize_create(self, instance):
         facility = self.get_facility_obj()
