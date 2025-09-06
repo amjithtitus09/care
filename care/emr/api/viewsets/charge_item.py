@@ -31,7 +31,11 @@ from care.emr.resources.account.default_account import get_default_account
 from care.emr.resources.charge_item.apply_charge_item_definition import (
     apply_charge_item_definition,
 )
+from care.emr.resources.charge_item.handle_charge_item_cancel import (
+    handle_charge_item_cancel,
+)
 from care.emr.resources.charge_item.spec import (
+    CHARGE_ITEM_CANCELLED_STATUS,
     ChargeItemReadSpec,
     ChargeItemResourceOptions,
     ChargeItemSpec,
@@ -175,16 +179,26 @@ class ChargeItemViewSet(
             raise ValidationError(
                 "Invoice is already balanced or issued, Cancel Invoice before updating charge item"
             )
+        if model_obj and model_obj.status in CHARGE_ITEM_CANCELLED_STATUS:
+            raise ValidationError("No updates allowed on cancelled charge item")
+
         return super().validate_data(instance, model_obj)
 
     def perform_update(self, instance):
         with transaction.atomic():
             # TODO Lock Charge item and Invoice
+            old_obj = self.get_object()
+            if (
+                old_obj.status != instance.status
+                and instance.status in CHARGE_ITEM_CANCELLED_STATUS
+            ):
+                handle_charge_item_cancel(instance)
             sync_charge_item_costs(instance)
             super().perform_update(instance)
             if (
                 instance.paid_invoice
                 and instance.paid_invoice.status == InvoiceStatusOptions.draft.value
+                and instance.status not in CHARGE_ITEM_CANCELLED_STATUS
             ):
                 sync_invoice_items(instance.paid_invoice)
                 instance.paid_invoice.save()

@@ -27,6 +27,13 @@ class ChargeItemStatusOptions(str, Enum):
     entered_in_error = "entered_in_error"
 
 
+CHARGE_ITEM_CANCELLED_STATUS = [
+    ChargeItemStatusOptions.entered_in_error.value,
+    ChargeItemStatusOptions.not_billable.value,
+    ChargeItemStatusOptions.aborted.value,
+]
+
+
 class ChargeItemResourceOptions(str, Enum):
     service_request = "service_request"
     medication_dispense = "medication_dispense"
