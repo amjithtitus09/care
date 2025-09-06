@@ -52,6 +52,7 @@ def sync_inventory_item(location, product):
             or 0
         )
         delivery_requests_in_progress_completed = SupplyDelivery.objects.filter(
+            origin__isnull=False,
             supplied_inventory_item=inventory_item,
             status__in=[
                 SupplyDeliveryStatusOptions.in_progress.value,
