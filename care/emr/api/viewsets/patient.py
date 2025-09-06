@@ -288,7 +288,9 @@ class PatientViewSet(EMRModelViewSet):
             patient = get_object_or_404(
                 Patient.objects.only("id"), external_id=self.kwargs[self.lookup_field]
             )
-            queryset = queryset.filter(facility=facility, patient=patient)
+            queryset = queryset.filter(
+                token_slot__resource__facility=facility, patient=patient
+            )
         else:
             queryset = queryset.filter(patient=self.get_object())
         paginator = self.pagination_class()

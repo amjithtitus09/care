@@ -11,10 +11,8 @@ from care.emr.api.viewsets.base import (
     EMRUpdateMixin,
     EMRUpsertMixin,
 )
-from care.emr.models.charge_item_definition import (
-    ChargeItemDefinition,
-    ChargeItemDefinitionCategory,
-)
+from care.emr.models.charge_item_definition import ChargeItemDefinition
+from care.emr.models.resource_category import ResourceCategory
 from care.emr.resources.charge_item_definition.spec import (
     ChargeItemDefinitionReadSpec,
     ChargeItemDefinitionSpec,
@@ -68,9 +66,7 @@ class ChargeItemDefinitionViewSet(
                 "Charge Item Definition with this slug already exists."
             )
         if instance.category:
-            category = get_object_or_404(
-                ChargeItemDefinitionCategory, slug=instance.category
-            )
+            category = get_object_or_404(ResourceCategory, slug=instance.category)
             if category.facility != facility:
                 raise ValidationError("Category does not belong to facility")
         return super().validate_data(instance, model_obj)
@@ -106,7 +102,7 @@ class ChargeItemDefinitionViewSet(
             raise PermissionDenied("Access Denied to Charge Item Definition")
         if self.action == "list" and self.request.GET.get("category"):
             category = get_object_or_404(
-                ChargeItemDefinitionCategory.objects.only("id"),
+                ResourceCategory.objects.only("id"),
                 slug=self.request.GET.get("category"),
                 facility=facility_obj,
             )

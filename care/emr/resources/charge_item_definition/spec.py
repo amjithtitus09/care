@@ -2,15 +2,11 @@ from enum import Enum
 
 from pydantic import UUID4, field_validator
 
-from care.emr.models.charge_item_definition import (
-    ChargeItemDefinition,
-    ChargeItemDefinitionCategory,
-)
+from care.emr.models.charge_item_definition import ChargeItemDefinition
+from care.emr.models.resource_category import ResourceCategory
 from care.emr.resources.base import EMRResource
-from care.emr.resources.charge_item_definition_category.spec import (
-    ChargeItemDefinitionCategoryReadSpec,
-)
 from care.emr.resources.common.monetary_component import MonetaryComponent
+from care.emr.resources.resource_category.spec import ResourceCategoryReadSpec
 
 
 class ChargeItemDefinitionStatusOptions(str, Enum):
@@ -51,7 +47,7 @@ class ChargeItemDefinitionSpec(EMRResource):
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.category:
-            obj.category = ChargeItemDefinitionCategory.objects.get(slug=self.category)
+            obj.category = ResourceCategory.objects.get(slug=self.category)
 
 
 class ChargeItemDefinitionReadSpec(ChargeItemDefinitionSpec):
@@ -64,6 +60,6 @@ class ChargeItemDefinitionReadSpec(ChargeItemDefinitionSpec):
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         if obj.category:
-            mapping["category"] = ChargeItemDefinitionCategoryReadSpec.serialize(
+            mapping["category"] = ResourceCategoryReadSpec.serialize(
                 obj.category
             ).to_json()

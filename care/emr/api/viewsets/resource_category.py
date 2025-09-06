@@ -11,23 +11,23 @@ from care.emr.api.viewsets.base import (
     EMRUpdateMixin,
     EMRUpsertMixin,
 )
-from care.emr.models.charge_item_definition import ChargeItemDefinitionCategory
-from care.emr.resources.charge_item_definition_category.spec import (
-    ChargeItemDefinitionCategoryBaseSpec,
-    ChargeItemDefinitionCategoryReadSpec,
-    ChargeItemDefinitionCategoryWriteSpec,
+from care.emr.models.resource_category import ResourceCategory
+from care.emr.resources.resource_category.spec import (
+    ResourceCategoryBaseSpec,
+    ResourceCategoryReadSpec,
+    ResourceCategoryWriteSpec,
 )
 from care.facility.models import Facility
 from care.security.authorization.base import AuthorizationController
 
 
-class ChargeItemDefinitionFilters(filters.FilterSet):
+class ResourceCategoryFilters(filters.FilterSet):
     parent = filters.UUIDFilter(field_name="parent__slug")
     title = filters.CharFilter(field_name="title", lookup_expr="icontains")
     resource_type = filters.CharFilter(field_name="resource_type", lookup_expr="iexact")
 
 
-class ChargeItemDefinitionCategoryViewSet(
+class ResourceCategoryViewSet(
     EMRCreateMixin,
     EMRRetrieveMixin,
     EMRUpdateMixin,
@@ -36,11 +36,11 @@ class ChargeItemDefinitionCategoryViewSet(
     EMRBaseViewSet,
 ):
     lookup_field = "slug"
-    database_model = ChargeItemDefinitionCategory
-    pydantic_model = ChargeItemDefinitionCategoryWriteSpec
-    pydantic_update_model = ChargeItemDefinitionCategoryBaseSpec
-    pydantic_read_model = ChargeItemDefinitionCategoryReadSpec
-    filterset_class = ChargeItemDefinitionFilters
+    database_model = ResourceCategory
+    pydantic_model = ResourceCategoryWriteSpec
+    pydantic_update_model = ResourceCategoryBaseSpec
+    pydantic_read_model = ResourceCategoryReadSpec
+    filterset_class = ResourceCategoryFilters
     filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
     ordering_fields = ["created_date", "modified_date"]
 
@@ -50,11 +50,8 @@ class ChargeItemDefinitionCategoryViewSet(
         )
 
     def validate_data(self, instance, model_obj=None):
-        if not model_obj:
-            facility = self.get_facility_obj()
-        else:
-            facility = model_obj.facility
-        queryset = ChargeItemDefinitionCategory.objects.filter(
+        facility = self.get_facility_obj() if not model_obj else model_obj.facility
+        queryset = ResourceCategory.objects.filter(
             slug__iexact=instance.slug, facility=facility
         )
         if model_obj:
@@ -64,7 +61,7 @@ class ChargeItemDefinitionCategoryViewSet(
         if not model_obj and instance.parent:
             parent = instance.parent
             if parent:
-                parent = get_object_or_404(ChargeItemDefinitionCategory, slug=parent)
+                parent = get_object_or_404(ResourceCategory, slug=parent)
                 if parent.facility != facility:
                     raise ValidationError("Parent category does not belong to facility")
                 if parent.resource_type != instance.resource_type:
@@ -80,7 +77,7 @@ class ChargeItemDefinitionCategoryViewSet(
 
     def authorize_create(self, instance):
         if not AuthorizationController.call(
-            "can_write_facility_charge_item_definition",
+            "can_write_facility_resource_category",
             self.request.user,
             self.get_facility_obj(),
         ):
@@ -88,7 +85,7 @@ class ChargeItemDefinitionCategoryViewSet(
 
     def authorize_update(self, request_obj, model_instance):
         if not AuthorizationController.call(
-            "can_write_facility_charge_item_definition",
+            "can_write_facility_resource_category",
             self.request.user,
             model_instance.facility,
         ):
@@ -98,7 +95,7 @@ class ChargeItemDefinitionCategoryViewSet(
         base_queryset = super().get_queryset()
         facility_obj = self.get_facility_obj()
         if not AuthorizationController.call(
-            "can_list_facility_charge_item_definition",
+            "can_list_facility_resource_category",
             self.request.user,
             facility_obj,
         ):
