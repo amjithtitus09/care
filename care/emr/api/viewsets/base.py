@@ -258,7 +258,8 @@ class EMRUpsertMixin:
                     try:
                         if "id" in datapoint:
                             instance = get_object_or_404(
-                                self.database_model, external_id=datapoint["id"]
+                                self.database_model,
+                                **{self.lookup_field: datapoint["id"]},
                             )
                             result = self.handle_update(instance, datapoint)
                         else:

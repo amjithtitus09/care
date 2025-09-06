@@ -187,7 +187,7 @@ class ChargeItemViewSet(
     def perform_update(self, instance):
         with transaction.atomic():
             # TODO Lock Charge item and Invoice
-            old_obj = self.get_object()
+            old_obj = ChargeItem.objects.get(id=instance.id)
             if (
                 old_obj.status != instance.status
                 and instance.status in CHARGE_ITEM_CANCELLED_STATUS
