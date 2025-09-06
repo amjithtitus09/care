@@ -9,6 +9,8 @@ def handle_charge_item_cancel(charge_item):
     # Check if the charge item in an invoice and its in draft
     # Remove the charge item from the invoice
     # Rebalance the invoice
+    if not charge_item.paid_invoice:
+        return
     with InvoiceLock(charge_item.paid_invoice):
         if (
             charge_item.paid_invoice

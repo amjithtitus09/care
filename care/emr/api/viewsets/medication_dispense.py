@@ -21,12 +21,19 @@ from care.emr.models.medication_dispense import MedicationDispense
 from care.emr.resources.charge_item.apply_charge_item_definition import (
     apply_charge_item_definition,
 )
-from care.emr.resources.charge_item.spec import ChargeItemResourceOptions
+from care.emr.resources.charge_item.handle_charge_item_cancel import (
+    handle_charge_item_cancel,
+)
+from care.emr.resources.charge_item.spec import (
+    ChargeItemResourceOptions,
+    ChargeItemStatusOptions,
+)
 from care.emr.resources.encounter.spec import EncounterListSpec
 from care.emr.resources.inventory.inventory_item.sync_inventory_item import (
     sync_inventory_item,
 )
 from care.emr.resources.medication.dispense.spec import (
+    MEDICATION_DISPENSE_CANCELLED_STATUSES,
     MedicationDispenseReadSpec,
     MedicationDispenseUpdateSpec,
     MedicationDispenseWriteSpec,
@@ -126,8 +133,22 @@ class MedicationDispenseViewSet(
                 "You do not have permission to read medication dispense"
             )
 
+    def validate_data(self, instance, model_obj=None):
+        if model_obj and model_obj.status in MEDICATION_DISPENSE_CANCELLED_STATUSES:
+            raise ValidationError("No updates allowed on cancelled medication dispense")
+        return super().validate_data(instance, model_obj)
+
     def perform_update(self, instance):
         with transaction.atomic():
+            current_obj = MedicationDispense.objects.get(id=instance.id)
+            if (
+                current_obj.status != instance.status
+                and instance.status in MEDICATION_DISPENSE_CANCELLED_STATUSES
+            ) and instance.charge_item:
+                # Perform Cancellation of charge items as well
+                handle_charge_item_cancel(instance.charge_item)
+                instance.charge_item.status = ChargeItemStatusOptions.aborted.value
+                instance.charge_item.save()
             super().perform_update(instance)
             sync_inventory_item(instance.item.location, instance.item.product)
             return instance

@@ -28,6 +28,10 @@ from care.emr.models.organization import (
 )
 from care.emr.models.scheduling import SchedulableResource, TokenBooking
 from care.emr.models.scheduling.token import Token, TokenCategory, TokenQueue
+from care.emr.resources.charge_item.handle_charge_item_cancel import (
+    handle_charge_item_cancel,
+)
+from care.emr.resources.charge_item.spec import ChargeItemStatusOptions
 from care.emr.resources.scheduling.schedule.spec import SchedulableResourceTypeOptions
 from care.emr.resources.scheduling.slot.spec import (
     CANCELLED_STATUS_CHOICES,
@@ -172,6 +176,10 @@ class TokenBookingViewSet(
                 instance.note = request_data.note
             instance.status = request_data.reason
             instance.updated_by = user
+            if instance.charge_item:
+                handle_charge_item_cancel(instance.charge_item)
+                instance.charge_item.status = ChargeItemStatusOptions.aborted.value
+                instance.charge_item.save()
             instance.save()
         return Response(
             TokenBookingReadSpec.serialize(instance).model_dump(exclude=["meta"])
