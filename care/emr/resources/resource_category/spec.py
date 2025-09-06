@@ -41,6 +41,9 @@ class ResourceCategoryReadSpec(ResourceCategoryBaseSpec):
     """ChargeItemDefinition Category write specification"""
 
     parent: dict
+    has_children: bool
+    level_cache: int = 0
+    is_child: bool
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
