@@ -25,6 +25,9 @@ class ResourceCategoryFilters(filters.FilterSet):
     parent = filters.UUIDFilter(field_name="parent__slug")
     title = filters.CharFilter(field_name="title", lookup_expr="icontains")
     resource_type = filters.CharFilter(field_name="resource_type", lookup_expr="iexact")
+    resource_sub_type = filters.CharFilter(
+        field_name="resource_sub_type", lookup_expr="iexact"
+    )
 
 
 class ResourceCategoryViewSet(
