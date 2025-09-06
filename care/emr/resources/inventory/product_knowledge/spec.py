@@ -119,6 +119,12 @@ class ProductKnowledgeWriteSpec(BaseProductKnowledgeSpec):
 class ProductKnowledgeReadSpec(BaseProductKnowledgeSpec):
     """Invoice read specification"""
 
+    is_instance_level: bool
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+        if obj.facility_id:
+            mapping["is_instance_level"] = False
+        else:
+            mapping["is_instance_level"] = True
