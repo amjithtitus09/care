@@ -71,6 +71,11 @@ class TokenAccess(AuthorizationHandler):
             return self.can_write_location_token(resource_obj.location, user)
         raise ValueError("Invalid resource type")
 
+    def can_list_token_on_facility(self, user, facility):
+        return self.check_permission_in_facility_organization(
+            [TokenPermissions.can_list_token.name], user, facility=facility
+        )
+
     def can_list_token(self, resource_obj, user):
         if (
             resource_obj.resource_type

@@ -19,6 +19,11 @@ class BookingAccess(AuthorizationHandler):
             orgs=[organization.id, *organization.parent_cache],
         )
 
+    def can_list_booking_on_facility(self, user, facility):
+        return self.check_permission_in_facility_organization(
+            [SchedulePermissions.can_list_booking.name], user, facility=facility
+        )
+
     def can_list_booking(self, resource_obj, user):
         if (
             resource_obj.resource_type

@@ -277,7 +277,20 @@ class PatientViewSet(EMRModelViewSet):
 
     @action(detail=True, methods=["GET"])
     def get_appointments(self, request, *args, **kwargs):
-        queryset = TokenBooking.objects.filter(patient=self.get_object())
+        facility = self.request.GET.get("facility", None)
+        queryset = TokenBooking.objects.all()
+        if facility:
+            facility = get_object_or_404(Facility, external_id=facility)
+            if not AuthorizationController.call(
+                "can_list_booking_on_facility", self.request.user, facility
+            ):
+                raise PermissionDenied("Cannot list bookings")
+            patient = get_object_or_404(
+                Patient.objects.only("id"), external_id=self.kwargs[self.lookup_field]
+            )
+            queryset = queryset.filter(facility=facility, patient=patient)
+        else:
+            queryset = queryset.filter(patient=self.get_object())
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
         if page is not None:
@@ -288,7 +301,20 @@ class PatientViewSet(EMRModelViewSet):
 
     @action(detail=True, methods=["GET"])
     def get_tokens(self, request, *args, **kwargs):
-        queryset = Token.objects.filter(patient=self.get_object())
+        facility = self.request.GET.get("facility", None)
+        queryset = Token.objects.all()
+        if facility:
+            facility = get_object_or_404(Facility, external_id=facility)
+            if not AuthorizationController.call(
+                "can_list_token_on_facility", self.request.user, facility
+            ):
+                raise PermissionDenied("Cannot list tokens")
+            patient = get_object_or_404(
+                Patient.objects.only("id"), external_id=self.kwargs[self.lookup_field]
+            )
+            queryset = queryset.filter(facility=facility, patient=patient)
+        else:
+            queryset = queryset.filter(patient=self.get_object())
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
         if page is not None:
