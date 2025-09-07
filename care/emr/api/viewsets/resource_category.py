@@ -28,6 +28,7 @@ class ResourceCategoryFilters(filters.FilterSet):
     resource_sub_type = filters.CharFilter(
         field_name="resource_sub_type", lookup_expr="iexact"
     )
+    level_cache = filters.NumberFilter(field_name="level_cache")
 
 
 class ResourceCategoryViewSet(
