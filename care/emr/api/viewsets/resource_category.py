@@ -22,7 +22,7 @@ from care.security.authorization.base import AuthorizationController
 
 
 class ResourceCategoryFilters(filters.FilterSet):
-    parent = filters.UUIDFilter(field_name="parent__slug")
+    parent = filters.CharFilter(field_name="parent__slug", lookup_expr="iexact")
     title = filters.CharFilter(field_name="title", lookup_expr="icontains")
     resource_type = filters.CharFilter(field_name="resource_type", lookup_expr="iexact")
     resource_sub_type = filters.CharFilter(
