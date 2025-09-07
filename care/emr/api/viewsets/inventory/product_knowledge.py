@@ -49,6 +49,25 @@ class ProductKnowledgeViewSet(
     filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
     ordering_fields = ["created_date", "modified_date"]
 
+    def validate_data(self, instance, model_obj=None):
+        queryset = ProductKnowledge.objects.filter(slug__iexact=instance.slug)
+        if model_obj:
+            if getattr(model_obj, "facility", None):
+                queryset = queryset.filter(facility=model_obj.facility_id).exclude(
+                    id=model_obj.id
+                )
+            else:
+                queryset = queryset.filter(facility__isnull=True).exclude(
+                    id=model_obj.id
+                )
+        elif instance.facility:
+            queryset = queryset.filter(facility__external_id=instance.facility)
+        else:
+            queryset = queryset.filter(facility__isnull=True)
+        if queryset.exists():
+            raise ValidationError("Slug already exists.")
+        return super().validate_data(instance, model_obj)
+
     def authorize_create(self, instance):
         if instance.facility:
             facility = get_object_or_404(Facility, external_id=instance.facility)
