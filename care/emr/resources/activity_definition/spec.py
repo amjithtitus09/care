@@ -60,7 +60,7 @@ class BaseActivityDefinitionSpec(EMRResource):
     status: ActivityDefinitionStatusOptions
     description: str = ""
     usage: str = ""
-    category: ActivityDefinitionCategoryOptions
+    classification: ActivityDefinitionCategoryOptions
     kind: ActivityDefinitionKindOptions
     code: ValueSetBoundCoding[ACTIVITY_DEFINITION_PROCEDURE_CODE_VALUESET.slug]
     body_site: ValueSetBoundCoding[CARE_BODY_SITE_VALUESET.slug] | None = None
