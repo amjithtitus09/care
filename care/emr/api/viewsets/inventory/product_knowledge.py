@@ -20,6 +20,7 @@ from care.emr.resources.inventory.product_knowledge.spec import (
 )
 from care.facility.models.facility import Facility
 from care.security.authorization.base import AuthorizationController
+from care.utils.filters.dummy_filter import DummyBooleanFilter, DummyCharFilter
 from care.utils.filters.null_filter import NullFilter
 
 
@@ -30,6 +31,8 @@ class ProductKnowledgeFilters(filters.FilterSet):
     product_type = filters.CharFilter(lookup_expr="iexact")
     facility_is_null = NullFilter(field_name="facility")
     alternate_identifier = filters.CharFilter(lookup_expr="iexact")
+    category = DummyCharFilter()
+    include_children = DummyBooleanFilter()
 
 
 class ProductKnowledgeViewSet(
@@ -129,6 +132,7 @@ class ProductKnowledgeViewSet(
             raise ValidationError("Multiple product knowledge with this slug found")
 
     def get_queryset(self):
+        queryset = super().get_queryset()
         if self.action == "list" and "facility" in self.request.GET:
             facility = get_object_or_404(
                 Facility, external_id=self.request.GET["facility"]
@@ -139,5 +143,18 @@ class ProductKnowledgeViewSet(
                 facility,
             ):
                 raise PermissionDenied("Cannot read product knowledge")
-            return ProductKnowledge.objects.filter(facility=facility)
-        return super().get_queryset()
+
+            queryset = queryset.filter(facility=facility)
+            if self.action == "list" and self.request.GET.get("category"):
+                category = get_object_or_404(
+                    ResourceCategory.objects.only("id"),
+                    slug=self.request.GET.get("category"),
+                    facility=facility,
+                )
+                if self.request.GET.get("include_children", "False").lower() == "true":
+                    queryset = queryset.filter(
+                        category__parent_cache__overlap=[category.id]
+                    )
+                else:
+                    queryset = queryset.filter(category=category)
+        return queryset
