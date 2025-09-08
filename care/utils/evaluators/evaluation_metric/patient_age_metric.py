@@ -8,6 +8,7 @@ from care.utils.registries.evaluation_metric import (
 class PatientAgeMetric(EvaluationMetricBase):
     context = "patient"
     name = "patient_age"
+    verbose_name = "Patient Age"
     allowed_operations = [
         AllowedOperations.in_range.value,
         AllowedOperations.equality.value,

@@ -8,6 +8,7 @@ from care.utils.registries.evaluation_metric import (
 class PatientGenderMetric(EvaluationMetricBase):
     context = "patient"
     name = "patient_gender"
+    verbose_name = "Patient Gender"
     allowed_operations = [
         AllowedOperations.equality.value,
     ]

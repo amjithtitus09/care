@@ -136,6 +136,7 @@ class ObservationDefinitionViewSet(
             response.append(
                 {
                     "name": metric.name,
+                    "verbose_name": metric.verbose_name,
                     "context": metric.context,
                     "allowed_operations": metric.allowed_operations,
                 }
