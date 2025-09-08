@@ -38,15 +38,10 @@ from care.emr.utils.compute_observation_interpretation import (
 from care.security.authorization.base import AuthorizationController
 
 
-class ApplyObservationDefinitionRequest(BaseModel):
-    observation_definition: UUID4
-    observation: ObservationUpdateSpec
-
-
 class UpsertObservationRequest(BaseModel):
     observation: ObservationUpdateSpec
     observation_id: UUID4 | None = None
-    observation_definition: UUID4 | None = None
+    observation_definition: str | None = None
 
 
 class BatchUpdateObservationRequest(BaseModel):
@@ -160,11 +155,12 @@ class DiagnosticReportViewSet(
                 "Cannot update observations for a final diagnostic report"
             )
         self.authorize_update({}, diagnostic_report)
+        metrics_cache = {}
         for request_param in request_params.observations:
             if request_param.observation_definition:
                 observation_definition = get_object_or_404(
                     ObservationDefinition,
-                    external_id=request_param.observation_definition,
+                    slug=request_param.observation_definition,
                     facility=diagnostic_report.facility,
                 )
                 observation_obj = convert_od_to_observation(
@@ -203,6 +199,9 @@ class DiagnosticReportViewSet(
 
             # Compute interpretation if observation_definition is linked
             if model_instance.observation_definition:
-                compute_observation_interpretation(model_instance)
+                returned_cache = compute_observation_interpretation(
+                    model_instance, metrics_cache
+                )
+                metrics_cache = returned_cache
             model_instance.save()
         return Response({"message": "Observations updated successfully"})
