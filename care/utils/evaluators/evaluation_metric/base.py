@@ -14,6 +14,8 @@ class EvaluationMetricBase:
         # TODO Check if value is the correct type for the operation
 
     def apply_rule(self, operation, rule):
+        if not self.context_object:
+            return False
         if operation not in self.allowed_operations or not getattr(
             self, f"evaluate_{operation}", None
         ):

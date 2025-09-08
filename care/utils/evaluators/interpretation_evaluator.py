@@ -10,8 +10,12 @@ from care.utils.registries.evaluation_metric import EvaluatorMetricsRegistry
 
 
 class InterpretationEvaluator:
-    def __init__(self, rules: list[dict]):
+    def __init__(self, rules: list[dict], metric_cache=None):
         self.rules = rules
+        if metric_cache:
+            self.metric_cache = metric_cache
+        else:
+            self.metric_cache = {}
 
     def check_valueset(self, valueset, code, interpretation):
         valueset = ValueSet.objects.get(slug=valueset)
@@ -94,34 +98,30 @@ class InterpretationEvaluator:
 
         return False, False
 
+    def evaluate_conditions(self, conditions, context):
+        if not conditions:
+            return True
+        for condition in conditions:
+            metric = condition.get("metric")
+            if metric in self.metric_cache:
+                metric_evaluator_obj = self.metric_cache[metric]
+            else:
+                metric_evaluator = EvaluatorMetricsRegistry.get_evaluator(metric)
+                metric_evaluator_obj = metric_evaluator(
+                    context.get(metric_evaluator.context)
+                )
+                self.metric_cache[metric] = metric_evaluator_obj
+            if metric_evaluator_obj.apply_rule(
+                condition.get("operation"), condition.get("value")
+            ):
+                return True
+        return False
+
     def get_matching_condition(self, context: dict, value: Any):
-        metric_cache = {}
         for rule in self.rules:
             conditions = rule.get("conditions", {})
-            condition_boolean = True
-            for condition in conditions:
-                metric = condition.get("metric")
-                if metric in metric_cache:
-                    metric_evaluator_obj = metric_cache[metric]
-                else:
-                    metric_evaluator = EvaluatorMetricsRegistry.get_evaluator(metric)
-                    metric_evaluator_obj = metric_evaluator(
-                        context.get(metric_evaluator.context)
-                    )
-                    metric_cache[metric] = metric_evaluator_obj
-                condition_boolean = (
-                    condition_boolean
-                    and metric_evaluator_obj.apply_rule(
-                        condition.get("operation"), condition.get("value")
-                    )
-                )
-                if not condition_boolean:
-                    # Short circuit if any condition is false
-                    break
-            if condition_boolean:
-                # All required conditions are met.
+            if self.evaluate_conditions(conditions, context):
                 return rule, value
-
         return None, None
 
     def evaluate(self, context: dict, value: Any) -> str:
