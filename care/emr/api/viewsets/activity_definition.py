@@ -47,6 +47,7 @@ class ActivityDefinitionViewSet(
     EMRBaseViewSet,
     EMRUpsertMixin,
 ):
+    lookup_field = "slug"
     database_model = ActivityDefinition
     pydantic_model = ActivityDefinitionWriteSpec
     pydantic_read_model = ActivityDefinitionReadSpec
