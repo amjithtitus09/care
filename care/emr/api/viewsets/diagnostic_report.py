@@ -32,6 +32,9 @@ from care.emr.resources.observation_definition.observation import (
     convert_od_to_observation,
 )
 from care.emr.resources.questionnaire.spec import SubjectType
+from care.emr.utils.compute_observation_interpretation import (
+    compute_observation_interpretation,
+)
 from care.security.authorization.base import AuthorizationController
 
 
@@ -197,5 +200,9 @@ class DiagnosticReportViewSet(
             model_instance.subject_id = diagnostic_report.encounter.external_id
             model_instance.diagnostic_report = diagnostic_report
             model_instance.subject_type = SubjectType.encounter.value
+
+            # Compute interpretation if observation_definition is linked
+            if model_instance.observation_definition:
+                compute_observation_interpretation(model_instance)
             model_instance.save()
         return Response({"message": "Observations updated successfully"})
