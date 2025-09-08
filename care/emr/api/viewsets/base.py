@@ -119,10 +119,12 @@ class EMRCreateMixin:
 
     def handle_create(self, request_data):
         clean_data = self.clean_create_data(request_data)
+        context = {"is_create": True, **self.get_serializer_create_context()}
         instance = self.pydantic_model.model_validate(
             clean_data,
-            context={"is_create": True, **self.get_serializer_create_context()},
+            context=context,
         )
+        instance._context = context  # noqa: SLF001
         self.validate_data(instance, None)
         self.authorize_create(instance)
         model_instance = instance.de_serialize()
@@ -204,14 +206,16 @@ class EMRUpdateMixin:
     def handle_update(self, instance, request_data):
         clean_data = self.clean_update_data(request_data)  # From Create
         pydantic_model = self.get_update_pydantic_model()
+        context = {
+            "is_update": True,
+            "object": instance,
+            **self.get_serializer_update_context(),
+        }
         serializer_obj = pydantic_model.model_validate(
             clean_data,
-            context={
-                "is_update": True,
-                "object": instance,
-                **self.get_serializer_update_context(),
-            },
+            context=context,
         )
+        serializer_obj._context = context  # noqa: SLF001
         self.validate_data(serializer_obj, instance)
         self.authorize_update(serializer_obj, instance)
         partial = getattr(self, "partial", False)

@@ -41,11 +41,13 @@ class ProductWriteSpec(BaseProductSpec):
 
     def perform_extra_deserialization(self, is_update, obj):
         obj.product_knowledge = ProductKnowledge.objects.get(
-            slug=self.product_knowledge
+            slug=self.product_knowledge,
+            facility=self.get_context().get("facility"),
         )
         if self.charge_item_definition:
             obj.charge_item_definition = ChargeItemDefinition.objects.get(
-                slug=self.charge_item_definition
+                slug=self.charge_item_definition,
+                facility=self.get_context().get("facility"),
             )
 
 
@@ -57,7 +59,8 @@ class ProductUpdateSpec(BaseProductSpec):
     def perform_extra_deserialization(self, is_update, obj):
         if self.charge_item_definition:
             obj.charge_item_definition = ChargeItemDefinition.objects.get(
-                slug=self.charge_item_definition
+                slug=self.charge_item_definition,
+                facility=self.get_context().get("facility"),
             )
 
 

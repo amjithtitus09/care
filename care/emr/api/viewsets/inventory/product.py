@@ -78,3 +78,6 @@ class ProductViewSet(
         ):
             raise PermissionDenied("Cannot list products")
         return queryset
+
+    def get_serializer_create_context(self):
+        return {"facility": self.get_facility_obj()}
