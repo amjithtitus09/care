@@ -68,13 +68,14 @@ class ProductKnowledgeViewSet(
             facility = instance.facility
             queryset = queryset.filter(facility__external_id=instance.facility)
         else:
+            facility = None
             queryset = queryset.filter(facility__isnull=True)
         if queryset.exists():
             raise ValidationError("Slug already exists.")
 
         if instance.category:
             category = get_object_or_404(ResourceCategory, slug=instance.category)
-            if category.facility.external_id != facility:
+            if not facility or category.facility.external_id != facility:
                 raise ValidationError("Category does not belong to facility")
 
         return super().validate_data(instance, model_obj)
