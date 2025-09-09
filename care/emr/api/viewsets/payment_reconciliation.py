@@ -36,6 +36,7 @@ class PaymentReconciliationFilters(filters.FilterSet):
     target_invoice = filters.UUIDFilter(field_name="target_invoice__external_id")
     reconciliation_type = filters.CharFilter(lookup_expr="iexact")
     account = filters.UUIDFilter(field_name="account__external_id")
+    is_credit_note = filters.BooleanFilter(field_name="is_credit_note")
 
 
 class PaymentReconciliationViewSet(

@@ -105,6 +105,7 @@ class PaymentReconciliationReadSpec(BasePaymentReconciliationSpec):
     amount: float | None = None
     tendered_amount: float
     returned_amount: float
+    is_credit_note: bool
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
