@@ -50,6 +50,14 @@ class ChargeItemDefinitionViewSet(
             Facility, external_id=self.kwargs["facility_external_id"]
         )
 
+    def get_serializer_create_context(self):
+        facility = self.get_facility_obj()
+        return {"facility": facility}
+
+    def get_serializer_update_context(self):
+        obj = self.get_object()
+        return {"facility": obj.facility}
+
     def validate_data(self, instance, model_obj=None):
         facility = self.get_facility_obj() if not model_obj else model_obj.facility
 
@@ -64,9 +72,11 @@ class ChargeItemDefinitionViewSet(
                 "Charge Item Definition with this slug already exists."
             )
         if instance.category:
-            category = get_object_or_404(ResourceCategory, slug=instance.category)
-            if category.facility != facility:
-                raise ValidationError("Category does not belong to facility")
+            category = get_object_or_404(
+                ResourceCategory.objects.only("id"),
+                slug=instance.category,
+                facility=facility,
+            )
         return super().validate_data(instance, model_obj)
 
     def perform_create(self, instance):

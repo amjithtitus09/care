@@ -62,6 +62,14 @@ class ActivityDefinitionViewSet(
             Facility, external_id=self.kwargs["facility_external_id"]
         )
 
+    def get_serializer_create_context(self):
+        facility = self.get_facility_obj()
+        return {"facility": facility}
+
+    def get_serializer_update_context(self):
+        obj = self.get_object()
+        return {"facility": obj.facility}
+
     def convert_external_id_to_internal_id(self, instance):
         # Convert speciment requirements to list of ids
         ids = []

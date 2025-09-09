@@ -83,7 +83,9 @@ class ActivityDefinitionWriteSpec(BaseActivityDefinitionSpec):
                 external_id=self.healthcare_service
             )
         if self.category:
-            obj.category = ResourceCategory.objects.get(slug=self.category)
+            obj.category = ResourceCategory.objects.get(
+                slug=self.category, facility=self.get_context().get("facility")
+            )
 
 
 class ActivityDefinitionReadSpec(BaseActivityDefinitionSpec):

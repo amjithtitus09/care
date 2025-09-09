@@ -52,6 +52,16 @@ class ProductKnowledgeViewSet(
     filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
     ordering_fields = ["created_date", "modified_date"]
 
+    def get_serializer_create_context(self):
+        facility = get_object_or_404(
+            Facility, external_id=self.request.data.get("facility")
+        )
+        return {"facility": facility}
+
+    def get_serializer_update_context(self):
+        obj = self.get_object()
+        return {"facility": obj.facility}
+
     def validate_data(self, instance, model_obj=None):
         queryset = ProductKnowledge.objects.filter(slug__iexact=instance.slug)
         if model_obj:
