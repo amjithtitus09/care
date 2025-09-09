@@ -13,8 +13,8 @@ from care.emr.models import (
     TokenSlot,
 )
 from care.emr.resources.scheduling.schedule.spec import (
-    SlotTypeOptions,
     SchedulableResourceTypeOptions,
+    SlotTypeOptions,
 )
 from care.emr.resources.scheduling.slot.spec import (
     CANCELLED_STATUS_CHOICES,

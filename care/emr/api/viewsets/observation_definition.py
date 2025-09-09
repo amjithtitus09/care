@@ -105,8 +105,10 @@ class ObservationDefinitionViewSet(
                 slug=self.kwargs["slug"],
                 facility=facility,
             )
-        except ObservationDefinition.MultipleObjectsReturned:
-            raise ValidationError("Multiple product knowledge with this slug found")
+        except ObservationDefinition.MultipleObjectsReturned as e:
+            raise ValidationError(
+                "Multiple product knowledge with this slug found"
+            ) from e
 
     def get_queryset(self):
         """

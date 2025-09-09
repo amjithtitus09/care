@@ -9,7 +9,6 @@ from django.test import override_settings
 from django.urls import reverse
 from PIL import Image
 
-from care.emr.models import SchedulableResource
 from care.emr.models.file_upload import FileUpload
 from care.emr.tasks.cleanup_incomplete_file_uploads import (
     cleanup_incomplete_file_uploads,
