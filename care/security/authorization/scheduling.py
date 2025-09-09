@@ -52,7 +52,7 @@ class ScheduleAccess(AuthorizationHandler):
         facility_orgs = FacilityOrganizationUser.objects.filter(
             user=obj, organization__facility=facility
         ).values("organization__parent_cache", "organization_id")
-        cache = []
+        cache = [facility.default_internal_organization_id]
         for facility_org in facility_orgs:
             cache.extend(facility_org["organization__parent_cache"])
             cache.append(facility_org["organization_id"])
@@ -91,7 +91,7 @@ class ScheduleAccess(AuthorizationHandler):
         facility_orgs = FacilityOrganizationUser.objects.filter(
             user=obj, organization__facility=facility
         ).values("organization__parent_cache", "organization_id")
-        cache = []
+        cache = [facility.default_internal_organization_id]
         for facility_org in facility_orgs:
             cache.extend(facility_org["organization__parent_cache"])
             cache.append(facility_org["organization_id"])
