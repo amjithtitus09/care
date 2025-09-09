@@ -15,6 +15,7 @@ from care.emr.resources.inventory.product_knowledge.valueset import (
 from care.emr.resources.observation.valueset import CARE_UCUM_UNITS
 from care.emr.resources.resource_category.spec import ResourceCategoryReadSpec
 from care.emr.resources.specimen.spec import DurationSpec
+from care.emr.utils.slug_type import SlugType
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
 from care.facility.models.facility import Facility
 
@@ -96,7 +97,7 @@ class BaseProductKnowledgeSpec(EMRResource):
     __exclude__ = ["facility"]
 
     id: UUID4 | None = None
-    slug: str
+    slug: SlugType
     alternate_identifier: str | None = None
     status: ProductKnowledgeStatusOptions
     product_type: ProductTypeOptions
