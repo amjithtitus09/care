@@ -1,2 +1,3 @@
-from .patient_age_metric import *  # noqa
+from .encounter_tag import *  # noqa
+from .patient_age import *  # noqa
 from .patient_gender import *  # noqa

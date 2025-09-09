@@ -111,13 +111,15 @@ class ChargeItemWriteSpec(ChargeItemSpec):
         return self
 
     def perform_extra_deserialization(self, is_update, obj):
+        if self.patient:
+            obj.patient = get_object_or_404(Patient, external_id=self.patient)
         if self.encounter:
             obj.encounter = get_object_or_404(Encounter, external_id=self.encounter)
             obj.patient = obj.encounter.patient
-        if self.patient:
-            obj.patient = get_object_or_404(Patient, external_id=self.patient)
         if self.account:
-            obj.account = Account.objects.get(external_id=self.account)
+            obj.account = Account.objects.get(
+                external_id=self.account, patient=obj.patient
+            )
 
 
 class ChargeItemReadSpec(ChargeItemSpec):

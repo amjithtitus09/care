@@ -95,10 +95,12 @@ def validate_service_resource(
     try:
         if service_resource == ChargeItemResourceOptions.service_request.value:
             qs = ServiceRequest.objects.filter(
-                facility=facility, external_id=service_resource_id, patient=patient
+                facility=facility, external_id=service_resource_id
             )
             if encounter:
                 qs = qs.filter(encounter=encounter)
+            else:
+                qs = qs.filter(patient=patient)
             return qs.exclude(status__in=SERVICE_REQUEST_COMPLETED_CHOICES).exists()
         if service_resource == ChargeItemResourceOptions.bed_association.value:
             if not encounter:
@@ -268,11 +270,6 @@ class ChargeItemViewSet(
                         "Charge item definition is not associated with the facility"
                     )
                 patient = None
-                if charge_item_request.patient:
-                    patient = get_object_or_404(
-                        Patient,
-                        external_id=charge_item_request.patient,
-                    )
                 encounter = None
                 if charge_item_request.encounter:
                     encounter = get_object_or_404(
@@ -280,6 +277,14 @@ class ChargeItemViewSet(
                         external_id=charge_item_request.encounter,
                         facility=facility,
                     )
+                    patient = encounter.patient
+                elif charge_item_request.patient:
+                    patient = get_object_or_404(
+                        Patient,
+                        external_id=charge_item_request.patient,
+                    )
+                else:
+                    raise ValidationError("Patient or encounter is required")
 
                 if (
                     charge_item_request.service_resource
@@ -292,16 +297,6 @@ class ChargeItemViewSet(
                     )
                 ):
                     raise ValidationError("Invalid service resource")
-                if not encounter:
-                    if charge_item_request.patient:
-                        patient = get_object_or_404(
-                            Patient,
-                            external_id=charge_item_request.patient,
-                        )
-                    else:
-                        raise ValidationError("Patient is required")
-                else:
-                    patient = encounter.patient
                 encounter = None
                 quantity = charge_item_request.quantity
                 charge_item = apply_charge_item_definition(
