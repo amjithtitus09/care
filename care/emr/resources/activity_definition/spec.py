@@ -121,30 +121,34 @@ class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):
         super().perform_extra_serialization(mapping, obj)
         specimen_requirements = []
         for specimen_requirement in obj.specimen_requirements:
+            obj = SpecimenDefinition.objects.filter(id=specimen_requirement).first()
+            if not obj:
+                continue
             specimen_requirements.append(
-                SpecimenDefinitionReadSpec.serialize(
-                    SpecimenDefinition.objects.get(id=specimen_requirement)
-                ).to_json()
+                SpecimenDefinitionReadSpec.serialize(obj).to_json()
             )
         mapping["specimen_requirements"] = specimen_requirements
         observation_result_requirements = []
         for observation_result_requirement in obj.observation_result_requirements:
+            obj = ObservationDefinition.objects.filter(
+                id=observation_result_requirement
+            ).first()
+            if not obj:
+                continue
             observation_result_requirements.append(
-                ObservationDefinitionReadSpec.serialize(
-                    ObservationDefinition.objects.get(id=observation_result_requirement)
-                ).to_json()
+                ObservationDefinitionReadSpec.serialize(obj).to_json()
             )
         mapping["observation_result_requirements"] = observation_result_requirements
         locations = []
         for location in obj.locations:
-            try:
-                locations.append(
-                    FacilityLocationListSpec.serialize(
-                        FacilityLocation.objects.get(id=location)
-                    ).to_json()
-                )
-            except Exception:  # noqa S110
-                pass
+            obj = FacilityLocation.objects.filter(id=location).first()
+            if not obj:
+                continue
+            locations.append(
+                FacilityLocationListSpec.serialize(
+                    FacilityLocation.objects.get(id=location)
+                ).to_json()
+            )
         mapping["locations"] = locations
         if obj.healthcare_service:
             mapping["healthcare_service"] = HealthcareServiceReadSpec.serialize(
@@ -152,9 +156,10 @@ class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):
             ).to_json()
         charge_item_definitions = []
         for charge_item_definition in obj.charge_item_definitions:
+            obj = ChargeItemDefinition.objects.filter(id=charge_item_definition).first()
+            if not obj:
+                continue
             charge_item_definitions.append(
-                ChargeItemDefinitionReadSpec.serialize(
-                    ChargeItemDefinition.objects.get(id=charge_item_definition)
-                ).to_json()
+                ChargeItemDefinitionReadSpec.serialize(obj).to_json()
             )
         mapping["charge_item_definitions"] = charge_item_definitions
