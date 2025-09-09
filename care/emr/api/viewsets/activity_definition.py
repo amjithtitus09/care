@@ -76,7 +76,7 @@ class ActivityDefinitionViewSet(
         for specimen_requirement in instance.specimen_requirements:
             obj = (
                 SpecimenDefinition.objects.only("id")
-                .filter(external_id=specimen_requirement, facility=instance.facility)
+                .filter(slug=specimen_requirement, facility=instance.facility)
                 .first()
             )
             if not obj:
@@ -91,7 +91,7 @@ class ActivityDefinitionViewSet(
         for observation_result in instance.observation_result_requirements:
             obj = (
                 ObservationDefinition.objects.only("id")
-                .filter(external_id=observation_result, facility=instance.facility)
+                .filter(slug=observation_result, facility=instance.facility)
                 .first()
             )
             if not obj:
