@@ -261,6 +261,7 @@ class ChargeItemViewSet(
                 charge_item_definition = get_object_or_404(
                     ChargeItemDefinition,
                     slug=charge_item_request.charge_item_definition,
+                    facility=facility,
                 )
                 if (
                     charge_item_definition.facility
