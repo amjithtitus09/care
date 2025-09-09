@@ -41,7 +41,11 @@ class ProductKnowledgeAPITest(CareAPITestBase):
             "status": status or ProductKnowledgeStatusOptions.active.value,
             "product_type": product_type or ProductTypeOptions.medication.value,
             "code": None,
-            "base_unit": None,
+            "base_unit": {
+                "display": "Test Value",
+                "system": "http://test_system.care/test",
+                "code": "123",
+            },
             "facility": facility,
         }
 
@@ -52,13 +56,16 @@ class ProductKnowledgeAPITest(CareAPITestBase):
             **data,
         )
 
-    def get_details_url(self, product_knowledge=None):
-        return reverse(
+    def get_details_url(self, product_knowledge=None, facility=None):
+        url = reverse(
             "product_knowledge-detail",
             kwargs={
-                "external_id": product_knowledge,
+                "slug": product_knowledge,
             },
         )
+        if facility:
+            url += f"?facility={facility}"
+        return url
 
     def get_base_url(self):
         return reverse("product_knowledge-list")
@@ -70,7 +77,11 @@ class ProductKnowledgeAPITest(CareAPITestBase):
             "status": ProductKnowledgeStatusOptions.retired.value,
             "product_type": ProductTypeOptions.medication.value,
             "code": None,
-            "base_unit": None,
+            "base_unit": {
+                "display": "Updated Test Value",
+                "system": "http://test_system.care/test",
+                "code": "456",
+            },
         }
 
     # Testcases for Create Product Knowledge
@@ -80,7 +91,7 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         data = self.generate_product_knowledge_data()
         response = self.client.post(self.get_base_url(), data, format="json")
         self.assertEqual(response.status_code, 200)
-        get_response = self.client.get(self.get_details_url(response.data["id"]))
+        get_response = self.client.get(self.get_details_url(response.data["slug"]))
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.data["id"], response.data["id"])
 
@@ -92,7 +103,11 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         data = self.generate_product_knowledge_data(facility=self.facility.external_id)
         response = self.client.post(self.get_base_url(), data, format="json")
         self.assertEqual(response.status_code, 200)
-        get_response = self.client.get(self.get_details_url(response.data["id"]))
+        get_response = self.client.get(
+            self.get_details_url(
+                response.data["slug"], facility=self.facility.external_id
+            )
+        )
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.data["id"], response.data["id"])
 
@@ -136,7 +151,7 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         data = self.generate_product_knowledge_data()
         response = self.client.post(self.get_base_url(), data, format="json")
         self.assertEqual(response.status_code, 200)
-        get_response = self.client.get(self.get_details_url(response.data["id"]))
+        get_response = self.client.get(self.get_details_url(response.data["slug"]))
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.data["id"], response.data["id"])
 
@@ -145,7 +160,11 @@ class ProductKnowledgeAPITest(CareAPITestBase):
     def test_retrieve_product_knowledge_as_superuser(self):
         self.client.force_authenticate(user=self.superuser)
         product_knowledge = self.create_product_knowledge(facility=self.facility)
-        response = self.client.get(self.get_details_url(product_knowledge.external_id))
+        response = self.client.get(
+            self.get_details_url(
+                product_knowledge.slug, facility=self.facility.external_id
+            )
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["id"], str(product_knowledge.external_id))
 
@@ -155,14 +174,22 @@ class ProductKnowledgeAPITest(CareAPITestBase):
             self.facility_organization, self.user, self.role
         )
         product_knowledge = self.create_product_knowledge(facility=self.facility)
-        response = self.client.get(self.get_details_url(product_knowledge.external_id))
+        response = self.client.get(
+            self.get_details_url(
+                product_knowledge.slug, facility=self.facility.external_id
+            )
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["id"], str(product_knowledge.external_id))
 
     def test_retrieve_product_knowledge_as_user_without_permission(self):
         self.client.force_authenticate(user=self.user)
         product_knowledge = self.create_product_knowledge(facility=self.facility)
-        response = self.client.get(self.get_details_url(product_knowledge.external_id))
+        response = self.client.get(
+            self.get_details_url(
+                product_knowledge.slug, facility=self.facility.external_id
+            )
+        )
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "Cannot read product knowledge", status_code=403)
 
@@ -175,7 +202,11 @@ class ProductKnowledgeAPITest(CareAPITestBase):
             name="Another Facility", user=self.superuser
         )
         product_knowledge = self.create_product_knowledge(facility=another_facility)
-        response = self.client.get(self.get_details_url(product_knowledge.external_id))
+        response = self.client.get(
+            self.get_details_url(
+                product_knowledge.slug, facility=another_facility.external_id
+            )
+        )
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "Cannot read product knowledge", status_code=403)
 
@@ -185,14 +216,14 @@ class ProductKnowledgeAPITest(CareAPITestBase):
             self.facility_organization, self.user, self.role
         )
         product_knowledge = self.create_product_knowledge(facility=None)
-        response = self.client.get(self.get_details_url(product_knowledge.external_id))
+        response = self.client.get(self.get_details_url(product_knowledge.slug))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["id"], str(product_knowledge.external_id))
 
     def test_retrieve_product_knowledge_as_superuser_in_instance_level(self):
         self.client.force_authenticate(user=self.superuser)
         product_knowledge = self.create_product_knowledge(facility=None)
-        response = self.client.get(self.get_details_url(product_knowledge.external_id))
+        response = self.client.get(self.get_details_url(product_knowledge.slug))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["id"], str(product_knowledge.external_id))
 
@@ -203,12 +234,18 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         product_knowledge = self.create_product_knowledge(facility=self.facility)
         updated_data = self.create_update_product_knowledge_data()
         response = self.client.patch(
-            self.get_details_url(product_knowledge.external_id),
+            self.get_details_url(
+                product_knowledge.slug, facility=self.facility.external_id
+            ),
             updated_data,
             format="json",
         )
         self.assertEqual(response.status_code, 200)
-        get_response = self.client.get(self.get_details_url(response.data["id"]))
+        get_response = self.client.get(
+            self.get_details_url(
+                response.data["slug"], facility=self.facility.external_id
+            )
+        )
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.data["name"], updated_data["name"])
         self.assertEqual(get_response.data["slug"], updated_data["slug"])
@@ -221,12 +258,18 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         product_knowledge = self.create_product_knowledge(facility=self.facility)
         updated_data = self.create_update_product_knowledge_data()
         response = self.client.patch(
-            self.get_details_url(product_knowledge.external_id),
+            self.get_details_url(
+                product_knowledge.slug, facility=self.facility.external_id
+            ),
             updated_data,
             format="json",
         )
         self.assertEqual(response.status_code, 200)
-        get_response = self.client.get(self.get_details_url(response.data["id"]))
+        get_response = self.client.get(
+            self.get_details_url(
+                response.data["slug"], facility=self.facility.external_id
+            )
+        )
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.data["name"], updated_data["name"])
         self.assertEqual(get_response.data["slug"], updated_data["slug"])
@@ -236,7 +279,9 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         product_knowledge = self.create_product_knowledge(facility=self.facility)
         updated_data = self.create_update_product_knowledge_data()
         response = self.client.patch(
-            self.get_details_url(product_knowledge.external_id),
+            self.get_details_url(
+                product_knowledge.slug, facility=self.facility.external_id
+            ),
             updated_data,
             format="json",
         )
@@ -253,7 +298,7 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         product_knowledge = self.create_product_knowledge(facility=None)
         updated_data = self.create_update_product_knowledge_data()
         response = self.client.patch(
-            self.get_details_url(product_knowledge.external_id),
+            self.get_details_url(product_knowledge.slug),
             updated_data,
             format="json",
         )
@@ -267,12 +312,12 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         product_knowledge = self.create_product_knowledge(facility=None)
         updated_data = self.create_update_product_knowledge_data()
         response = self.client.patch(
-            self.get_details_url(product_knowledge.external_id),
+            self.get_details_url(product_knowledge.slug),
             updated_data,
             format="json",
         )
         self.assertEqual(response.status_code, 200)
-        get_response = self.client.get(self.get_details_url(response.data["id"]))
+        get_response = self.client.get(self.get_details_url(response.data["slug"]))
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.data["name"], updated_data["name"])
         self.assertEqual(get_response.data["slug"], updated_data["slug"])
@@ -344,7 +389,8 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["results"]), 2)
-        self.assertEqual(response.data["results"][0]["id"], str(product.external_id))
+        result_ids = [result["id"] for result in response.data["results"]]
+        self.assertIn(str(product.external_id), result_ids)
 
     def test_filter_product_knowledge_by_status(self):
         self.client.force_authenticate(user=self.superuser)
@@ -413,7 +459,7 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         self.create_product_knowledge(
             facility=self.facility,
             name="Test Product",
-            slug="test-duplicate-product-knowledge",
+            slug="test-duplicate-product",
         )
         response = self.client.post(
             self.get_base_url(),
@@ -422,7 +468,7 @@ class ProductKnowledgeAPITest(CareAPITestBase):
                 name="Test Product",
                 product_type="medication",
                 alternate_identifier="12345",
-                slug="test-duplicate-product-knowledge",
+                slug="test-duplicate-product",
             ),
             format="json",
         )
@@ -437,7 +483,7 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         self.create_product_knowledge(
             facility=self.facility,
             name="Test Product",
-            slug="test-duplicate-product-knowledge",
+            slug="test-duplicate-product",
         )
         response = self.client.post(
             self.get_base_url(),
@@ -446,12 +492,16 @@ class ProductKnowledgeAPITest(CareAPITestBase):
                 name="Test Product",
                 product_type="medication",
                 alternate_identifier="12345",
-                slug="test-duplicate-product-knowledge",
+                slug="test-duplicate-product",
             ),
             format="json",
         )
         self.assertEqual(response.status_code, 200)
-        get_response = self.client.get(self.get_details_url(response.data["id"]))
+        get_response = self.client.get(
+            self.get_details_url(
+                response.data["slug"], facility=another_facility.external_id
+            )
+        )
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.data["id"], response.data["id"])
 
@@ -460,7 +510,7 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         self.create_product_knowledge(
             facility=None,
             name="Test Product",
-            slug="test-duplicate-product-knowledge",
+            slug="test-duplicate-product",
         )
         response = self.client.post(
             self.get_base_url(),
@@ -469,7 +519,7 @@ class ProductKnowledgeAPITest(CareAPITestBase):
                 name="Test Product",
                 product_type="medication",
                 alternate_identifier="12345",
-                slug="test-duplicate-product-knowledge",
+                slug="test-duplicate-product",
             ),
             format="json",
         )
@@ -483,12 +533,12 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         self.create_product_knowledge(
             facility=None,
             name="Test Product",
-            slug="test-duplicate-product-knowledge",
+            slug="test-duplicate-product",
         )
         self.create_product_knowledge(
             facility=self.facility,
             name="Test Product",
-            slug="test-duplicate-product-knowledge",
+            slug="test-duplicate-product",
         )
         another_facility = self.create_facility(
             name="Another Facility", user=self.superuser
@@ -500,12 +550,16 @@ class ProductKnowledgeAPITest(CareAPITestBase):
                 name="Test Product",
                 product_type="medication",
                 alternate_identifier="12345",
-                slug="test-duplicate-product-knowledge",
+                slug="test-duplicate-product",
             ),
             format="json",
         )
         self.assertEqual(response.status_code, 200)
-        get_response = self.client.get(self.get_details_url(response.data["id"]))
+        get_response = self.client.get(
+            self.get_details_url(
+                response.data["slug"], facility=another_facility.external_id
+            )
+        )
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.data["id"], response.data["id"])
 
@@ -514,7 +568,7 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         self.create_product_knowledge(
             facility=self.facility,
             name="Test Product",
-            slug="test-duplicate-product-knowledge",
+            slug="test-duplicate-product",
         )
         product2 = self.create_product_knowledge(
             facility=self.facility,
@@ -522,10 +576,8 @@ class ProductKnowledgeAPITest(CareAPITestBase):
             slug="test-product-knowledge",
         )
         response = self.client.put(
-            self.get_details_url(product2.external_id),
-            self.create_update_product_knowledge_data(
-                slug="test-duplicate-product-knowledge"
-            ),
+            self.get_details_url(product2.slug, facility=self.facility.external_id),
+            self.create_update_product_knowledge_data(slug="test-duplicate-product"),
             format="json",
         )
         self.assertEqual(response.status_code, 400)
@@ -536,7 +588,7 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         self.create_product_knowledge(
             facility=None,
             name="Test Product",
-            slug="test-duplicate-product-knowledge",
+            slug="test-duplicate-product",
         )
         product2 = self.create_product_knowledge(
             facility=None,
@@ -544,10 +596,8 @@ class ProductKnowledgeAPITest(CareAPITestBase):
             slug="test-product-knowledge",
         )
         response = self.client.put(
-            self.get_details_url(product2.external_id),
-            self.create_update_product_knowledge_data(
-                slug="test-duplicate-product-knowledge"
-            ),
+            self.get_details_url(product2.slug),
+            self.create_update_product_knowledge_data(slug="test-duplicate-product"),
             format="json",
         )
         self.assertEqual(response.status_code, 400)
@@ -559,7 +609,7 @@ class ProductKnowledgeAPITest(CareAPITestBase):
         self.create_product_knowledge(
             facility=self.facility,
             name="Test Product",
-            slug="test-duplicate-product-knowledge",
+            slug="test-duplicate-product",
         )
         product2 = self.create_product_knowledge(
             facility=None,
@@ -567,13 +617,11 @@ class ProductKnowledgeAPITest(CareAPITestBase):
             slug="test-product-knowledge",
         )
         response = self.client.put(
-            self.get_details_url(product2.external_id),
-            self.create_update_product_knowledge_data(
-                slug="test-duplicate-product-knowledge"
-            ),
+            self.get_details_url(product2.slug),
+            self.create_update_product_knowledge_data(slug="test-duplicate-product"),
             format="json",
         )
         self.assertEqual(response.status_code, 200)
-        get_response = self.client.get(self.get_details_url(product2.external_id))
+        get_response = self.client.get(self.get_details_url(response.data["slug"]))
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.data["id"], str(product2.external_id))

@@ -7,6 +7,7 @@ from care.emr.models.resource_category import ResourceCategory
 from care.emr.resources.base import EMRResource
 from care.emr.resources.common.monetary_component import MonetaryComponent
 from care.emr.resources.resource_category.spec import ResourceCategoryReadSpec
+from care.emr.utils.slug_type import SlugType
 
 
 class ChargeItemDefinitionStatusOptions(str, Enum):
@@ -24,7 +25,7 @@ class ChargeItemDefinitionSpec(EMRResource):
     id: UUID4 | None = None
     status: ChargeItemDefinitionStatusOptions
     title: str
-    slug: str
+    slug: SlugType
     derived_from_uri: str | None = None
     description: str | None = None
     purpose: str | None = None
