@@ -72,11 +72,11 @@ class ChargeItemDefinitionViewSet(
                 "Charge Item Definition with this slug already exists."
             )
         if instance.category:
-            category = get_object_or_404(
+            get_object_or_404(
                 ResourceCategory.objects.only("id"),
                 slug=instance.category,
                 facility=facility,
-            )
+            )  # Exists Check
         return super().validate_data(instance, model_obj)
 
     def perform_create(self, instance):
