@@ -155,8 +155,8 @@ class TokenBookingViewSet(
             queryset = authorize_booking_list(
                 queryset,
                 self.request.query_params["resource_type"],
-                self.request.query_params.get("organization_ids", "").split(),
-                self.request.query_params.get("resource_ids", "").split(),
+                self.request.query_params.get("organization_ids", "").split(","),
+                self.request.query_params.get("resource_ids", "").split(","),
                 self.request.user,
                 facility,
             )
