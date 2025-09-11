@@ -12,6 +12,7 @@ from care.emr.api.viewsets.base import (
     EMRUpdateMixin,
     EMRUpsertMixin,
 )
+from care.emr.api.viewsets.favorites import EMRFavoritesMixin
 from care.emr.models import ActivityDefinition
 from care.emr.models.charge_item_definition import ChargeItemDefinition
 from care.emr.models.location import FacilityLocation
@@ -23,6 +24,8 @@ from care.emr.resources.activity_definition.spec import (
     ActivityDefinitionRetrieveSpec,
     ActivityDefinitionWriteSpec,
 )
+from care.emr.resources.favorites.filters import FavoritesFilter
+from care.emr.resources.favorites.spec import FavoriteResourceChoices
 from care.emr.resources.tag.config_spec import TagResource
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
@@ -46,6 +49,7 @@ class ActivityDefinitionViewSet(
     EMRTagMixin,
     EMRBaseViewSet,
     EMRUpsertMixin,
+    EMRFavoritesMixin,
 ):
     lookup_field = "slug"
     database_model = ActivityDefinition
@@ -53,9 +57,10 @@ class ActivityDefinitionViewSet(
     pydantic_read_model = ActivityDefinitionReadSpec
     pydantic_retrieve_model = ActivityDefinitionRetrieveSpec
     filterset_class = ActivityDefinitionFilters
-    filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
+    filter_backends = [filters.DjangoFilterBackend, OrderingFilter, FavoritesFilter]
     ordering_fields = ["created_date", "modified_date"]
     resource_type = TagResource.activity_definition
+    FAVORITE_RESOURCE = FavoriteResourceChoices.activity_definition
 
     def get_facility_obj(self):
         return get_object_or_404(

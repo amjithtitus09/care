@@ -11,8 +11,11 @@ from care.emr.api.viewsets.base import (
     EMRUpdateMixin,
     EMRUpsertMixin,
 )
+from care.emr.api.viewsets.favorites import EMRFavoritesMixin
 from care.emr.models.product_knowledge import ProductKnowledge
 from care.emr.models.resource_category import ResourceCategory
+from care.emr.resources.favorites.filters import FavoritesFilter
+from care.emr.resources.favorites.spec import FavoriteResourceChoices
 from care.emr.resources.inventory.product_knowledge.spec import (
     ProductKnowledgeReadSpec,
     ProductKnowledgeUpdateSpec,
@@ -42,6 +45,7 @@ class ProductKnowledgeViewSet(
     EMRListMixin,
     EMRBaseViewSet,
     EMRUpsertMixin,
+    EMRFavoritesMixin,
 ):
     lookup_field = "slug"
     database_model = ProductKnowledge
@@ -49,8 +53,9 @@ class ProductKnowledgeViewSet(
     pydantic_update_model = ProductKnowledgeUpdateSpec
     pydantic_read_model = ProductKnowledgeReadSpec
     filterset_class = ProductKnowledgeFilters
-    filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
+    filter_backends = [filters.DjangoFilterBackend, OrderingFilter, FavoritesFilter]
     ordering_fields = ["created_date", "modified_date"]
+    FAVORITE_RESOURCE = FavoriteResourceChoices.product_knowledge
 
     def get_serializer_create_context(self):
         facility_id = self.request.data.get("facility")
