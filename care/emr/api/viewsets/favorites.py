@@ -15,7 +15,7 @@ class FavoriteRequest(BaseModel):
 class EMRFavoritesMixin:
     FAVORITE_RESOURCE = None
 
-    def get_facility_obj(self, obj):
+    def retrieve_facility_obj(self, obj):
         return obj.facility
 
     @action(detail=False, methods=["GET"])
@@ -39,7 +39,7 @@ class EMRFavoritesMixin:
             user=user,
             favorite_list=favorite_list,
             resource_type=self.FAVORITE_RESOURCE,
-            facility=self.get_facility_obj(obj),
+            facility=self.retrieve_facility_obj(obj),
         )
         if len(favorites_obj.favorites) >= settings.MAX_FAVORITES_PER_LIST:
             raise ValidationError("Maximum number of favorites reached")
@@ -59,7 +59,7 @@ class EMRFavoritesMixin:
             user=user,
             favorite_list=favorite_list,
             resource_type=self.FAVORITE_RESOURCE,
-            facility=self.get_facility_obj(obj),
+            facility=self.retrieve_facility_obj(obj),
         ).first()
         if not favorites_obj:
             raise ValidationError("Favorite List not found")
