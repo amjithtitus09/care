@@ -65,10 +65,11 @@ class ProductKnowledgeViewSet(
 
     def validate_data(self, instance, model_obj=None):
         queryset = ProductKnowledge.objects.filter(slug__iexact=instance.slug)
+        facility = None
         if model_obj:
             if getattr(model_obj, "facility", None):
-                facility = model_obj.facility.external_id
-                queryset = queryset.filter(facility=model_obj.facility_id).exclude(
+                facility = model_obj.facility
+                queryset = queryset.filter(facility=model_obj.facility).exclude(
                     id=model_obj.id
                 )
             else:
@@ -76,15 +77,17 @@ class ProductKnowledgeViewSet(
                     id=model_obj.id
                 )
         elif instance.facility:
-            facility = instance.facility
-            queryset = queryset.filter(facility__external_id=instance.facility)
+            facility = get_object_or_404(
+                Facility.objects.only("id"), external_id=instance.facility
+            )
+            queryset = queryset.filter(facility=facility)
         else:
             facility = None
             queryset = queryset.filter(facility__isnull=True)
         if queryset.exists():
             raise ValidationError("Slug already exists.")
 
-        if instance.category:
+        if instance.category and facility:
             get_object_or_404(
                 ResourceCategory, slug=instance.category, facility=facility
             )
