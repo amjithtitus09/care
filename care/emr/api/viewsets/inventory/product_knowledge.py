@@ -85,9 +85,9 @@ class ProductKnowledgeViewSet(
             raise ValidationError("Slug already exists.")
 
         if instance.category:
-            category = get_object_or_404(ResourceCategory, slug=instance.category)
-            if not facility or category.facility.external_id != facility:
-                raise ValidationError("Category does not belong to facility")
+            get_object_or_404(
+                ResourceCategory, slug=instance.category, facility=facility
+            )
 
         return super().validate_data(instance, model_obj)
 

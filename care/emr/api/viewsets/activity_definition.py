@@ -141,9 +141,10 @@ class ActivityDefinitionViewSet(
         facility = self.get_facility_obj() if not model_obj else model_obj.facility
 
         if instance.category:
-            category = get_object_or_404(ResourceCategory, slug=instance.category)
-            if category.facility != facility:
-                raise ValidationError("Category does not belong to facility")
+            get_object_or_404(
+                ResourceCategory, slug=instance.category, facility=facility
+            )
+
         return super().validate_data(instance, model_obj)
 
     def perform_create(self, instance):

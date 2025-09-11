@@ -65,9 +65,9 @@ class ResourceCategoryViewSet(
         if not model_obj and instance.parent:
             parent = instance.parent
             if parent:
-                parent = get_object_or_404(ResourceCategory, slug=parent)
-                if parent.facility != facility:
-                    raise ValidationError("Parent category does not belong to facility")
+                parent = get_object_or_404(
+                    ResourceCategory, slug=parent, facility=facility
+                )
                 if parent.resource_type != instance.resource_type:
                     raise ValidationError(
                         "Parent category does not belong to same resource type"
