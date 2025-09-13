@@ -51,9 +51,7 @@ class ChargeItemDefinitionWriteSpec(ChargeItemDefinitionSpec):
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.category:
-            obj.category = ResourceCategory.objects.get(
-                slug=self.category, facility=self.get_context().get("facility")
-            )
+            obj.category = ResourceCategory.objects.get(slug=self.category)
 
         obj.slug = self.slug_value
 
