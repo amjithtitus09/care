@@ -12,8 +12,8 @@ from care.emr.api.viewsets.base import (
 )
 from care.emr.models.resource_category import ResourceCategory
 from care.emr.resources.resource_category.spec import (
-    ResourceCategoryBaseSpec,
     ResourceCategoryReadSpec,
+    ResourceCategoryUpdateSpec,
     ResourceCategoryWriteSpec,
 )
 from care.facility.models import Facility
@@ -42,7 +42,7 @@ class ResourceCategoryViewSet(
     lookup_field = "slug"
     database_model = ResourceCategory
     pydantic_model = ResourceCategoryWriteSpec
-    pydantic_update_model = ResourceCategoryBaseSpec
+    pydantic_update_model = ResourceCategoryUpdateSpec
     pydantic_read_model = ResourceCategoryReadSpec
     filterset_class = ResourceCategoryFilters
     filter_backends = [filters.DjangoFilterBackend, OrderingFilter]

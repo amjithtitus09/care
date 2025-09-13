@@ -26,6 +26,13 @@ class ResourceCategoryBaseSpec(EMRResource):
     resource_sub_type: str
 
 
+class ResourceCategoryUpdateSpec(ResourceCategoryBaseSpec):
+    slug_value: SlugType
+
+    def perform_extra_deserialization(self, is_update, obj):
+        obj.slug = self.slug_value
+
+
 class ResourceCategoryWriteSpec(ResourceCategoryBaseSpec):
     """ChargeItemDefinition Category write specification"""
 
