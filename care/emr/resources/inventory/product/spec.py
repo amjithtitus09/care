@@ -9,6 +9,7 @@ from care.emr.models.product_knowledge import ProductKnowledge
 from care.emr.resources.base import EMRResource
 from care.emr.resources.charge_item_definition.spec import ChargeItemDefinitionReadSpec
 from care.emr.resources.inventory.product_knowledge.spec import ProductKnowledgeReadSpec
+from care.utils.shortcuts import get_object_or_404
 
 
 class ProductStatusOptions(str, Enum):
@@ -40,12 +41,14 @@ class ProductWriteSpec(BaseProductSpec):
     charge_item_definition: str | None = None
 
     def perform_extra_deserialization(self, is_update, obj):
-        obj.product_knowledge = ProductKnowledge.objects.get(
+        obj.product_knowledge = get_object_or_404(
+            ProductKnowledge,
             slug=self.product_knowledge,
             facility=self.get_context().get("facility"),
         )
         if self.charge_item_definition:
-            obj.charge_item_definition = ChargeItemDefinition.objects.get(
+            obj.charge_item_definition = get_object_or_404(
+                ChargeItemDefinition,
                 slug=self.charge_item_definition,
                 facility=self.get_context().get("facility"),
             )
