@@ -1,9 +1,9 @@
 from django.db import models
 
-from care.emr.models.base import EMRBaseModel
+from care.emr.models.base import SlugBaseModel
 
 
-class ChargeItemDefinition(EMRBaseModel):
+class ChargeItemDefinition(SlugBaseModel):
     facility = models.ForeignKey(
         "facility.Facility",
         on_delete=models.PROTECT,

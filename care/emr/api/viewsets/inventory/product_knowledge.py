@@ -57,38 +57,39 @@ class ProductKnowledgeViewSet(
     ordering_fields = ["created_date", "modified_date"]
     FAVORITE_RESOURCE = FavoriteResourceChoices.product_knowledge
 
-    def get_serializer_create_context(self):
-        facility_id = self.request.data.get("facility")
-        if facility_id:
-            facility = get_object_or_404(Facility, external_id=facility_id)
-            return {"facility": facility}
-        return {}
+    def recalculate_slug(self, instance):
+        if instance.facility:
+            instance.slug = ProductKnowledge.calculate_slug_from_facility(
+                instance.facility.external_id, instance.slug
+            )
+        else:
+            instance.slug = ProductKnowledge.calculate_slug_from_instance(instance.slug)
 
-    def get_serializer_update_context(self):
-        obj = self.get_object()
-        return {"facility": obj.facility}
+    def perform_create(self, instance):
+        self.recalculate_slug(instance)
+        super().perform_create(instance)
+
+    def perform_update(self, instance):
+        self.recalculate_slug(instance)
+        return super().perform_update(instance)
 
     def validate_data(self, instance, model_obj=None):
-        queryset = ProductKnowledge.objects.filter(slug__iexact=instance.slug)
+        queryset = ProductKnowledge.objects.all()
         facility = None
         if model_obj:
-            if getattr(model_obj, "facility", None):
-                facility = model_obj.facility
-                queryset = queryset.filter(facility=model_obj.facility).exclude(
-                    id=model_obj.id
-                )
-            else:
-                queryset = queryset.filter(facility__isnull=True).exclude(
-                    id=model_obj.id
-                )
-        elif instance.facility:
-            facility = get_object_or_404(
-                Facility.objects.only("id"), external_id=instance.facility
-            )
-            queryset = queryset.filter(facility=facility)
+            queryset = queryset.exclude(id=model_obj.id)
+            facility = str(model_obj.facility.external_id)
         else:
-            facility = None
-            queryset = queryset.filter(facility__isnull=True)
+            facility = instance.facility
+
+        if facility:
+            slug = ProductKnowledge.calculate_slug_from_facility(
+                facility, instance.slug_value
+            )
+        else:
+            slug = ProductKnowledge.calculate_slug_from_instance(instance.slug_value)
+
+        queryset = queryset.filter(slug__iexact=slug)
         if queryset.exists():
             raise ValidationError("Slug already exists.")
 
@@ -131,28 +132,6 @@ class ProductKnowledgeViewSet(
         ):
             raise PermissionDenied("Cannot read product knowledge")
 
-    def get_object(self):
-        queryset = self.get_queryset()
-        try:
-            if "facility" not in self.request.GET:
-                return get_object_or_404(
-                    queryset,
-                    slug=self.kwargs["slug"],
-                    facility__isnull=True,
-                )
-            facility = get_object_or_404(
-                Facility.objects.only("id"), external_id=self.request.GET["facility"]
-            )
-            return get_object_or_404(
-                queryset,
-                slug=self.kwargs["slug"],
-                facility=facility,
-            )
-        except ProductKnowledge.MultipleObjectsReturned:
-            raise ValidationError(
-                "Multiple product knowledge with this slug found"
-            ) from ProductKnowledge.MultipleObjectsReturned
-
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "list" and "facility" in self.request.GET:
@@ -167,7 +146,7 @@ class ProductKnowledgeViewSet(
                 raise PermissionDenied("Cannot read product knowledge")
 
             queryset = queryset.filter(facility=facility)
-            if self.action == "list" and self.request.GET.get("category"):
+            if self.request.GET.get("category"):
                 category = get_object_or_404(
                     ResourceCategory.objects.only("id"),
                     slug=self.request.GET.get("category"),
@@ -179,4 +158,6 @@ class ProductKnowledgeViewSet(
                     )
                 else:
                     queryset = queryset.filter(category=category)
+        elif self.action == "list" and "facility" not in self.request.GET:
+            queryset = queryset.filter(facility__isnull=True)
         return queryset

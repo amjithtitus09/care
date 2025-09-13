@@ -4,6 +4,15 @@ from django.utils import timezone
 from care.emr.models.base import EMRBaseModel
 
 
+class MedicationRequestPrescription(EMRBaseModel):
+    encounter = models.ForeignKey("emr.Encounter", on_delete=models.CASCADE)
+    patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)
+    note = models.TextField(null=True, blank=True)
+    prescribed_by = models.ForeignKey("users.User", on_delete=models.CASCADE)
+    status = models.CharField(max_length=100, null=True, blank=True)
+    approval_status = models.CharField(max_length=100, null=True, blank=True)
+
+
 class MedicationRequest(EMRBaseModel):
     status = models.CharField(max_length=100, null=True, blank=True)
     status_reason = models.CharField(max_length=100, null=True, blank=True)
@@ -30,4 +39,11 @@ class MedicationRequest(EMRBaseModel):
     )
     dispense_status = models.CharField(
         max_length=100, null=True, blank=True, default=None
+    )
+    prescription = models.ForeignKey(
+        "emr.MedicationRequestPrescription",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
     )

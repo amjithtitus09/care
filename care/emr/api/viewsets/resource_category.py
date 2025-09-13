@@ -55,13 +55,24 @@ class ResourceCategoryViewSet(
 
     def validate_data(self, instance, model_obj=None):
         facility = self.get_facility_obj() if not model_obj else model_obj.facility
-        queryset = ResourceCategory.objects.filter(
-            slug__iexact=instance.slug, facility=facility
-        )
+
+        queryset = ResourceCategory.objects.all()
+
         if model_obj:
             queryset = queryset.exclude(id=model_obj.id)
+
+        facility_external_id = str(facility.external_id)
+        slug = ResourceCategory.calculate_slug_from_facility(
+            facility_external_id, instance.slug_value
+        )
+
+        queryset = queryset.filter(slug__iexact=slug)
+
         if queryset.exists():
-            raise ValidationError("Category with this slug already exists")
+            raise ValidationError(
+                "Charge Item Definition with this slug already exists."
+            )
+
         if not model_obj and instance.parent:
             parent = instance.parent
             if parent:
@@ -77,7 +88,16 @@ class ResourceCategoryViewSet(
 
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
+        instance.slug = ResourceCategory.calculate_slug_from_facility(
+            instance.facility.external_id, instance.slug
+        )
         super().perform_create(instance)
+
+    def perform_update(self, instance):
+        instance.slug = ResourceCategory.calculate_slug_from_facility(
+            instance.facility.external_id, instance.slug
+        )
+        super().perform_update(instance)
 
     def authorize_create(self, instance):
         if not AuthorizationController.call(

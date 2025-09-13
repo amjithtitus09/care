@@ -7,7 +7,7 @@ from care.emr.models.resource_category import ResourceCategory
 from care.emr.resources.base import EMRResource
 from care.emr.resources.common.monetary_component import MonetaryComponent
 from care.emr.resources.resource_category.spec import ResourceCategoryReadSpec
-from care.emr.utils.slug_type import SlugType
+from care.emr.utils.slug_type import ExtendedSlugType, SlugType
 
 
 class ChargeItemDefinitionStatusOptions(str, Enum):
@@ -25,12 +25,15 @@ class ChargeItemDefinitionSpec(EMRResource):
     id: UUID4 | None = None
     status: ChargeItemDefinitionStatusOptions
     title: str
-    slug: SlugType
     derived_from_uri: str | None = None
     description: str | None = None
     purpose: str | None = None
     price_components: list[MonetaryComponent]
-    category: str | None = None
+
+
+class ChargeItemDefinitionWriteSpec(ChargeItemDefinitionSpec):
+    slug_value: SlugType
+    category: ExtendedSlugType | None = None
 
     @field_validator("price_components")
     @classmethod
@@ -52,12 +55,16 @@ class ChargeItemDefinitionSpec(EMRResource):
                 slug=self.category, facility=self.get_context().get("facility")
             )
 
+        obj.slug = self.slug_value
+
 
 class ChargeItemDefinitionReadSpec(ChargeItemDefinitionSpec):
     """ChargeItemDefinition read specification"""
 
     version: int | None = None
     category: dict | None = None
+    slug_config: dict
+    slug: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -66,3 +73,4 @@ class ChargeItemDefinitionReadSpec(ChargeItemDefinitionSpec):
             mapping["category"] = ResourceCategoryReadSpec.serialize(
                 obj.category
             ).to_json()
+        mapping["slug_config"] = obj.parse_slug(obj.slug)

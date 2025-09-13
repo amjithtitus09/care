@@ -12,8 +12,8 @@ from care.emr.api.viewsets.base import (
 )
 from care.emr.models.specimen_definition import SpecimenDefinition
 from care.emr.resources.specimen_definition.spec import (
-    BaseSpecimenDefinitionSpec,
     SpecimenDefinitionReadSpec,
+    SpecimenDefinitionWriteSpec,
 )
 from care.facility.models import Facility
 from care.security.authorization import AuthorizationController
@@ -35,7 +35,7 @@ class SpecimenDefinitionViewSet(
 ):
     lookup_field = "slug"
     database_model = SpecimenDefinition
-    pydantic_model = BaseSpecimenDefinitionSpec
+    pydantic_model = SpecimenDefinitionWriteSpec
     pydantic_read_model = SpecimenDefinitionReadSpec
     filterset_class = SpecimenDefinitionFilters
     filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
@@ -46,13 +46,38 @@ class SpecimenDefinitionViewSet(
             Facility, external_id=self.kwargs["facility_external_id"]
         )
 
+    def validate_data(self, instance, model_obj=None):
+        facility = self.get_facility_obj() if not model_obj else model_obj.facility
+
+        queryset = SpecimenDefinition.objects.all()
+
+        if model_obj:
+            queryset = queryset.exclude(id=model_obj.id)
+
+        facility_external_id = str(facility.external_id)
+        slug = SpecimenDefinition.calculate_slug_from_facility(
+            facility_external_id, instance.slug_value
+        )
+
+        queryset = queryset.filter(slug__iexact=slug)
+
+        if queryset.exists():
+            raise ValidationError("Specimen Definition with this slug already exists.")
+
+        return super().validate_data(instance, model_obj)
+
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
-        if SpecimenDefinition.objects.filter(
-            slug__exact=instance.slug, facility=instance.facility
-        ).exists():
-            raise ValidationError("Specimen Definition with this slug already exists.")
+        instance.slug = SpecimenDefinition.calculate_slug_from_facility(
+            instance.facility.external_id, instance.slug
+        )
         super().perform_create(instance)
+
+    def perform_update(self, instance):
+        instance.slug = SpecimenDefinition.calculate_slug_from_facility(
+            instance.facility.external_id, instance.slug
+        )
+        super().perform_update(instance)
 
     def authorize_create(self, instance):
         """

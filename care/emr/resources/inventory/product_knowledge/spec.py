@@ -97,7 +97,6 @@ class BaseProductKnowledgeSpec(EMRResource):
     __exclude__ = ["facility"]
 
     id: UUID4 | None = None
-    slug: SlugType
     alternate_identifier: str | None = None
     status: ProductKnowledgeStatusOptions
     product_type: ProductTypeOptions
@@ -111,12 +110,14 @@ class BaseProductKnowledgeSpec(EMRResource):
 
 class ProductKnowledgeUpdateSpec(BaseProductKnowledgeSpec):
     category: str | None = None
+    slug_value: SlugType
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.category:
             obj.category = ResourceCategory.objects.get(
                 slug=self.category, facility=self.get_context().get("facility")
             )
+        obj.slug = self.slug_value
 
 
 class ProductKnowledgeWriteSpec(ProductKnowledgeUpdateSpec):
@@ -136,6 +137,9 @@ class ProductKnowledgeReadSpec(BaseProductKnowledgeSpec):
     is_instance_level: bool
     category: dict | None = None
 
+    slug_config: dict
+    slug: str
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
@@ -147,3 +151,4 @@ class ProductKnowledgeReadSpec(BaseProductKnowledgeSpec):
             mapping["category"] = ResourceCategoryReadSpec.serialize(
                 obj.category
             ).to_json()
+        mapping["slug_config"] = obj.parse_slug(obj.slug)

@@ -154,7 +154,6 @@ class BaseObservationDefinitionSpec(EMRResource):
     __exclude__ = ["facility"]
 
     id: UUID4 | None = None
-    slug: SlugType
     title: str
     status: ObservationStatusChoices
     description: str
@@ -191,15 +190,7 @@ class BaseObservationDefinitionSpec(EMRResource):
 
 class ObservationDefinitionCreateSpec(BaseObservationDefinitionSpec):
     facility: UUID4 | None = None
-
-    @model_validator(mode="after")
-    def validate_slug_uniqueness(self):
-        qs = ObservationDefinition.objects.filter(slug__exact=self.slug)
-        if self.facility:
-            qs = qs.filter(facility__external_id=self.facility)
-        if qs.exists():
-            raise ValueError("Slug must be unique")
-        return self
+    slug_value: SlugType
 
     @field_validator("facility")
     @classmethod
@@ -212,11 +203,22 @@ class ObservationDefinitionCreateSpec(BaseObservationDefinitionSpec):
     def perform_extra_deserialization(self, is_update, obj):
         if self.facility:
             obj.facility = Facility.objects.get(external_id=self.facility)
+        obj.slug = self.slug_value
+
+
+class ObservationDefinitionUpdateSpec(BaseObservationDefinitionSpec):
+    slug_value: SlugType
+
+    def perform_extra_deserialization(self, is_update, obj):
+        obj.slug = self.slug_value
 
 
 class ObservationDefinitionReadSpec(BaseObservationDefinitionSpec):
     version: int | None = None
     facility: dict | None = None
+
+    slug_config: dict
+    slug: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -225,3 +227,4 @@ class ObservationDefinitionReadSpec(BaseObservationDefinitionSpec):
             mapping["facility"] = FacilityBareMinimumSpec.serialize(
                 obj.facility
             ).to_json()
+        mapping["slug_config"] = obj.parse_slug(obj.slug)

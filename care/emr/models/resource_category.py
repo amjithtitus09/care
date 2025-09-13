@@ -4,10 +4,10 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils import timezone
 
-from care.emr.models.base import EMRBaseModel
+from care.emr.models.base import SlugBaseModel
 
 
-class ResourceCategory(EMRBaseModel):
+class ResourceCategory(SlugBaseModel):
     facility = models.ForeignKey(
         "facility.Facility",
         on_delete=models.PROTECT,
@@ -15,7 +15,7 @@ class ResourceCategory(EMRBaseModel):
     resource_type = models.CharField(max_length=255)
     resource_sub_type = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
-    slug = models.CharField(max_length=25)
+    slug = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     parent = models.ForeignKey(
         "emr.ResourceCategory",

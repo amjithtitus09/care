@@ -21,7 +21,6 @@ class ResourceCategoryBaseSpec(EMRResource):
 
     id: UUID4 | None = None
     title: str
-    slug: SlugType
     description: str | None = None
     resource_type: ResourceCategoryResourceTypeOptions
     resource_sub_type: str
@@ -32,10 +31,12 @@ class ResourceCategoryWriteSpec(ResourceCategoryBaseSpec):
 
     parent: str | None = None
     is_child: bool = False
+    slug_value: SlugType
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.parent:
             obj.parent = ResourceCategory.objects.get(slug=self.parent)
+        obj.slug = self.slug_value
 
 
 class ResourceCategoryReadSpec(ResourceCategoryBaseSpec):
@@ -45,8 +46,11 @@ class ResourceCategoryReadSpec(ResourceCategoryBaseSpec):
     has_children: bool
     level_cache: int = 0
     is_child: bool
+    slug_config: dict
+    slug: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         mapping["parent"] = obj.get_parent_json()
+        mapping["slug_config"] = obj.parse_slug(obj.slug)

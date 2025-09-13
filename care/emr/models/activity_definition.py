@@ -1,10 +1,10 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from care.emr.models.base import EMRBaseModel
+from care.emr.models.base import SlugBaseModel
 
 
-class ActivityDefinition(EMRBaseModel):
+class ActivityDefinition(SlugBaseModel):
     facility = models.ForeignKey("facility.Facility", on_delete=models.PROTECT)
     version = models.IntegerField(default=1)
     slug = models.CharField(max_length=255)

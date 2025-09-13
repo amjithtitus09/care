@@ -15,7 +15,7 @@ from care.emr.models.charge_item_definition import ChargeItemDefinition
 from care.emr.models.resource_category import ResourceCategory
 from care.emr.resources.charge_item_definition.spec import (
     ChargeItemDefinitionReadSpec,
-    ChargeItemDefinitionSpec,
+    ChargeItemDefinitionWriteSpec,
 )
 from care.emr.resources.favorites.filters import FavoritesFilter
 from care.emr.resources.favorites.spec import FavoriteResourceChoices
@@ -43,7 +43,7 @@ class ChargeItemDefinitionViewSet(
 ):
     lookup_field = "slug"
     database_model = ChargeItemDefinition
-    pydantic_model = ChargeItemDefinitionSpec
+    pydantic_model = ChargeItemDefinitionWriteSpec
     pydantic_read_model = ChargeItemDefinitionReadSpec
     filterset_class = ChargeItemDefinitionFilters
     filter_backends = [filters.DjangoFilterBackend, OrderingFilter, FavoritesFilter]
@@ -55,22 +55,20 @@ class ChargeItemDefinitionViewSet(
             Facility, external_id=self.kwargs["facility_external_id"]
         )
 
-    def get_serializer_create_context(self):
-        facility = self.get_facility_obj()
-        return {"facility": facility}
-
-    def get_serializer_update_context(self):
-        obj = self.get_object()
-        return {"facility": obj.facility}
-
     def validate_data(self, instance, model_obj=None):
         facility = self.get_facility_obj() if not model_obj else model_obj.facility
 
-        queryset = ChargeItemDefinition.objects.filter(
-            slug__iexact=instance.slug, facility=facility
-        )
+        queryset = ChargeItemDefinition.objects.all()
+
         if model_obj:
             queryset = queryset.exclude(id=model_obj.id)
+
+        facility_external_id = str(facility.external_id)
+        slug = ChargeItemDefinition.calculate_slug_from_facility(
+            facility_external_id, instance.slug_value
+        )
+
+        queryset = queryset.filter(slug__iexact=slug)
 
         if queryset.exists():
             raise ValidationError(
@@ -86,7 +84,16 @@ class ChargeItemDefinitionViewSet(
 
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
+        instance.slug = ChargeItemDefinition.calculate_slug_from_facility(
+            instance.facility.external_id, instance.slug
+        )
         super().perform_create(instance)
+
+    def perform_update(self, instance):
+        instance.slug = ChargeItemDefinition.calculate_slug_from_facility(
+            instance.facility.external_id, instance.slug
+        )
+        super().perform_update(instance)
 
     def authorize_create(self, instance):
         if not AuthorizationController.call(

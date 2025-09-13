@@ -24,7 +24,7 @@ from care.emr.resources.observation_definition.spec import ObservationDefinition
 from care.emr.resources.resource_category.spec import ResourceCategoryReadSpec
 from care.emr.resources.specimen_definition.spec import SpecimenDefinitionReadSpec
 from care.emr.tagging.base import SingleFacilityTagManager
-from care.emr.utils.slug_type import SlugType
+from care.emr.utils.slug_type import ExtendedSlugType, SlugType
 from care.emr.utils.valueset_coding_type import ValueSetBoundCoding
 
 
@@ -55,7 +55,6 @@ class BaseActivityDefinitionSpec(EMRResource):
     __exclude__ = ["facility"]
 
     id: UUID4 | None = None
-    slug: SlugType
     title: str
     derived_from_uri: str | None = None
     status: ActivityDefinitionStatusOptions
@@ -72,11 +71,12 @@ class BaseActivityDefinitionSpec(EMRResource):
 
 class ActivityDefinitionWriteSpec(BaseActivityDefinitionSpec):
     locations: list[UUID4]
-    specimen_requirements: list[SlugType]
-    observation_result_requirements: list[SlugType]
+    specimen_requirements: list[ExtendedSlugType]
+    observation_result_requirements: list[ExtendedSlugType]
     healthcare_service: UUID4 | None
-    charge_item_definitions: list[SlugType]
-    category: SlugType | None
+    charge_item_definitions: list[ExtendedSlugType]
+    category: ExtendedSlugType | None
+    slug_value: SlugType
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.healthcare_service:
@@ -87,6 +87,7 @@ class ActivityDefinitionWriteSpec(BaseActivityDefinitionSpec):
             obj.category = ResourceCategory.objects.get(
                 slug=self.category, facility=self.get_context().get("facility")
             )
+        obj.slug = self.slug_value
 
 
 class ActivityDefinitionReadSpec(BaseActivityDefinitionSpec):
@@ -95,6 +96,8 @@ class ActivityDefinitionReadSpec(BaseActivityDefinitionSpec):
     version: int | None = None
     tags: list[dict] = []
     category: dict | None = None
+    slug_config: dict
+    slug: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -105,6 +108,7 @@ class ActivityDefinitionReadSpec(BaseActivityDefinitionSpec):
             mapping["category"] = ResourceCategoryReadSpec.serialize(
                 obj.category
             ).to_json()
+        mapping["slug_config"] = obj.parse_slug(obj.slug)
 
 
 class ActivityDefinitionRetrieveSpec(ActivityDefinitionReadSpec):

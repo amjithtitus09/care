@@ -67,14 +67,6 @@ class ActivityDefinitionViewSet(
             Facility, external_id=self.kwargs["facility_external_id"]
         )
 
-    def get_serializer_create_context(self):
-        facility = self.get_facility_obj()
-        return {"facility": facility}
-
-    def get_serializer_update_context(self):
-        obj = self.get_object()
-        return {"facility": obj.facility}
-
     def convert_external_id_to_internal_id(self, instance):
         # Convert speciment requirements to list of ids
         ids = []
@@ -145,6 +137,20 @@ class ActivityDefinitionViewSet(
     def validate_data(self, instance, model_obj=None):
         facility = self.get_facility_obj() if not model_obj else model_obj.facility
 
+        queryset = ActivityDefinition.objects.all()
+        if model_obj:
+            queryset = queryset.exclude(id=model_obj.id)
+
+        facility_external_id = str(facility.external_id)
+        slug = ActivityDefinition.calculate_slug_from_facility(
+            facility_external_id, instance.slug_value
+        )
+
+        queryset = queryset.filter(slug__iexact=slug)
+
+        if queryset.exists():
+            raise ValidationError("Activity Definition with this slug already exists.")
+
         if instance.category:
             get_object_or_404(
                 ResourceCategory, slug=instance.category, facility=facility
@@ -154,15 +160,17 @@ class ActivityDefinitionViewSet(
 
     def perform_create(self, instance):
         instance.facility = self.get_facility_obj()
-        if ActivityDefinition.objects.filter(
-            slug__iexact=instance.slug, facility=instance.facility
-        ).exists():
-            raise ValidationError("Activity Definition with this slug already exists.")
+        instance.slug = ActivityDefinition.calculate_slug_from_facility(
+            instance.facility.external_id, instance.slug
+        )
         self.convert_external_id_to_internal_id(instance)
         self.validate_health_care_service(instance)
         super().perform_create(instance)
 
     def perform_update(self, instance):
+        instance.slug = ActivityDefinition.calculate_slug_from_facility(
+            instance.facility.external_id, instance.slug
+        )
         self.convert_external_id_to_internal_id(instance)
         self.validate_health_care_service(instance)
         super().perform_update(instance)

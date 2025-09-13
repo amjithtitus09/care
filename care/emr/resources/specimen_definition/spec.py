@@ -86,7 +86,6 @@ class BaseSpecimenDefinitionSpec(EMRResource):
     __exclude__ = ["facility"]
 
     id: UUID4 | None = None
-    slug: SlugType
     title: str
     derived_from_uri: str | None = None
     status: SpecimenDefinitionStatusOptions
@@ -101,11 +100,21 @@ class BaseSpecimenDefinitionSpec(EMRResource):
     type_tested: TypeTestedSpec | None = None
 
 
+class SpecimenDefinitionWriteSpec(BaseSpecimenDefinitionSpec):
+    slug_value: SlugType
+
+    def perform_extra_deserialization(self, is_update, obj):
+        obj.slug = self.slug_value
+
+
 class SpecimenDefinitionReadSpec(BaseSpecimenDefinitionSpec):
     """Specimen definition read specification"""
 
     version: int | None = None
+    slug_config: dict
+    slug: str
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
+        mapping["slug_config"] = obj.parse_slug(obj.slug)
