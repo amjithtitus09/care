@@ -95,7 +95,7 @@ class ProductKnowledgeViewSet(
 
         if instance.category and facility:
             get_object_or_404(
-                ResourceCategory, slug=instance.category, facility=facility
+                ResourceCategory.objects.only("id"), slug=instance.category
             )
 
         return super().validate_data(instance, model_obj)

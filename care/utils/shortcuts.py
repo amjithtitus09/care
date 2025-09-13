@@ -11,4 +11,5 @@ def get_object_or_404(queryset, *filter_args, **filter_kwargs):
     try:
         return _get_object_or_404(queryset, *filter_args, **filter_kwargs)
     except (TypeError, ValueError, ValidationError):
-        raise Http404(f"No {queryset.model._meta.object_name} matches the given query.")  # noqa: B904, EM102, SLF001
+        model = queryset.model if hasattr(queryset, "model") else queryset
+        raise Http404(f"No {model._meta.object_name} matches the given query.")  # noqa: B904, EM102, SLF001
