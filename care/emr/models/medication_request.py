@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.utils import timezone
@@ -16,6 +17,7 @@ class MedicationRequestPrescription(EMRBaseModel):
     status = models.CharField(max_length=100, null=True, blank=True)
     approval_status = models.CharField(max_length=100, null=True, blank=True)
     alternate_identifier = models.CharField(max_length=100, null=True, blank=True)
+    tags = ArrayField(models.IntegerField(), default=list)
 
     class Meta:
         constraints = [

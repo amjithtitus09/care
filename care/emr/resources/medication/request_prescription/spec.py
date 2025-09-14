@@ -8,6 +8,7 @@ from care.emr.models.medication_request import MedicationRequestPrescription
 from care.emr.resources.base import EMRResource, model_from_cache
 from care.emr.resources.encounter.spec import EncounterListSpec
 from care.emr.resources.user.spec import UserSpec
+from care.emr.tagging.base import SingleFacilityTagManager
 from care.users.models import User
 
 
@@ -52,6 +53,7 @@ class MedicationRequestPrescriptionReadSpec(BaseMedicationRequestPrescriptionSpe
     created_date: datetime
     modified_date: datetime
     prescribed_by: UserSpec = {}
+    tags: list[dict] = []
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -60,6 +62,7 @@ class MedicationRequestPrescriptionReadSpec(BaseMedicationRequestPrescriptionSpe
             mapping["prescribed_by"] = model_from_cache(
                 UserSpec, id=obj.prescribed_by_id
             )
+        mapping["tags"] = SingleFacilityTagManager().render_tags(obj)
 
 
 class MedicationRequestPrescriptionRetrieveSpec(MedicationRequestPrescriptionReadSpec):
