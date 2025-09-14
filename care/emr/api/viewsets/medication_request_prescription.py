@@ -1,7 +1,7 @@
 from django_filters import rest_framework as filters
 from rest_framework import filters as rest_framework_filters
 
-from care.emr.api.viewsets.base import EMRModelViewSet
+from care.emr.api.viewsets.base import EMRModelViewSet, EMRTagMixin
 from care.emr.api.viewsets.encounter_authz_base import EncounterBasedAuthorizationBase
 from care.emr.models.medication_request import MedicationRequestPrescription
 from care.emr.resources.medication.request_prescription.spec import (
@@ -9,6 +9,8 @@ from care.emr.resources.medication.request_prescription.spec import (
     MedicationRequestPrescriptionUpdateSpec,
     MedicationRequestPrescriptionWriteSpec,
 )
+from care.emr.resources.tag.config_spec import TagResource
+from care.emr.tagging.filters import SingleFacilityTagFilter
 from care.utils.filters.multiselect import MultiSelectFilter
 
 
@@ -19,7 +21,7 @@ class MedicationRequestPrescriptionFilter(filters.FilterSet):
 
 
 class MedicationRequestPrescriptionViewSet(
-    EncounterBasedAuthorizationBase, EMRModelViewSet
+    EncounterBasedAuthorizationBase, EMRModelViewSet, EMRTagMixin
 ):
     database_model = MedicationRequestPrescription
     pydantic_model = MedicationRequestPrescriptionWriteSpec
@@ -29,8 +31,13 @@ class MedicationRequestPrescriptionViewSet(
     filter_backends = [
         filters.DjangoFilterBackend,
         rest_framework_filters.OrderingFilter,
+        SingleFacilityTagFilter,
     ]
     ordering_fields = ["created_date", "modified_date"]
+    resource_type = TagResource.medication_request_prescription
+
+    def get_facility_from_instance(self, instance):
+        return instance.encounter.facility  # Overide as needed
 
     def get_queryset(self):
         self.authorize_read_for_medication()

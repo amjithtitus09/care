@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import UniqueConstraint
 from django.utils import timezone
 
 from care.emr.models.base import EMRBaseModel
@@ -9,9 +10,20 @@ class MedicationRequestPrescription(EMRBaseModel):
     patient = models.ForeignKey("emr.Patient", on_delete=models.CASCADE)
     name = models.CharField(max_length=100, null=True, blank=True)
     note = models.TextField(null=True, blank=True)
-    prescribed_by = models.ForeignKey("users.User", on_delete=models.CASCADE)
+    prescribed_by = models.ForeignKey(
+        "users.User", on_delete=models.CASCADE, null=True, blank=True
+    )
     status = models.CharField(max_length=100, null=True, blank=True)
     approval_status = models.CharField(max_length=100, null=True, blank=True)
+    alternate_identifier = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["alternate_identifier", "encounter"],
+                name="unique_alternate_identifier_encounter",
+            )
+        ]
 
 
 class MedicationRequest(EMRBaseModel):

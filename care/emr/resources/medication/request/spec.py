@@ -14,6 +14,7 @@ from care.emr.resources.common.coding import Coding
 from care.emr.resources.inventory.product_knowledge.spec import ProductKnowledgeReadSpec
 from care.emr.resources.medication.request_prescription.spec import (
     MedicationRequestPrescriptionReadSpec,
+    MedicationRequestPrescriptionStatus,
 )
 from care.emr.resources.medication.valueset.additional_instruction import (
     CARE_ADDITIONAL_INSTRUCTION_VALUESET,
@@ -196,10 +197,23 @@ class BaseMedicationRequestSpec(MedicationRequestResource):
     dispense_status: MedicationRequestDispenseStatus | None = None
 
 
+class CreatePrescription(BaseModel):
+    name: str | None = None
+    note: str | None = None
+    alternate_identifier: str | None = None
+
+
 class MedicationRequestSpec(BaseMedicationRequestSpec):
     requester: UUID4 | None = None
     requested_product: UUID4 | None = None
     prescription: UUID4 | None = None
+    create_prescription: CreatePrescription | None = None
+
+    @model_validator(mode="after")
+    def validate_prescription(self):
+        if self.create_prescription and self.prescription:
+            raise ValueError("Cannot have both prescription and create_prescription")
+        return self
 
     @model_validator(mode="after")
     def validate_request_code(self):
@@ -239,6 +253,22 @@ class MedicationRequestSpec(BaseMedicationRequestSpec):
                 external_id=self.prescription,
                 encounter=obj.encounter,
             )
+        if self.create_prescription:
+            prescription_obj = MedicationRequestPrescription.objects.filter(
+                alternate_identifier=self.create_prescription.alternate_identifier,
+                encounter=obj.encounter,
+            ).first()
+            if not prescription_obj:
+                prescription_obj = MedicationRequestPrescription.objects.create(
+                    status=MedicationRequestPrescriptionStatus.active,
+                    alternate_identifier=self.create_prescription.alternate_identifier,
+                    encounter=obj.encounter,
+                    patient=obj.patient,
+                    name=self.create_prescription.name,
+                    note=self.create_prescription.note,
+                    prescribed_by=obj.requester,
+                )
+            obj.prescription = prescription_obj
 
 
 class MedicationRequestUpdateSpec(MedicationRequestResource):

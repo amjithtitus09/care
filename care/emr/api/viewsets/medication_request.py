@@ -12,16 +12,21 @@ from care.emr.api.viewsets.base import (
 )
 from care.emr.api.viewsets.encounter_authz_base import EncounterBasedAuthorizationBase
 from care.emr.models.encounter import Encounter
-from care.emr.models.medication_request import MedicationRequest
+from care.emr.models.medication_request import (
+    MedicationRequest,
+    MedicationRequestPrescription,
+)
 from care.emr.registries.system_questionnaire.system_questionnaire import (
     InternalQuestionnaireRegistry,
 )
-from care.emr.resources.encounter.spec import EncounterListSpec
 from care.emr.resources.medication.request.spec import (
     MedicationRequestReadSpec,
     MedicationRequestSpec,
     MedicationRequestStatus,
     MedicationRequestUpdateSpec,
+)
+from care.emr.resources.medication.request_prescription.spec import (
+    MedicationRequestPrescriptionRetrieveDetailedSpec,
 )
 from care.emr.resources.questionnaire.spec import SubjectType
 from care.facility.models.facility import Facility
@@ -133,24 +138,27 @@ class MedicationRequestSummaryViewSet(EMRBaseViewSet):
             MedicationRequest.objects.filter(
                 encounter__facility=facility,
                 status=MedicationRequestStatus.active.value,
+                prescription__isnull=False,
             )
-            .values("encounter_id", "priority")
-            .annotate(dcount=Count("priority"))
-        ).order_by("encounter_id")
+            .values("prescription_id")
+            .annotate(dcount=Count("prescription_id"))
+        ).order_by("prescription_id")
         queryset = self.filter_queryset(queryset)
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
         if page is not None:
-            encounters = Encounter.objects.filter(
-                id__in=[x["encounter_id"] for x in page]
+            prescriptions = MedicationRequestPrescription.objects.filter(
+                id__in=[x["prescription_id"] for x in page]
             )
-            encounters = {
-                x.id: EncounterListSpec.serialize(x).to_json() for x in encounters
+            prescriptions = {
+                x.id: MedicationRequestPrescriptionRetrieveDetailedSpec.serialize(
+                    x
+                ).to_json()
+                for x in prescriptions
             }
             data = [
                 {
-                    "encounter": encounters.get(x["encounter_id"], None),
-                    "priority": x["priority"],
+                    "prescription": prescriptions.get(x["prescription_id"], None),
                     "count": x["dcount"],
                 }
                 for x in page

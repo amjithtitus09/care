@@ -6,6 +6,7 @@ from pydantic import UUID4
 from care.emr.models.encounter import Encounter
 from care.emr.models.medication_request import MedicationRequestPrescription
 from care.emr.resources.base import EMRResource, model_from_cache
+from care.emr.resources.encounter.spec import EncounterListSpec
 from care.emr.resources.user.spec import UserSpec
 from care.users.models import User
 
@@ -69,3 +70,15 @@ class MedicationRequestPrescriptionRetrieveSpec(BaseMedicationRequestPrescriptio
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
         cls.serialize_audit_users(mapping, obj)
+
+
+class MedicationRequestPrescriptionRetrieveDetailedSpec(
+    MedicationRequestPrescriptionRetrieveSpec
+):
+    encounter: dict = {}
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        mapping["id"] = obj.external_id
+        cls.serialize_audit_users(mapping, obj)
+        mapping["encounter"] = EncounterListSpec.serialize(obj.encounter).to_json()
