@@ -11,6 +11,7 @@ from care.emr.resources.charge_item.spec import ChargeItemReadSpec
 from care.emr.resources.facility.spec import FacilityBareMinimumSpec
 from care.emr.resources.patient.otp_based_flow import PatientOTPReadSpec
 from care.emr.resources.scheduling.resource.spec import serialize_resource
+from care.emr.resources.scheduling.schedule.spec import SchedulableResourceTypeOptions
 from care.emr.resources.scheduling.token.spec import TokenReadSpec
 from care.emr.resources.user.spec import UserSpec
 from care.emr.tagging.base import SingleFacilityTagManager
@@ -106,6 +107,7 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
     booked_by: UserSpec
     status: str
     note: str
+    resource_type: SchedulableResourceTypeOptions
     resource: dict = {}
     facility: dict = {}
     created_by: UserSpec | None = None
@@ -125,6 +127,7 @@ class TokenBookingReadSpec(TokenBookingBaseSpec):
         mapping["patient"] = PatientOTPReadSpec.serialize(obj.patient).model_dump(
             exclude=["meta"]
         )
+        mapping["resource_type"] = obj.token_slot.resource.resource_type
         mapping["resource"] = serialize_resource(obj.token_slot.resource)
         mapping["facility"] = model_from_cache(
             FacilityBareMinimumSpec, id=obj.token_slot.resource.facility_id
