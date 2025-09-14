@@ -51,8 +51,12 @@ class MedicationDispenseFilters(filters.FilterSet):
     patient = filters.UUIDFilter(field_name="patient__external_id")
     item = filters.UUIDFilter(field_name="item__external_id")
     authorizing_prescription = filters.UUIDFilter(
-        field_name="authorizing_prescription__external_id"
+        field_name="authorizing_request__prescription__external_id"
     )
+    authorizing_request = filters.UUIDFilter(
+        field_name="authorizing_request__external_id"
+    )
+
     exclude_status = MultiSelectFilter(field_name="status", exclude=True)
     location = filters.UUIDFilter(field_name="location__external_id")
     include_children = DummyBooleanFilter()
@@ -93,11 +97,11 @@ class MedicationDispenseViewSet(
                 instance.charge_item = charge_item
                 instance.save(update_fields=["charge_item"])
             sync_inventory_item(instance.item.location, instance.item.product)
-            if instance.authorizing_prescription:
-                instance.authorizing_prescription.dispense_status = (
+            if instance.authorizing_request:
+                instance.authorizing_request.dispense_status = (
                     MedicationRequestDispenseStatus.partial.value
                 )
-                instance.authorizing_prescription.save()
+                instance.authorizing_request.save()
 
     def authorize_location_write(self, location):
         if not AuthorizationController.call(

@@ -12,7 +12,10 @@ from care.emr.resources.base import EMRResource
 from care.emr.resources.charge_item.spec import ChargeItemReadSpec
 from care.emr.resources.inventory.inventory_item.spec import InventoryItemReadSpec
 from care.emr.resources.location.spec import FacilityLocationListSpec
-from care.emr.resources.medication.request.spec import DosageInstruction
+from care.emr.resources.medication.request.spec import (
+    DosageInstruction,
+    MedicationRequestReadSpec,
+)
 from care.utils.shortcuts import get_object_or_404
 
 
@@ -82,7 +85,7 @@ class BaseMedicationDispenseSpec(EMRResource):
     __exclude__ = [
         "patient",
         "encounter",
-        "authorizing_prescription",
+        "authorizing_request",
         "item",
         "location",
     ]
@@ -101,7 +104,7 @@ class BaseMedicationDispenseSpec(EMRResource):
 class MedicationDispenseWriteSpec(BaseMedicationDispenseSpec):
     encounter: UUID4
     location: UUID4
-    authorizing_prescription: UUID4 | None = None
+    authorizing_request: UUID4 | None = None
     item: UUID4
     quantity: float
     days_supply: float | None = None
@@ -111,10 +114,10 @@ class MedicationDispenseWriteSpec(BaseMedicationDispenseSpec):
             Encounter.objects.filter(external_id=self.encounter).only("id")
         )
         obj.patient = obj.encounter.patient
-        if self.authorizing_prescription:
-            obj.authorizing_prescription = get_object_or_404(
+        if self.authorizing_request:
+            obj.authorizing_request = get_object_or_404(
                 MedicationRequest.objects.filter(
-                    external_id=self.authorizing_prescription,
+                    external_id=self.authorizing_request,
                     encounter=obj.encounter,
                 ).only("id")
             )
@@ -141,6 +144,7 @@ class MedicationDispenseReadSpec(BaseMedicationDispenseSpec):
     modified_date: datetime
     location: dict
     quantity: float
+    authorizing_request: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -151,3 +155,7 @@ class MedicationDispenseReadSpec(BaseMedicationDispenseSpec):
                 obj.charge_item
             ).to_json()
         mapping["location"] = FacilityLocationListSpec.serialize(obj.location).to_json()
+        if obj.authorizing_request:
+            mapping["authorizing_request"] = MedicationRequestReadSpec.serialize(
+                obj.authorizing_request
+            ).to_json()
