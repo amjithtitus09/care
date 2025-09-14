@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 
 from pydantic import UUID4, BaseModel, Field, field_validator, model_validator
+from rest_framework.exceptions import ValidationError
 
 from care.emr.models.encounter import Encounter
 from care.emr.models.medication_request import (
@@ -258,6 +259,12 @@ class MedicationRequestSpec(BaseMedicationRequestSpec):
                 alternate_identifier=self.create_prescription.alternate_identifier,
                 encounter=obj.encounter,
             ).first()
+            if (
+                prescription_obj
+                and prescription_obj.status
+                != MedicationRequestPrescriptionStatus.active
+            ):
+                raise ValidationError("Prescription is not active")
             if not prescription_obj:
                 prescription_obj = MedicationRequestPrescription.objects.create(
                     status=MedicationRequestPrescriptionStatus.active,

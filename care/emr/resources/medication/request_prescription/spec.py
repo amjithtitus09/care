@@ -62,13 +62,13 @@ class MedicationRequestPrescriptionReadSpec(BaseMedicationRequestPrescriptionSpe
             )
 
 
-class MedicationRequestPrescriptionRetrieveSpec(BaseMedicationRequestPrescriptionSpec):
+class MedicationRequestPrescriptionRetrieveSpec(MedicationRequestPrescriptionReadSpec):
     created_by: UserSpec = {}
     updated_by: UserSpec = {}
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
-        mapping["id"] = obj.external_id
+        super().perform_extra_serialization(mapping, obj)
         cls.serialize_audit_users(mapping, obj)
 
 
@@ -79,6 +79,5 @@ class MedicationRequestPrescriptionRetrieveDetailedSpec(
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
-        mapping["id"] = obj.external_id
-        cls.serialize_audit_users(mapping, obj)
+        super().perform_extra_serialization(mapping, obj)
         mapping["encounter"] = EncounterListSpec.serialize(obj.encounter).to_json()
