@@ -32,8 +32,11 @@ class EvaluationMetricBase:
 
     def evaluate_intersects_any(self, rule):
         value = self.get_value()
+        rule = self.clean_rule(rule)
+        return rule in value
 
-        return value in rule["values"]
+    def clean_rule(self, rule):
+        return rule
 
     def get_value(self):
         return self._value

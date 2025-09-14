@@ -1,3 +1,4 @@
+from care.emr.models.tag_config import TagConfig
 from care.utils.evaluators.evaluation_metric.base import EvaluationMetricBase
 from care.utils.registries.evaluation_metric import (
     AllowedOperations,
@@ -12,6 +13,12 @@ class EncounterTagsMetric(EvaluationMetricBase):
     allowed_operations = [
         AllowedOperations.intersects_any.value,
     ]
+
+    def clean_rule(self, rule):
+        tag_config = TagConfig.objects.only("id").filter(external_id=rule).first()
+        if tag_config is None:
+            return -1
+        return tag_config.id
 
     def get_value(self):
         encounter = self.context_object
