@@ -52,6 +52,9 @@ from care.emr.api.viewsets.medication_request import (
     MedicationRequestSummaryViewSet,
     MedicationRequestViewSet,
 )
+from care.emr.api.viewsets.medication_request_prescription import (
+    MedicationRequestPrescriptionViewSet,
+)
 from care.emr.api.viewsets.medication_statement import MedicationStatementViewSet
 from care.emr.api.viewsets.meta_artifact import MetaArtifactViewSet
 from care.emr.api.viewsets.mfa_login import MFALoginViewSet
@@ -417,6 +420,11 @@ patient_nested_router.register(
     r"medication/request",
     MedicationRequestViewSet,
     basename="medication-request",
+)
+patient_nested_router.register(
+    r"medication/prescription",
+    MedicationRequestPrescriptionViewSet,
+    basename="medication-request-prescription",
 )
 patient_nested_router.register(
     r"medication/statement",

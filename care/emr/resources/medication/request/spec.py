@@ -4,11 +4,17 @@ from enum import Enum
 from pydantic import UUID4, BaseModel, Field, field_validator, model_validator
 
 from care.emr.models.encounter import Encounter
-from care.emr.models.medication_request import MedicationRequest
+from care.emr.models.medication_request import (
+    MedicationRequest,
+    MedicationRequestPrescription,
+)
 from care.emr.models.product_knowledge import ProductKnowledge
 from care.emr.resources.base import EMRResource, model_from_cache
 from care.emr.resources.common.coding import Coding
 from care.emr.resources.inventory.product_knowledge.spec import ProductKnowledgeReadSpec
+from care.emr.resources.medication.request_prescription.spec import (
+    MedicationRequestPrescriptionReadSpec,
+)
 from care.emr.resources.medication.valueset.additional_instruction import (
     CARE_ADDITIONAL_INSTRUCTION_VALUESET,
 )
@@ -155,7 +161,13 @@ class DosageInstruction(BaseModel):
 
 class MedicationRequestResource(EMRResource):
     __model__ = MedicationRequest
-    __exclude__ = ["patient", "encounter", "requester", "requested_product"]
+    __exclude__ = [
+        "patient",
+        "encounter",
+        "requester",
+        "requested_product",
+        "prescription",
+    ]
 
 
 class BaseMedicationRequestSpec(MedicationRequestResource):
@@ -187,6 +199,7 @@ class BaseMedicationRequestSpec(MedicationRequestResource):
 class MedicationRequestSpec(BaseMedicationRequestSpec):
     requester: UUID4 | None = None
     requested_product: UUID4 | None = None
+    prescription: UUID4 | None = None
 
     @model_validator(mode="after")
     def validate_request_code(self):
@@ -220,6 +233,13 @@ class MedicationRequestSpec(BaseMedicationRequestSpec):
             ):
                 raise ValueError("Product not found in facility")
 
+        if self.prescription:
+            obj.prescription = get_object_or_404(
+                MedicationRequestPrescription.objects.only("id"),
+                external_id=self.prescription,
+                encounter=obj.encounter,
+            )
+
 
 class MedicationRequestUpdateSpec(MedicationRequestResource):
     status: MedicationRequestStatus
@@ -235,6 +255,8 @@ class MedicationRequestReadSpec(BaseMedicationRequestSpec):
     requested_product: dict | None = None
     requester: UserSpec | None = None
 
+    prescription: dict | None = None
+
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
@@ -246,3 +268,7 @@ class MedicationRequestReadSpec(BaseMedicationRequestSpec):
         if obj.requester_id:
             mapping["requester"] = model_from_cache(UserSpec, id=obj.requester_id)
         cls.serialize_audit_users(mapping, obj)
+        if obj.prescription:
+            mapping["prescription"] = MedicationRequestPrescriptionReadSpec.serialize(
+                obj.prescription
+            ).to_json()

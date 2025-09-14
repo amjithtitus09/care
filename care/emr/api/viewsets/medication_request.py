@@ -46,6 +46,7 @@ class MedicationRequestFilter(filters.FilterSet):
     )
     dispense_status_isnull = NullFilter(field_name="dispense_status")
     facility = filters.UUIDFilter(field_name="encounter__facility__external_id")
+    prescription = filters.UUIDFilter(field_name="prescription__external_id")
 
 
 class MedicationRequestViewSet(
