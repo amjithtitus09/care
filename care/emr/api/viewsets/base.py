@@ -1,6 +1,7 @@
 import json
 
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.http.response import Http404
 from drf_spectacular.utils import extend_schema
@@ -8,6 +9,7 @@ from pydantic import UUID4, BaseModel, ValidationError
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as RestFrameworkValidationError
+from rest_framework.fields import get_error_detail
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 from rest_framework.viewsets import GenericViewSet
@@ -20,6 +22,9 @@ from care.utils.shortcuts import get_object_or_404
 
 
 def emr_exception_handler(exc, context):
+    if isinstance(exc, DjangoValidationError):
+        exc = RestFrameworkValidationError(detail={"detail": get_error_detail(exc)[0]})
+
     if isinstance(exc, ValidationError):
         return Response({"errors": json.loads(exc.json())}, status=400)
     if isinstance(exc, Http404):
