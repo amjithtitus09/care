@@ -11,7 +11,6 @@ from care.emr.resources.medication.request_prescription.spec import (
     MedicationRequestPrescriptionReadSpec,
     MedicationRequestPrescriptionRetrieveDetailedSpec,
     MedicationRequestPrescriptionRetrieveMedicationsSpec,
-    MedicationRequestPrescriptionStatus,
     MedicationRequestPrescriptionUpdateSpec,
     MedicationRequestPrescriptionWriteSpec,
 )
@@ -89,8 +88,7 @@ class MedicationRequestSummaryViewSet(EMRBaseViewSet):
         facility = self.get_facility_obj()
         self.authorize_for_pharmacist(facility)
         queryset = MedicationRequestPrescription.objects.filter(
-            encounter__facility=facility,
-            status=MedicationRequestPrescriptionStatus.active.value,
+            encounter__facility=facility
         ).order_by("-created_date")
         queryset = self.filter_queryset(queryset)
         paginator = self.pagination_class()
