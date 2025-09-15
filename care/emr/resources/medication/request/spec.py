@@ -188,8 +188,6 @@ class BaseMedicationRequestSpec(MedicationRequestResource):
 
     medication: ValueSetBoundCoding[CARE_MEDICATION_VALUESET.slug] | None = None
 
-    encounter: UUID4
-
     dosage_instruction: list[DosageInstruction]
     authored_on: datetime
 
@@ -209,6 +207,7 @@ class MedicationRequestSpec(BaseMedicationRequestSpec):
     requested_product: UUID4 | None = None
     prescription: UUID4 | None = None
     create_prescription: CreatePrescription | None = None
+    encounter: UUID4
 
     @model_validator(mode="after")
     def validate_prescription(self):
@@ -284,7 +283,7 @@ class MedicationRequestUpdateSpec(MedicationRequestResource):
     dispense_status: MedicationRequestDispenseStatus | None = None
 
 
-class MedicationRequestReadSpec(BaseMedicationRequestSpec):
+class MedicationRequestReadWithoutPrescriptionSpec(BaseMedicationRequestSpec):
     created_by: UserSpec = {}
     updated_by: UserSpec = {}
     created_date: datetime
@@ -292,12 +291,9 @@ class MedicationRequestReadSpec(BaseMedicationRequestSpec):
     requested_product: dict | None = None
     requester: UserSpec | None = None
 
-    prescription: dict | None = None
-
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        mapping["encounter"] = obj.encounter.external_id
         if obj.requested_product:
             mapping["requested_product"] = ProductKnowledgeReadSpec.serialize(
                 obj.requested_product
@@ -305,7 +301,17 @@ class MedicationRequestReadSpec(BaseMedicationRequestSpec):
         if obj.requester_id:
             mapping["requester"] = model_from_cache(UserSpec, id=obj.requester_id)
         cls.serialize_audit_users(mapping, obj)
+
+
+class MedicationRequestReadSpec(MedicationRequestReadWithoutPrescriptionSpec):
+    prescription: dict | None = None
+    encounter: UUID4
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        super().perform_extra_serialization(mapping, obj)
         if obj.prescription:
             mapping["prescription"] = MedicationRequestPrescriptionReadSpec.serialize(
                 obj.prescription
             ).to_json()
+        mapping["encounter"] = obj.encounter.external_id

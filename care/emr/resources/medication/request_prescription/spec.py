@@ -4,7 +4,10 @@ from enum import Enum
 from pydantic import UUID4
 
 from care.emr.models.encounter import Encounter
-from care.emr.models.medication_request import MedicationRequestPrescription
+from care.emr.models.medication_request import (
+    MedicationRequest,
+    MedicationRequestPrescription,
+)
 from care.emr.resources.base import EMRResource, model_from_cache
 from care.emr.resources.encounter.spec import EncounterListSpec
 from care.emr.resources.user.spec import UserSpec
@@ -73,6 +76,28 @@ class MedicationRequestPrescriptionRetrieveSpec(MedicationRequestPrescriptionRea
     def perform_extra_serialization(cls, mapping, obj):
         super().perform_extra_serialization(mapping, obj)
         cls.serialize_audit_users(mapping, obj)
+
+
+class MedicationRequestPrescriptionRetrieveMedicationsSpec(
+    MedicationRequestPrescriptionRetrieveSpec
+):
+    medications: list[dict] = []
+
+    @classmethod
+    def perform_extra_serialization(cls, mapping, obj):
+        from care.emr.resources.medication.request.spec import (
+            MedicationRequestReadWithoutPrescriptionSpec,
+        )
+
+        super().perform_extra_serialization(mapping, obj)
+        cls.serialize_audit_users(mapping, obj)
+        medications = MedicationRequest.objects.filter(prescription=obj).select_related(
+            "requested_product"
+        )
+        mapping["medications"] = [
+            MedicationRequestReadWithoutPrescriptionSpec.serialize(medication).to_json()
+            for medication in medications
+        ]
 
 
 class MedicationRequestPrescriptionRetrieveDetailedSpec(

@@ -6,6 +6,7 @@ from care.emr.api.viewsets.encounter_authz_base import EncounterBasedAuthorizati
 from care.emr.models.medication_request import MedicationRequestPrescription
 from care.emr.resources.medication.request_prescription.spec import (
     MedicationRequestPrescriptionReadSpec,
+    MedicationRequestPrescriptionRetrieveMedicationsSpec,
     MedicationRequestPrescriptionUpdateSpec,
     MedicationRequestPrescriptionWriteSpec,
 )
@@ -27,6 +28,7 @@ class MedicationRequestPrescriptionViewSet(
     pydantic_model = MedicationRequestPrescriptionWriteSpec
     pydantic_update_model = MedicationRequestPrescriptionUpdateSpec
     pydantic_read_model = MedicationRequestPrescriptionReadSpec
+    pydantic_retrieve_model = MedicationRequestPrescriptionRetrieveMedicationsSpec
     filterset_class = MedicationRequestPrescriptionFilter
     filter_backends = [
         filters.DjangoFilterBackend,
