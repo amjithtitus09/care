@@ -49,7 +49,7 @@ from care.emr.api.viewsets.medication_administration import (
 )
 from care.emr.api.viewsets.medication_dispense import MedicationDispenseViewSet
 from care.emr.api.viewsets.medication_request import (
-    MedicationRequestSummaryViewSet,
+    MedicationPrescriptionSummaryViewSet,
     MedicationRequestViewSet,
 )
 from care.emr.api.viewsets.medication_request_prescription import (
@@ -342,9 +342,9 @@ facility_nested_router.register(
 )
 
 facility_nested_router.register(
-    r"medication_request",
-    MedicationRequestSummaryViewSet,
-    basename="medication_request",
+    r"medication_prescription",
+    MedicationPrescriptionSummaryViewSet,
+    basename="medication_prescription",
 )
 
 
