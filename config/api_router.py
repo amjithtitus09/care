@@ -48,11 +48,9 @@ from care.emr.api.viewsets.medication_administration import (
     MedicationAdministrationViewSet,
 )
 from care.emr.api.viewsets.medication_dispense import MedicationDispenseViewSet
-from care.emr.api.viewsets.medication_request import (
-    MedicationPrescriptionSummaryViewSet,
-    MedicationRequestViewSet,
-)
+from care.emr.api.viewsets.medication_request import MedicationRequestViewSet
 from care.emr.api.viewsets.medication_request_prescription import (
+    MedicationPrescriptionSummaryViewSet,
     MedicationRequestPrescriptionViewSet,
 )
 from care.emr.api.viewsets.medication_statement import MedicationStatementViewSet

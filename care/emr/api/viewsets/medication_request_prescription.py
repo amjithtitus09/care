@@ -68,7 +68,7 @@ class MedicationRequestSummaryFilters(filters.FilterSet):
     )
 
 
-class MedicationRequestSummaryViewSet(EMRBaseViewSet):
+class MedicationPrescriptionSummaryViewSet(EMRBaseViewSet):
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = MedicationRequestSummaryFilters
 
