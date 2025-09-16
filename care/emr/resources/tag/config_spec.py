@@ -60,8 +60,8 @@ class TagConfigUpdateSpec(TagConfigBaseSpec):
 
     def perform_extra_deserialization(self, is_update, obj):
         if self.organization:
-            obj.organization = Organization.objects.only("id").get(
-                external_id=self.organization
+            obj.organization = get_object_or_404(
+                Organization.objects.only("id"), external_id=self.organization
             )
         if self.facility_organization:
             obj.facility_organization = get_object_or_404(
