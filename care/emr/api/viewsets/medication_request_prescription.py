@@ -69,7 +69,7 @@ class MedicationRequestSummaryFilters(filters.FilterSet):
 
 
 class MedicationPrescriptionSummaryViewSet(EMRBaseViewSet):
-    filter_backends = [filters.DjangoFilterBackend]
+    filter_backends = [filters.DjangoFilterBackend, SingleFacilityTagFilter]
     filterset_class = MedicationRequestSummaryFilters
 
     def get_facility_obj(self):
