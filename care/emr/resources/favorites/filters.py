@@ -50,7 +50,7 @@ class FavoritesFilter(BaseFilterBackend):
 
         favorites = cache.get(
             favorite_list_object_cache_key(
-                request.user, view.FAVORITE_RESOURCE, facility, favorite_list
+                request.user, view.FAVORITE_RESOURCE.value, facility, favorite_list
             )
         )
         if favorites is None:
