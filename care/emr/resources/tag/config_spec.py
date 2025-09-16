@@ -56,7 +56,20 @@ class TagConfigBaseSpec(EMRResource):
 
 
 class TagConfigUpdateSpec(TagConfigBaseSpec):
-    pass
+    facility_organization: UUID4 | None = None
+    organization: UUID4 | None = None
+
+    def perform_extra_deserialization(self, is_update, obj):
+        if self.organization:
+            obj.organization = Organization.objects.only("id").get(
+                external_id=self.organization
+            )
+        if self.facility_organization:
+            obj.facility_organization = get_object_or_404(
+                FacilityOrganization.objects.only("id"),
+                external_id=self.facility_organization,
+                facility=obj.facility,
+            )
 
 
 class TagConfigWriteSpec(TagConfigBaseSpec):

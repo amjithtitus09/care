@@ -97,7 +97,7 @@ class MedicationDispenseViewSet(
                 instance.charge_item = charge_item
                 instance.save(update_fields=["charge_item"])
             sync_inventory_item(instance.item.location, instance.item.product)
-            if instance._fully_dispensed is not None and instance.authorizing_request:
+            if instance._fully_dispensed is not None and instance.authorizing_request:  # noqa
                 if instance._fully_dispensed:  # noqa
                     instance.authorizing_request.dispense_status = (
                         MedicationRequestDispenseStatus.complete.value
