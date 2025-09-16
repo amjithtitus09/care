@@ -11,8 +11,6 @@ from rest_framework.exceptions import ValidationError
 from care.emr.models.organization import FacilityOrganization, Organization
 from care.emr.models.tag_config import TagConfig
 from care.emr.resources.base import EMRResource, cacheable
-from care.emr.resources.facility_organization.spec import FacilityOrganizationReadSpec
-from care.emr.resources.organization.spec import OrganizationReadSpec
 from care.facility.models.facility import Facility
 from care.utils.shortcuts import get_object_or_404
 
@@ -161,6 +159,11 @@ class TagConfigRetrieveSpec(TagConfigReadSpec):
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
+        from care.emr.resources.facility_organization.spec import (
+            FacilityOrganizationReadSpec,
+        )
+        from care.emr.resources.organization.spec import OrganizationReadSpec
+
         super().perform_extra_serialization(mapping, obj)
         cls.serialize_audit_users(mapping, obj)
         if obj.facility_organization:
