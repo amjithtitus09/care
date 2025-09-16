@@ -5,7 +5,6 @@ Tag configs include what tags are available for a resource and their configurati
 
 from enum import Enum
 
-from django.shortcuts import get_object_or_404
 from pydantic import UUID4, model_validator
 from rest_framework.exceptions import ValidationError
 
@@ -13,6 +12,7 @@ from care.emr.models.organization import FacilityOrganization, Organization
 from care.emr.models.tag_config import TagConfig
 from care.emr.resources.base import EMRResource, cacheable
 from care.facility.models.facility import Facility
+from care.utils.shortcuts import get_object_or_404
 
 
 class TagCategoryChoices(str, Enum):
@@ -35,6 +35,7 @@ class TagResource(str, Enum):
     charge_item = "charge_item"
     patient = "patient"
     token_booking = "token_booking"
+    medication_request_prescription = "medication_request_prescription"
 
 
 class TagStatus(str, Enum):
@@ -153,8 +154,23 @@ class TagConfigReadSpec(TagConfigBaseSpec):
 class TagConfigRetrieveSpec(TagConfigReadSpec):
     created_by: dict
     updated_by: dict
+    facility_organization: dict | None = None
+    organization: dict | None = None
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
+        from care.emr.resources.facility_organization.spec import (
+            FacilityOrganizationReadSpec,
+        )
+        from care.emr.resources.organization.spec import OrganizationReadSpec
+
         super().perform_extra_serialization(mapping, obj)
         cls.serialize_audit_users(mapping, obj)
+        if obj.facility_organization:
+            mapping["facility_organization"] = FacilityOrganizationReadSpec.serialize(
+                obj.facility_organization
+            ).to_json()
+        if obj.organization:
+            mapping["organization"] = OrganizationReadSpec.serialize(
+                obj.organization
+            ).to_json()
