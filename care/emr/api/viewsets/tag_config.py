@@ -33,7 +33,6 @@ class TagConfigFilters(filters.FilterSet):
     organization = filters.UUIDFilter(
         lookup_expr="exact", field_name="organization__external_id"
     )
-    slug = filters.CharFilter(lookup_expr="icontains")
     status = filters.CharFilter(lookup_expr="iexact")
     display = filters.CharFilter(lookup_expr="icontains")
     category = filters.CharFilter(lookup_expr="iexact")

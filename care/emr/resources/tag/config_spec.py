@@ -47,7 +47,6 @@ class TagConfigBaseSpec(EMRResource):
     __model__ = TagConfig
     __exclude__ = ["facility", "facility_organization", "organization", "parent"]
     id: UUID4 | None = None
-    slug: str
     display: str
     category: TagCategoryChoices
     description: str = ""
@@ -112,13 +111,6 @@ class TagConfigWriteSpec(TagConfigBaseSpec):
             if not config.exists():
                 err = "Parent tag config not found"
                 raise ValueError(err)
-        # Validate slug uniqueness
-        configs = TagConfig.objects.filter(slug=self.slug)
-        if facility:
-            configs = configs.filter(facility=facility)
-        if configs.exists():
-            err = "Slug must be unique"
-            raise ValidationError(err)
         return self
 
     @model_validator(mode="after")
