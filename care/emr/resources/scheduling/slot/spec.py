@@ -85,8 +85,6 @@ class TokenBookingMinimumReadSpec(TokenBookingBaseSpec):
     booked_on: datetime.datetime
     status: str
     note: str
-    resource_type: SchedulableResourceTypeOptions
-    resource: dict = {}
     created_date: datetime.datetime
     modified_date: datetime.datetime
 
@@ -96,8 +94,6 @@ class TokenBookingMinimumReadSpec(TokenBookingBaseSpec):
         mapping["token_slot"] = TokenSlotBaseSpec.serialize(obj.token_slot).model_dump(
             exclude=["meta"]
         )
-        mapping["resource_type"] = obj.token_slot.resource.resource_type
-        mapping["resource"] = serialize_resource(obj.token_slot.resource)
 
 
 class TokenBookingReadSpec(TokenBookingBaseSpec):
