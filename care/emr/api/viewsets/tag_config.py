@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django_filters import rest_framework as filters
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import OrderingFilter
@@ -93,7 +94,9 @@ class TagConfigViewSet(
                     raise PermissionDenied(
                         "You do not have permission to read tag configs"
                     )
-                queryset = queryset.filter(facility=facility)
+                queryset = queryset.filter(
+                    Q(facility=facility) | Q(facility__isnull=True)
+                )
             else:
                 queryset = queryset.filter(facility__isnull=True)
         return queryset
