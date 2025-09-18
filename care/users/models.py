@@ -205,6 +205,8 @@ class User(AbstractUser):
         error_messages={"unique": _("A user with that username already exists.")},
     )
 
+    odoo_agent_id = models.IntegerField(null=True, blank=True, help_text="Odoo agent ID for users")
+
     TYPE_VALUE_MAP = {
         "Transportation": 2,
         "Pharmacist": 3,
