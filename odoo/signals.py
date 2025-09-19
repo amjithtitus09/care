@@ -11,9 +11,6 @@ from odoo.resource.agent import OdooAgentResource
 
 @receiver(post_save, sender=User)
 def create_odoo_agent(sender, instance, created, **kwargs):
-    """
-    Signal handler to create an Odoo agent for a user when they are created.
-    """
     try:
         with transaction.atomic():
             agent_resource = OdooAgentResource()
