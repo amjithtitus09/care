@@ -86,14 +86,28 @@ class OdooAgentResource(OdooBaseResource):
         """
         Get or create an agent for a doctor user.
         """
-        user_name = f"CARE : {user.get_full_name()}"
-        user_id = str(user.external_id)
-        existing_agent_id = self.find_by_care_id(user_id)
-        if not existing_agent_id:
-            existing_agent_id = self.create_agent(
-                name=user_name,
-                phone=user.phone_number,
-                email=user.email,
-                care_id=user_id
+        from odoo.models import UserOdooAgent
+
+        # First check if we already have a mapping
+        try:
+            user_agent = UserOdooAgent.objects.get(user=user)
+            return user_agent.odoo_agent_id
+        except UserOdooAgent.DoesNotExist:
+            # No mapping exists, create new agent in Odoo
+            user_name = f"CARE : {user.get_full_name()}"
+            user_id = str(user.external_id)
+            existing_agent_id = self.find_by_care_id(user_id)
+            if not existing_agent_id:
+                existing_agent_id = self.create_agent(
+                    name=user_name,
+                    phone=user.phone_number,
+                    email=user.email,
+                    care_id=user_id
+                )
+
+            # Create the mapping
+            UserOdooAgent.objects.create(
+                user=user,
+                odoo_agent_id=existing_agent_id
             )
-        return existing_agent_id
+            return existing_agent_id
