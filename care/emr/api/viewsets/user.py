@@ -109,9 +109,7 @@ class UserViewSet(EMRModelViewSet):
             # Create odoo agent for all users
             try:
                 agent_resource = OdooAgentResource()
-                agent_id = agent_resource.get_or_create_doctor_agent(instance)
-                instance.odoo_agent_id = agent_id
-                instance.save(update_fields=["odoo_agent_id"])
+                agent_resource.get_or_create_doctor_agent(instance)
             except Exception as e:
                 raise IntegrityError(
                     "User creation failed due to Odoo agent creation error."
