@@ -25,7 +25,6 @@ from care.emr.utils.send_password_reset_mail import send_password_creation_email
 from care.security.authorization import AuthorizationController
 from care.security.models import RoleModel
 from care.users.models import User
-from odoo.resource.agent import OdooAgentResource
 from care.utils.file_uploads.cover_image import delete_cover_image, upload_cover_image
 from care.utils.models.validators import (
     cover_image_validator,
@@ -106,14 +105,6 @@ class UserViewSet(EMRModelViewSet):
                 ),
             )
 
-            # Create odoo agent for all users
-            try:
-                agent_resource = OdooAgentResource()
-                agent_resource.get_or_create_doctor_agent(instance)
-            except Exception as e:
-                raise IntegrityError(
-                    "User creation failed due to Odoo agent creation error."
-                ) from e
 
             if not instance.has_usable_password():
                 try:
