@@ -1,6 +1,5 @@
 from django.db import transaction
 from django.utils import timezone
-from django.utils.dateparse import parse_date
 from django_filters import CharFilter, FilterSet
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
@@ -278,10 +277,14 @@ class PatientViewSet(EMRModelViewSet):
 
     @action(detail=True, methods=["GET"])
     def get_appointments(self, request, *args, **kwargs):
+        from care.emr.api.viewsets.scheduling.booking import TokenBookingFilters
+
         facility = self.request.GET.get("facility", None)
-        status = self.request.GET.get("status", None)
-        date = self.request.GET.get("date", None)
         queryset = TokenBooking.objects.all().order_by("-token_slot__start_datetime")
+
+        filter_class = TokenBookingFilters(self.request.GET, queryset=queryset)
+        queryset = filter_class.qs
+
         if facility:
             facility = get_object_or_404(Facility, external_id=facility)
             if not AuthorizationController.call(
@@ -297,16 +300,6 @@ class PatientViewSet(EMRModelViewSet):
         else:
             queryset = queryset.filter(patient=self.get_object())
 
-        if status:
-            status_list = status.split(",")
-            queryset = queryset.filter(status__in=status_list)
-
-        if date:
-            parsed_date = parse_date(date)
-            if not parsed_date:
-                raise ValidationError("Invalid date format. Expected YYYY-MM-DD.")
-            queryset = queryset.filter(booked_on__date=parsed_date)
-
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
         if page is not None:
@@ -317,13 +310,14 @@ class PatientViewSet(EMRModelViewSet):
 
     @action(detail=True, methods=["GET"])
     def get_tokens(self, request, *args, **kwargs):
+        from care.emr.api.viewsets.scheduling.token import TokenFilters
+
         facility = self.request.GET.get("facility", None)
-        date = self.request.GET.get("date", None)
-        status = self.request.GET.get("status", None)
         queryset = Token.objects.all().order_by("-created_date")
-        if status:
-            status_list = status.split(",")
-            queryset = queryset.filter(status__in=status_list)
+
+        filter_class = TokenFilters(self.request.GET, queryset=queryset)
+        queryset = filter_class.qs
+
         if facility:
             facility = get_object_or_404(Facility, external_id=facility)
             if not AuthorizationController.call(
@@ -336,12 +330,6 @@ class PatientViewSet(EMRModelViewSet):
             queryset = queryset.filter(facility=facility, patient=patient)
         else:
             queryset = queryset.filter(patient=self.get_object())
-
-        if date:
-            parsed_date = parse_date(date)
-            if not parsed_date:
-                raise ValidationError("Invalid date format. Expected YYYY-MM-DD.")
-            queryset = queryset.filter(queue__date=parsed_date)
 
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
