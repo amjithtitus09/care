@@ -599,14 +599,6 @@
             "markers": "python_version >= '3.6'",
             "version": "==5.4.0"
         },
-        "django-rest-passwordreset": {
-            "hashes": [
-                "sha256:6da38dd00e0cdb1ed5c403e66beeb90f10f8a1a73ebc13fdd27f2b5d67d14181",
-                "sha256:862fce99b12198aa1473299aac68febe4f40760a39beabc47f941cff5c9e7280"
-            ],
-            "index": "pypi",
-            "version": "==1.5.0"
-        },
         "django-simple-history": {
             "hashes": [
                 "sha256:040f0c2286bed730312aa15f0acee9e7e6f839c4bcd721693251aa7ec5b65d95",

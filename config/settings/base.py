@@ -130,7 +130,6 @@ THIRD_PARTY_APPS = [
     "djangoql",
     "maintenance_mode",
     "django.contrib.postgres",
-    "django_rest_passwordreset",
     "healthy_django",
     "import_export",
 ]
