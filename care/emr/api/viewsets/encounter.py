@@ -197,7 +197,7 @@ class EncounterViewSet(
                 "can_view_patient_obj", self.request.user, patient
             ):
                 return qs.filter(patient=patient)
-            raise PermissionDenied("User Cannot access patient")
+            raise PermissionDenied("User cannot access patient")
 
         if (
             self.action in ["list"]
