@@ -35,6 +35,7 @@ class SupplyRequestFilters(filters.FilterSet):
     include_children = DummyBooleanFilter()
     deliver_from = DummyUUIDFilter()
     deliver_to = DummyUUIDFilter()
+    order = filters.UUIDFilter(field_name="order__external_id")
 
 
 class SupplyRequestViewSet(

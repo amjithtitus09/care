@@ -7,7 +7,7 @@ from care.emr.models.inventory_item import InventoryItem
 from care.emr.models.location import FacilityLocation
 from care.emr.models.organization import Organization
 from care.emr.models.product import Product
-from care.emr.models.supply_delivery import SupplyDelivery
+from care.emr.models.supply_delivery import DeliveryOrder, SupplyDelivery
 from care.emr.models.supply_request import SupplyRequest
 from care.emr.resources.base import EMRResource
 from care.emr.resources.inventory.inventory_item.spec import InventoryItemReadSpec
@@ -64,6 +64,17 @@ class BaseSupplyDeliverySpec(EMRResource):
     supplied_item_condition: SupplyDeliveryConditionOptions | None = None
 
 
+class SupplyDeliveryUpdateSpec(BaseSupplyDeliverySpec):
+    order: UUID4 | None = None
+
+    def perform_extra_deserialization(self, is_update, obj):
+        if self.order:
+            obj.order = get_object_or_404(
+                DeliveryOrder.objects.only("id").filter(external_id=self.order)
+            )
+        return obj
+
+
 class SupplyDeliveryWriteSpec(BaseSupplyDeliverySpec):
     """Supply delivery write specification"""
 
@@ -74,6 +85,7 @@ class SupplyDeliveryWriteSpec(BaseSupplyDeliverySpec):
     origin: UUID4 | None = None
     destination: UUID4
     supply_request: UUID4 | None = None
+    order: UUID4 | None = None
 
     @model_validator(mode="after")
     def validate_supplied_item(self):
@@ -131,6 +143,11 @@ class SupplyDeliveryWriteSpec(BaseSupplyDeliverySpec):
                     org_type=OrganizationTypeChoices.product_supplier.value,
                 )
             )
+        if self.order:
+            obj.order = get_object_or_404(
+                DeliveryOrder.objects.only("id").filter(external_id=self.order)
+            )
+
         return obj
 
 
