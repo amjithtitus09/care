@@ -10,6 +10,7 @@ from care.emr.models.patient import Patient, PatientIdentifier, PatientIdentifie
 from care.emr.resources.patient_identifier.spec import (
     IdentifierConfig,
     PatientIdentifierRetrieveConfig,
+    PatientIdentifierStatus,
     PatientIdentifierUse,
 )
 
@@ -35,6 +36,7 @@ class NameIdentifierConfig:
     def create_name_identifier(cls):
         return PatientIdentifierConfig.objects.create(
             facility=None,
+            status=PatientIdentifierStatus.active.value,
             config=IdentifierConfig(
                 use=PatientIdentifierUse.secondary,
                 system=cls.IDENTIFIER_SYSTEM,
