@@ -3,6 +3,7 @@ This signal is used to create a patient identifier with the same name as the pat
 This allows workflows without strict Authz to function as needed
 """
 
+from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -24,4 +25,5 @@ class NameIdentifierConfig(BasePatientIdentifierConfig):
 
 @receiver(post_save, sender=Patient)
 def update_name_identifier(sender, instance, created, **kwargs):
-    NameIdentifierConfig.update_identifier(instance)
+    if settings.MAINTAIN_PATIENT_NAME_IDENTIFIER:
+        NameIdentifierConfig.update_identifier(instance)
