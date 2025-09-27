@@ -10,18 +10,18 @@ from care.emr.models.patient import Patient
 from care.emr.signals.patient.base import BasePatientIdentifierConfig
 
 
-class NameIdentifierConfig(BasePatientIdentifierConfig):
-    IDENTIFIER_SYSTEM = "system.care.ohc.network/patient-name"
+class PhoneNumberIdentifierConfig(BasePatientIdentifierConfig):
+    IDENTIFIER_SYSTEM = "system.care.ohc.network/patient-phone-number"
     CACHED_CONFIG = {}
-    DISPLAY = "Patient Name"
-    RETRIEVE_WITH_YOB = False
-    PARTIAL_SEARCH = True
+    DISPLAY = "Patient Phone Number"
+    RETRIEVE_WITH_YOB = True
+    PARTIAL_SEARCH = False
 
     @classmethod
     def get_value(cls, patient):
-        return patient.name
+        return patient.phone_number
 
 
 @receiver(post_save, sender=Patient)
-def update_name_identifier(sender, instance, created, **kwargs):
-    NameIdentifierConfig.update_identifier(instance)
+def update_phone_number_identifier(sender, instance, created, **kwargs):
+    PhoneNumberIdentifierConfig.update_identifier(instance)
