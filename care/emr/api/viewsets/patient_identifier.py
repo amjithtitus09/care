@@ -39,6 +39,10 @@ class PatientIdentifierConfigViewSet(
     filter_backends = [filters.DjangoFilterBackend]
 
     def authorize_create(self, instance):
+        if instance.config.get("auto_maintained", False):
+            raise PermissionDenied(
+                "Cannot create auto maintained patient identifier config"
+            )
         if instance.facility:
             facility = get_object_or_404(Facility, external_id=instance.facility)
             if not AuthorizationController.call(
@@ -55,6 +59,10 @@ class PatientIdentifierConfigViewSet(
             )
 
     def authorize_update(self, request_obj, model_instance):
+        if model_instance.config.get("auto_maintained", False):
+            raise PermissionDenied(
+                "Cannot update auto maintained patient identifier config"
+            )
         if model_instance.facility and not AuthorizationController.call(
             "can_write_facility_patient_identifier_config",
             self.request.user,

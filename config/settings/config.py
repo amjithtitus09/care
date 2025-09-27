@@ -230,3 +230,10 @@ INFORMATIONAL_MONETARY_CODES = MonetaryCodes(
         ],
     )
 )
+
+
+# Patient Identifier Configs
+
+MAINTAIN_PATIENT_NAME_IDENTIFIER = env.bool(
+    "MAINTAIN_PATIENT_NAME_IDENTIFIER", default=False
+)
