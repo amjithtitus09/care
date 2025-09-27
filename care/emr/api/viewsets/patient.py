@@ -174,14 +174,16 @@ class PatientViewSet(EMRModelViewSet):
         config: UUID4 | None = None
         value: str | None = None
         facility: UUID4 | None = None
+        page_size: int = 100
 
     @extend_schema(
         request=SearchRequestSpec,
     )
     @action(detail=False, methods=["POST"])
     def search(self, request, *args, **kwargs):
-        max_page_size = 200
         request_data = self.SearchRequestSpec(**request.data)
+        max_page_size = 100
+        page_size = min(max_page_size, request_data.page_size)
         partial = False
         if not request_data.phone_number and not request_data.config:
             raise ValidationError("Either phone number or config is required")
@@ -214,7 +216,7 @@ class PatientViewSet(EMRModelViewSet):
                 identifier_queryset = PatientIdentifier.objects.filter(
                     config=config,
                     value__icontains=request_data.value,
-                )[:max_page_size]
+                )[:page_size]
 
             queryset = Patient.objects.filter(
                 id__in=identifier_queryset.values("patient_id")
@@ -225,7 +227,7 @@ class PatientViewSet(EMRModelViewSet):
             ):
                 partial = True
 
-        queryset = queryset.order_by("-created_date")[:max_page_size]
+        queryset = queryset.order_by("-created_date")[:page_size]
         if partial:
             data = [PatientPartialSpec.serialize(obj).to_json() for obj in queryset]
             return Response({"partial": True, "results": data})
