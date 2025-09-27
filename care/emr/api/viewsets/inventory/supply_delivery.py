@@ -27,6 +27,7 @@ from care.emr.resources.inventory.supply_delivery.spec import (
     SupplyDeliveryReadSpec,
     SupplyDeliveryRetrieveSpec,
     SupplyDeliveryStatusOptions,
+    SupplyDeliveryUpdateSpec,
     SupplyDeliveryWriteSpec,
 )
 from care.security.authorization.base import AuthorizationController
@@ -50,6 +51,7 @@ class SupplyDeliveryFilters(filters.FilterSet):
     origin_isnull = NullFilter(field_name="origin")
     supplier = filters.UUIDFilter(field_name="supplier__external_id")
     include_children = DummyBooleanFilter()
+    order = filters.UUIDFilter(field_name="order__external_id")
 
 
 class SupplyDeliveryViewSet(
@@ -62,7 +64,7 @@ class SupplyDeliveryViewSet(
 ):
     database_model = SupplyDelivery
     pydantic_model = SupplyDeliveryWriteSpec
-    pydantic_update_model = BaseSupplyDeliverySpec
+    pydantic_update_model = SupplyDeliveryUpdateSpec
     pydantic_read_model = SupplyDeliveryReadSpec
     pydantic_retrieve_model = SupplyDeliveryRetrieveSpec
     filterset_class = SupplyDeliveryFilters

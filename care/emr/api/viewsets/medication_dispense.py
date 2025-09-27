@@ -60,6 +60,7 @@ class MedicationDispenseFilters(filters.FilterSet):
     exclude_status = MultiSelectFilter(field_name="status", exclude=True)
     location = filters.UUIDFilter(field_name="location__external_id")
     include_children = DummyBooleanFilter()
+    order = filters.UUIDFilter(field_name="order__external_id")
 
 
 class MedicationDispenseViewSet(
