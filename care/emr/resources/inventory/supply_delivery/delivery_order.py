@@ -17,6 +17,7 @@ from care.utils.shortcuts import get_object_or_404
 
 class SupplyDeliveryOrderStatusOptions(str, Enum):
     draft = "draft"
+    pending = "pending"
     in_progress = "in_progress"
     completed = "completed"
     abandoned = "abandoned"
