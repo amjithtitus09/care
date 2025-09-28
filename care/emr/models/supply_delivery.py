@@ -14,26 +14,10 @@ class SupplyDelivery(EMRBaseModel):
         "emr.InventoryItem", on_delete=models.CASCADE, null=True, blank=True
     )
     supplied_item_condition = models.CharField(max_length=255)
-    origin = models.ForeignKey(
-        "emr.FacilityLocation",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="origin_deliveries",
-    )
-    destination = models.ForeignKey(
-        "emr.FacilityLocation",
-        related_name="destination_deliveries",
-        on_delete=models.CASCADE,
-    )
     delivery_type = models.CharField(max_length=255)
     supply_request = models.ForeignKey(
         "emr.SupplyRequest", on_delete=models.CASCADE, null=True, blank=True
     )
-    supplier = models.ForeignKey(
-        "emr.Organization", on_delete=models.CASCADE, null=True, blank=True
-    )
-
     order = models.ForeignKey(
         "emr.DeliveryOrder",
         on_delete=models.CASCADE,
@@ -46,5 +30,19 @@ class DeliveryOrder(EMRBaseModel):
     name = models.CharField(max_length=255)
     status = models.CharField(max_length=255)
     note = models.TextField(null=True, blank=True)
-    location = models.ForeignKey("emr.FacilityLocation", on_delete=models.CASCADE)
     tags = ArrayField(models.IntegerField(), default=list)
+    supplier = models.ForeignKey(
+        "emr.Organization", on_delete=models.CASCADE, null=True, blank=True
+    )
+    origin = models.ForeignKey(
+        "emr.FacilityLocation",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="origin_delivery_orders",
+    )
+    destination = models.ForeignKey(
+        "emr.FacilityLocation",
+        related_name="destination_delivery_orders",
+        on_delete=models.CASCADE,
+    )
