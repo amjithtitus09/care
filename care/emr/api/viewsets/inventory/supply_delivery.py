@@ -52,6 +52,7 @@ class SupplyDeliveryFilters(filters.FilterSet):
     supplier = filters.UUIDFilter(field_name="order__supplier__external_id")
     include_children = DummyBooleanFilter()
     order = DummyUUIDFilter()
+    request_order = DummyUUIDFilter()
 
 
 class SupplyDeliveryViewSet(
@@ -203,10 +204,17 @@ class SupplyDeliveryViewSet(
             )
             if "order" in self.request.GET:
                 order = get_object_or_404(
-                    RequestOrder, external_id=self.request.GET["order"]
+                    DeliveryOrder, external_id=self.request.GET["order"]
                 )
                 self.authorize_order_read(order)
                 queryset = queryset.filter(order=order)
+            if "request_order" in self.request.GET:
+                order = get_object_or_404(
+                    RequestOrder, external_id=self.request.GET["request_order"]
+                )
+                self.authorize_order_read(order)
+                # TODO Optimize without joins
+                queryset = queryset.filter(supply_request__order=order)
             if "destination" in self.request.GET:
                 destination = get_object_or_404(
                     FacilityLocation, external_id=self.request.GET["destination"]
