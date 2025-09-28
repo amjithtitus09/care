@@ -20,12 +20,20 @@ from care.emr.resources.inventory.supply_delivery.delivery_order import (
     SupplyDeliveryOrderWriteSpec,
 )
 from care.security.authorization.base import AuthorizationController
+from care.utils.filters.dummy_filter import DummyBooleanFilter, DummyUUIDFilter
 from care.utils.filters.multiselect import MultiSelectFilter
+from care.utils.filters.null_filter import NullFilter
 
 
 class DeliveryOrderFilters(filters.FilterSet):
     status = MultiSelectFilter(field_name="status")
     created_date = filters.DateRangeFilter()
+    supplier = filters.UUIDFilter(field_name="supplier__external_id")
+
+    origin = DummyUUIDFilter()
+    destination = DummyUUIDFilter()
+    include_children = DummyBooleanFilter()
+    origin_isnull = NullFilter(field_name="origin")
 
 
 class DeliveryOrderViewSet(

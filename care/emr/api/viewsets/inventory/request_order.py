@@ -29,11 +29,15 @@ class RequestOrderFilters(filters.FilterSet):
     status = MultiSelectFilter(field_name="status")
     date = filters.DateFilter(field_name="created_date")
     priority = filters.CharFilter(lookup_expr="iexact")
+    supplier = filters.UUIDFilter(field_name="supplier__external_id")
+    intent = filters.CharFilter(lookup_expr="iexact")
+    category = filters.CharFilter(lookup_expr="iexact")
+    reason = filters.CharFilter(lookup_expr="iexact")
 
     origin = DummyUUIDFilter()
     destination = DummyUUIDFilter()
     include_children = DummyBooleanFilter()
-    destination_isnull = NullFilter(field_name="destination")
+    origin_isnull = NullFilter(field_name="origin")
 
 
 class RequestOrderViewSet(
