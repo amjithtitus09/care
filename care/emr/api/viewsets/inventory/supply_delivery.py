@@ -178,7 +178,7 @@ class SupplyDeliveryViewSet(
         self.authorize_order_write(model_instance.order)
 
     def authorize_create(self, instance):
-        order = get_object_or_404(RequestOrder, external_id=instance.order)
+        order = get_object_or_404(DeliveryOrder, external_id=instance.order)
         self.authorize_order_write(order)
 
     def authorize_retrieve(self, model_instance):
