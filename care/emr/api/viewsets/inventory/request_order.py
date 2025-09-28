@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
 from rest_framework.exceptions import PermissionDenied
@@ -12,17 +13,26 @@ from care.emr.api.viewsets.base import (
     EMRUpsertMixin,
 )
 from care.emr.models.location import FacilityLocation
-from care.emr.models.supply_request import RequestOrder, SupplyRequest
+from care.emr.models.supply_request import RequestOrder
 from care.emr.resources.inventory.supply_request.request_order import (
     BaseSupplyRequestOrderSpec,
     SupplyRequestOrderReadSpec,
+    SupplyRequestOrderWriteSpec,
 )
 from care.security.authorization.base import AuthorizationController
+from care.utils.filters.dummy_filter import DummyBooleanFilter, DummyUUIDFilter
+from care.utils.filters.null_filter import NullFilter
 
 
 class RequestOrderFilters(filters.FilterSet):
     status = filters.CharFilter(lookup_expr="iexact")
     date = filters.DateFilter(field_name="created_date")
+    priority = filters.CharFilter(lookup_expr="iexact")
+
+    origin = DummyUUIDFilter()
+    destination = DummyUUIDFilter()
+    include_children = DummyBooleanFilter()
+    destination_isnull = NullFilter(field_name="destination")
 
 
 class RequestOrderViewSet(
@@ -34,59 +44,96 @@ class RequestOrderViewSet(
     EMRBaseViewSet,
 ):
     database_model = RequestOrder
-    pydantic_model = BaseSupplyRequestOrderSpec
+    pydantic_model = SupplyRequestOrderWriteSpec
+    pydantic_update_model = BaseSupplyRequestOrderSpec
     pydantic_read_model = SupplyRequestOrderReadSpec
     filterset_class = RequestOrderFilters
     filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
     ordering_fields = ["created_date", "modified_date"]
 
-    def get_location_obj(self):
-        return get_object_or_404(
-            FacilityLocation, external_id=self.kwargs["location_external_id"]
-        )
-
-    def authorize_location_read(self, location_obj):
+    def authorize_location_read(self, location_obj, raise_error=True):
         if not AuthorizationController.call(
             "can_list_facility_supply_request", self.request.user, location_obj
         ):
-            raise PermissionDenied("Cannot list supply requests")
+            if raise_error:
+                raise PermissionDenied("Cannot list supply requests")
+            return False
+        return True
 
-    def authorize_location_write(self, location_obj):
+    def authorize_location_write(self, location_obj, raise_error=True):
         if not AuthorizationController.call(
             "can_write_facility_supply_request", self.request.user, location_obj
         ):
-            raise PermissionDenied("Cannot write supply requests")
+            if raise_error:
+                raise PermissionDenied("Cannot write supply requests")
+            return False
+        return True
 
     def perform_create(self, instance):
-        instance.location = self.get_location_obj()
+        if (
+            instance.origin
+            and instance.origin.facility != instance.destination.facility
+        ):
+            raise PermissionDenied(
+                "Origin and destination must be in the same facility"
+            )
         return super().perform_create(instance)
 
     def authorize_create(self, instance):
-        self.authorize_location_write(self.get_location_obj())
+        """
+        Orders can only be created from a destination Location
+        """
+        destination_location = get_object_or_404(
+            FacilityLocation, external_id=instance.destination
+        )
+        self.authorize_location_write(destination_location)
 
     def authorize_update(self, request_obj, model_instance):
-        self.authorize_location_write(model_instance.location)
+        """
+        Orders can be updated from destination or origin
+        """
+        # TODO: Change logic so that update logic is changed based on origin and destination
+        self.authorize_location_write(model_instance.destination)
 
     def authorize_retrieve(self, model_instance):
-        if "destination" in self.request.GET:
-            # Retrieve access is present if the
-            # order is referenced in another location
-            from_location = get_object_or_404(
-                FacilityLocation, external_id=self.request.GET["destination"]
-            )
-            if not SupplyRequest.objects.filter(
-                order=model_instance, deliver_to=from_location
-            ).exists():
-                raise PermissionDenied("This Order is not referenced in this location")
-            location = from_location
-        else:
-            location = model_instance.location
+        allowed = False
+        if model_instance.origin:
+            allowed = allowed or self.authorize_location_read(model_instance.origin)
+        allowed = allowed or self.authorize_location_read(model_instance.destination)
+        if not allowed:
+            raise PermissionDenied("Cannot read request orders")
 
-        self.authorize_location_read(location)
+    def get_location_obj(self, external_id):
+        return get_object_or_404(FacilityLocation, external_id=external_id)
+
+    def filter_location_queryset(
+        self, queryset, attribute, location_obj, include_children=False
+    ):
+        if include_children:
+            queryset = queryset.filter(
+                Q(**{attribute: location_obj})
+                | Q(**{attribute + "__parent_cache__overlap": [location_obj.id]})
+            )
+        else:
+            queryset = queryset.filter(**{attribute: location_obj})
+        return queryset
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        location = self.get_location_obj()
         if self.action == "list":
-            self.authorize_location_read(location)
-        return queryset.filter(location=location)
+            include_children = (
+                self.request.GET.get("include_children", "false").lower() == "true"
+            )
+            if "origin" in self.request.GET:
+                origin = self.get_location_obj(self.request.GET["origin"])
+                self.authorize_location_read(origin)
+                queryset = self.filter_location_queryset(
+                    queryset, "origin", origin, include_children
+                )
+            if "destination" in self.request.GET:
+                destination = self.get_location_obj(self.request.GET["destination"])
+                self.authorize_location_read(destination)
+                queryset = self.filter_location_queryset(
+                    queryset, "destination", destination, include_children
+                )
+        return queryset

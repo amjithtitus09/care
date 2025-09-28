@@ -348,6 +348,20 @@ facility_nested_router.register(
     basename="medication_prescription",
 )
 
+# Orders
+
+facility_nested_router.register(
+    r"order/delivery",
+    DeliveryOrderViewSet,
+    basename="delivery-order",
+)
+
+facility_nested_router.register(
+    r"order/request",
+    RequestOrderViewSet,
+    basename="request-order",
+)
+
 facility_nested_router.register(
     r"order/dispense",
     DispenseOrderViewSet,
@@ -391,20 +405,6 @@ facility_location_nested_router.register(
     r"product",
     InventoryItemViewSet,
     basename="inventory-item",
-)
-
-# Orders
-
-facility_location_nested_router.register(
-    r"order/delivery",
-    DeliveryOrderViewSet,
-    basename="delivery-order",
-)
-
-facility_location_nested_router.register(
-    r"order/request",
-    RequestOrderViewSet,
-    basename="request-order",
 )
 
 

@@ -39,7 +39,7 @@ class PatientIdentifierConfigViewSet(
     filter_backends = [filters.DjangoFilterBackend]
 
     def authorize_create(self, instance):
-        if instance.config.get("auto_maintained", False):
+        if instance.config.auto_maintained:
             raise PermissionDenied(
                 "Cannot create auto maintained patient identifier config"
             )
