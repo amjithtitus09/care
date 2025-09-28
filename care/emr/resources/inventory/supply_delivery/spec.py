@@ -11,8 +11,6 @@ from care.emr.resources.base import EMRResource
 from care.emr.resources.inventory.inventory_item.spec import InventoryItemReadSpec
 from care.emr.resources.inventory.product.spec import ProductReadSpec
 from care.emr.resources.inventory.supply_request.spec import SupplyRequestReadSpec
-from care.emr.resources.location.spec import FacilityLocationListSpec
-from care.emr.resources.organization.spec import OrganizationReadSpec
 from care.emr.resources.user.spec import UserSpec
 from care.utils.shortcuts import get_object_or_404
 
@@ -110,8 +108,8 @@ class SupplyDeliveryWriteSpec(BaseSupplyDeliverySpec):
             obj.supplied_inventory_item = get_object_or_404(
                 InventoryItem.objects.only("id").filter(
                     external_id=self.supplied_inventory_item,
-                    location__facility=obj.origin.facility,
-                    location=obj.origin,
+                    location__facility=obj.order.origin.facility,
+                    location=obj.order.origin,
                 )
             )
 
@@ -135,11 +133,6 @@ class SupplyDeliveryReadSpec(BaseSupplyDeliverySpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-        if obj.origin:
-            mapping["origin"] = FacilityLocationListSpec.serialize(obj.origin).to_json()
-        mapping["destination"] = FacilityLocationListSpec.serialize(
-            obj.destination
-        ).to_json()
         if obj.supplied_item:
             mapping["supplied_item"] = ProductReadSpec.serialize(
                 obj.supplied_item
@@ -148,8 +141,6 @@ class SupplyDeliveryReadSpec(BaseSupplyDeliverySpec):
             mapping["supplied_inventory_item"] = InventoryItemReadSpec.serialize(
                 obj.supplied_inventory_item
             ).to_json()
-        if obj.supplier:
-            mapping["supplier"] = OrganizationReadSpec.serialize(obj.supplier).to_json()
 
 
 class SupplyDeliveryRetrieveSpec(SupplyDeliveryReadSpec):
