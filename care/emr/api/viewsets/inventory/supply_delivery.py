@@ -73,9 +73,9 @@ class SupplyDeliveryViewSet(
     ordering_fields = ["created_date", "modified_date"]
 
     def validate_data(self, instance, model_obj=None):
-        if not model_obj and instance.origin:
+        if not model_obj:
             order = get_object_or_404(DeliveryOrder, external_id=instance.order)
-            if instance.supplied_inventory_item:
+            if order.origin and instance.supplied_inventory_item:
                 inventory_item = get_object_or_404(
                     InventoryItem,
                     external_id=instance.supplied_inventory_item,
