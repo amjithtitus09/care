@@ -20,10 +20,11 @@ from care.emr.resources.inventory.supply_delivery.delivery_order import (
     SupplyDeliveryOrderWriteSpec,
 )
 from care.security.authorization.base import AuthorizationController
+from care.utils.filters.multiselect import MultiSelectFilter
 
 
 class DeliveryOrderFilters(filters.FilterSet):
-    status = filters.CharFilter(lookup_expr="iexact")
+    status = MultiSelectFilter(field_name="status")
     created_date = filters.DateRangeFilter()
 
 

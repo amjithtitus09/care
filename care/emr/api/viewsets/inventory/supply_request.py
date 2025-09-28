@@ -20,11 +20,12 @@ from care.emr.resources.inventory.supply_request.spec import (
 )
 from care.security.authorization.base import AuthorizationController
 from care.utils.filters.dummy_filter import DummyBooleanFilter, DummyUUIDFilter
+from care.utils.filters.multiselect import MultiSelectFilter
 from care.utils.shortcuts import get_object_or_404
 
 
 class SupplyRequestFilters(filters.FilterSet):
-    status = filters.CharFilter(lookup_expr="iexact")
+    status = MultiSelectFilter(field_name="status")
     origin = DummyUUIDFilter()
     destination = DummyUUIDFilter()
     item = filters.UUIDFilter(field_name="item__external_id")

@@ -21,11 +21,12 @@ from care.emr.resources.inventory.supply_request.request_order import (
 )
 from care.security.authorization.base import AuthorizationController
 from care.utils.filters.dummy_filter import DummyBooleanFilter, DummyUUIDFilter
+from care.utils.filters.multiselect import MultiSelectFilter
 from care.utils.filters.null_filter import NullFilter
 
 
 class RequestOrderFilters(filters.FilterSet):
-    status = filters.CharFilter(lookup_expr="iexact")
+    status = MultiSelectFilter(field_name="status")
     date = filters.DateFilter(field_name="created_date")
     priority = filters.CharFilter(lookup_expr="iexact")
 

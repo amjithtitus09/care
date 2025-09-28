@@ -31,12 +31,13 @@ from care.emr.resources.inventory.supply_delivery.spec import (
 )
 from care.security.authorization.base import AuthorizationController
 from care.utils.filters.dummy_filter import DummyBooleanFilter, DummyUUIDFilter
+from care.utils.filters.multiselect import MultiSelectFilter
 from care.utils.filters.null_filter import NullFilter
 from care.utils.shortcuts import get_object_or_404
 
 
 class SupplyDeliveryFilters(filters.FilterSet):
-    status = filters.CharFilter(lookup_expr="iexact")
+    status = MultiSelectFilter(field_name="status")
     origin = DummyUUIDFilter()
     destination = DummyUUIDFilter()
     supplied_item = filters.UUIDFilter(field_name="supplied_item__external_id")
