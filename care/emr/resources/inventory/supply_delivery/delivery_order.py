@@ -49,7 +49,6 @@ class SupplyDeliveryOrderWriteSpec(BaseSupplyDeliveryOrderSpec):
         obj.destination = get_object_or_404(
             FacilityLocation.objects.only("id").filter(external_id=self.destination)
         )
-
         if self.origin:
             obj.origin = get_object_or_404(
                 FacilityLocation.objects.only("id").filter(external_id=self.origin)

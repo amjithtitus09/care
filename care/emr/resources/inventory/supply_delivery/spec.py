@@ -129,7 +129,6 @@ class SupplyDeliveryReadSpec(BaseSupplyDeliverySpec):
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
         mapping["id"] = obj.external_id
-
         if obj.supplied_item:
             mapping["supplied_item"] = ProductReadSpec.serialize(
                 obj.supplied_item
