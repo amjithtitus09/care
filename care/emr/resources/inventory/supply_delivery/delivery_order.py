@@ -4,7 +4,6 @@ from pydantic import UUID4
 
 from care.emr.models.location import FacilityLocation
 from care.emr.models.organization import Organization
-from care.emr.models.product import Product
 from care.emr.models.supply_delivery import DeliveryOrder
 from care.emr.resources.base import EMRResource
 from care.emr.resources.location.spec import FacilityLocationListSpec
@@ -50,13 +49,6 @@ class SupplyDeliveryOrderWriteSpec(BaseSupplyDeliveryOrderSpec):
         obj.destination = get_object_or_404(
             FacilityLocation.objects.only("id").filter(external_id=self.destination)
         )
-
-        if self.supplied_item:
-            obj.supplied_item = get_object_or_404(
-                Product.objects.only("id").filter(
-                    external_id=self.supplied_item, facility=obj.destination.facility
-                )
-            )
 
         if self.origin:
             obj.origin = get_object_or_404(
