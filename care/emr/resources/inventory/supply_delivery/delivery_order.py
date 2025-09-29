@@ -11,6 +11,7 @@ from care.emr.resources.organization.spec import (
     OrganizationReadSpec,
     OrganizationTypeChoices,
 )
+from care.emr.tagging.base import SingleFacilityTagManager
 from care.utils.shortcuts import get_object_or_404
 
 
@@ -69,6 +70,7 @@ class SupplyDeliveryOrderReadSpec(BaseSupplyDeliveryOrderSpec):
     origin: dict | None = None
     destination: dict
     supplier: dict | None = None
+    tags: list[dict] = []
 
     @classmethod
     def perform_extra_serialization(cls, mapping, obj):
@@ -80,3 +82,4 @@ class SupplyDeliveryOrderReadSpec(BaseSupplyDeliveryOrderSpec):
         ).to_json()
         if obj.supplier:
             mapping["supplier"] = OrganizationReadSpec.serialize(obj.supplier).to_json()
+        mapping["tags"] = SingleFacilityTagManager().render_tags(obj)
