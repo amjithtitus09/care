@@ -207,8 +207,10 @@ class SupplyDeliveryViewSet(
         if "request_order" not in request.GET:
             raise ValidationError("request_order is required")
         orders = queryset.values("order_id").distinct()[:100]
+        orders_qs = DeliveryOrder.objects.filter(id__in=orders)
         response = [
-            SupplyDeliveryOrderReadSpec.serialize(order).to_json() for order in orders
+            SupplyDeliveryOrderReadSpec.serialize(order).to_json()
+            for order in orders_qs
         ]
         return Response({"results": response})
 
