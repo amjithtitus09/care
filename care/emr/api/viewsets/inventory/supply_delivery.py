@@ -1,8 +1,10 @@
 from django.db import transaction
 from django.db.models import Q
 from django_filters import rest_framework as filters
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
+from rest_framework.response import Response
 
 from care.emr.api.viewsets.base import (
     EMRBaseViewSet,
@@ -21,6 +23,9 @@ from care.emr.resources.inventory.inventory_item.create_inventory_item import (
 )
 from care.emr.resources.inventory.inventory_item.sync_inventory_item import (
     sync_inventory_item,
+)
+from care.emr.resources.inventory.supply_delivery.delivery_order import (
+    SupplyDeliveryOrderReadSpec,
 )
 from care.emr.resources.inventory.supply_delivery.spec import (
     SupplyDeliveryReadSpec,
@@ -196,18 +201,33 @@ class SupplyDeliveryViewSet(
             queryset = queryset.filter(**{attribute: location_obj})
         return queryset
 
+    @action(detail=False, methods=["GET"])
+    def request_orders(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if "request_order" not in request.GET:
+            raise ValidationError("request_order is required")
+        orders = queryset.values("order_id").distinct()[:100]
+        response = [
+            SupplyDeliveryOrderReadSpec.serialize(order).to_json() for order in orders
+        ]
+        return Response({"results": response})
+
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = self.database_model.objects.all()
         if self.action == "list":
+            queryset = queryset.order_by("-id")
+        if self.action in ["list", "request_orders"]:
             include_children = (
                 self.request.GET.get("include_children", "false").lower() == "true"
             )
+            filtered = False
             if "order" in self.request.GET:
                 order = get_object_or_404(
                     DeliveryOrder, external_id=self.request.GET["order"]
                 )
                 self.authorize_order_read(order)
                 queryset = queryset.filter(order=order)
+                filtered = True
             if "request_order" in self.request.GET:
                 order = get_object_or_404(
                     RequestOrder, external_id=self.request.GET["request_order"]
@@ -215,6 +235,7 @@ class SupplyDeliveryViewSet(
                 self.authorize_order_read(order)
                 # TODO Optimize without joins
                 queryset = queryset.filter(supply_request__order=order)
+                filtered = True
             if "destination" in self.request.GET:
                 destination = get_object_or_404(
                     FacilityLocation, external_id=self.request.GET["destination"]
@@ -223,6 +244,7 @@ class SupplyDeliveryViewSet(
                 queryset = self.filter_location_queryset(
                     queryset, "order__destination", destination, include_children
                 )
+                filtered = True
             if "origin" in self.request.GET:
                 origin = get_object_or_404(
                     FacilityLocation, external_id=self.request.GET["origin"]
@@ -231,4 +253,7 @@ class SupplyDeliveryViewSet(
                 queryset = self.filter_location_queryset(
                     queryset, "order__origin", origin, include_children
                 )
+                filtered = True
+            if not filtered:
+                raise ValidationError("No filters provided")
         return queryset

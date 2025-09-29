@@ -1,6 +1,6 @@
 from django.db.models import Q
 from django_filters import rest_framework as filters
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
 
 from care.emr.api.viewsets.base import (
@@ -120,12 +120,14 @@ class SupplyRequestViewSet(
             include_children = (
                 self.request.GET.get("include_children", "false").lower() == "true"
             )
+            filtered = False
             if "order" in self.request.GET:
                 order = get_object_or_404(
                     RequestOrder, external_id=self.request.GET["order"]
                 )
                 self.authorize_order_read(order)
                 queryset = queryset.filter(order=order)
+                filtered = True
             if "destination" in self.request.GET:
                 destination = get_object_or_404(
                     FacilityLocation, external_id=self.request.GET["destination"]
@@ -134,6 +136,7 @@ class SupplyRequestViewSet(
                 queryset = self.filter_location_queryset(
                     queryset, "order__destination", destination, include_children
                 )
+                filtered = True
             if "origin" in self.request.GET:
                 origin = get_object_or_404(
                     FacilityLocation, external_id=self.request.GET["origin"]
@@ -142,4 +145,7 @@ class SupplyRequestViewSet(
                 queryset = self.filter_location_queryset(
                     queryset, "order__origin", origin, include_children
                 )
+                filtered = True
+            if not filtered:
+                raise ValidationError("No filters provided")
         return queryset
